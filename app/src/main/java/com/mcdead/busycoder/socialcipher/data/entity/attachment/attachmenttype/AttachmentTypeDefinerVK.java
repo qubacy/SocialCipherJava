@@ -11,8 +11,8 @@ public class AttachmentTypeDefinerVK implements AttachmentTypeDefinerInterface {
 
         switch (type) {
             case C_IMAGE_TYPE_NAME: return AttachmentType.IMAGE;
-            case C_DOC_TYPE_NAME: return AttachmentType.IMAGE;
-            case C_VIDEO_TYPE_NAME: return AttachmentType.IMAGE;
+            case C_DOC_TYPE_NAME: return AttachmentType.DOC;
+            case C_VIDEO_TYPE_NAME: return AttachmentType.VIDEO;
         }
 
         return null;
