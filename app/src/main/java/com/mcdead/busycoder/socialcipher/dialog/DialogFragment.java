@@ -1,0 +1,121 @@
+package com.mcdead.busycoder.socialcipher.dialog;
+
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
+import com.mcdead.busycoder.socialcipher.data.UsersStore;
+import com.mcdead.busycoder.socialcipher.error.Error;
+import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.data.DialogsStore;
+import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
+
+public class DialogFragment extends Fragment
+    implements DialogLoadingCallback, RecyclerViewAdapterErrorCallback
+{
+    private long m_peerId = 0;
+    private long m_localPeerId = 0;
+
+    private DialogBroadcastReceiver m_broadcastReceiver = null;
+
+    private RecyclerView m_messagesList = null;
+    private MessageListAdapter m_messagesAdapter = null;
+
+    public DialogFragment(final long peerId) {
+        super();
+
+        m_peerId = peerId;
+        m_localPeerId = UsersStore.getInstance().getLocalUser().getPeerId();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        m_broadcastReceiver = new DialogBroadcastReceiver(this);
+
+        LocalBroadcastManager
+                .getInstance(getContext().getApplicationContext())
+                .registerReceiver(m_broadcastReceiver,
+                        new IntentFilter(DialogBroadcastReceiver.C_NEW_MESSAGE_ADDED));
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState)
+    {
+        View view = inflater.inflate(R.layout.fragment_dialog, container, false);
+
+        m_messagesList = view.findViewById(R.id.messages_list);
+        m_messagesAdapter = new MessageListAdapter(getActivity(), this, m_localPeerId);
+
+        m_messagesList.setAdapter(m_messagesAdapter);
+        m_messagesList.setLayoutManager(new LinearLayoutManager(getContext()));
+        //m_messagesList.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState)
+    {
+        super.onViewCreated(view, savedInstanceState);
+
+        onDialogLoaded();
+    }
+
+    @Override
+    public void onDestroy() {
+        LocalBroadcastManager
+                .getInstance(getContext().getApplicationContext())
+                .unregisterReceiver(m_broadcastReceiver);
+
+        super.onDestroy();
+    }
+
+    @Override
+    public void onDialogLoaded() {
+        DialogEntity dialog = DialogsStore.getInstance().getDialogByPeerId(m_peerId);
+
+        if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Dialog doesn't exist!", true),
+                    getContext().getApplicationContext()
+            );
+
+            return;
+        }
+
+        m_messagesList.scrollToPosition(dialog.getMessages().size() - 1);
+    }
+
+    @Override
+    public void onDialogLoadingError(Error error) {
+        ErrorBroadcastReceiver.broadcastError(
+                error,
+                getContext().getApplicationContext()
+        );
+    }
+
+    @Override
+    public void onRecyclerViewAdapterErrorOccurred(Error error) {
+        ErrorBroadcastReceiver.broadcastError(
+                error,
+                getContext().getApplicationContext()
+        );
+    }
+}

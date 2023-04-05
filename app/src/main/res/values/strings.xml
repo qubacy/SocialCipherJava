@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">OKApiTry</string>
+    <string name="signin_button_caption">SIGN IN!</string>
+    <string name="error_button_caption">OK</string>
+</resources>
