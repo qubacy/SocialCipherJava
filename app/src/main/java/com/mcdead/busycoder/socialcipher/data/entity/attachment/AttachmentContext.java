@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.data.entity.attachment;
 
+import java.io.File;
 import java.net.URI;
 
 public class AttachmentContext {
@@ -9,20 +10,35 @@ public class AttachmentContext {
 
         if (!filepath.contains(".")) return new String("");
 
-        String[] attachmentFilePathParts = filepath.split(".");
+        File file = new File(filepath);
+        String fileName = file.getName();
 
-        return attachmentFilePathParts[attachmentFilePathParts.length - 1];
+        return getExtensionByFileName(fileName);
+    }
+
+    public static String getExtensionByFileName(final String filename) {
+        return getPartOfFileName(filename, 1);
     }
 
     public static String getAttachmentIdByFileName(final String filename) {
+        return getPartOfFileName(filename, 0);
+    }
+
+    private static String getPartOfFileName(
+            final String filename,
+            final int partIndex)
+    {
         if (filename == null) return null;
         if (filename.isEmpty()) return null;
 
         if (!filename.contains(".")) return filename;
 
-        String[] attachmentFileNameParts = filename.split(".");
+        String[] attachmentFileNameParts = filename.split("\\.");
 
-        return attachmentFileNameParts[0];
+        if (attachmentFileNameParts.length <= partIndex)
+            return null;
+
+        return attachmentFileNameParts[partIndex];
     }
 
     public static URI getURIByFilePath(final String filePath) {

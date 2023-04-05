@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.mcdead.busycoder.socialcipher.api.vk.VKAttachmentType;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentBase;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentDoc;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentLinked;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentStored;
 
@@ -98,25 +99,54 @@ public class ResponseDialogItemDeserializer implements JsonDeserializer<Response
         JsonObject attachmentData = attachmentObj.get(attachmentType.getType()).getAsJsonObject();
 
         switch (attachmentType) {
-            case DOC: return processLinkedDocAttachment(attachmentType, attachmentData);
-            case PHOTO: return processLinkedPhotoAttachment(attachmentType, attachmentData);
+            case DOC:
+            case PHOTO: return processLinkedDefaultAttachment(attachmentType, attachmentData);
+        }
+
+        return null;
+    }
+
+    private ResponseAttachmentBase processLinkedDefaultAttachment(
+            VKAttachmentType attachmentType,
+            JsonObject attachmentObj)
+    {
+        if (!attachmentObj.has(C_ATTACHMENT_ID_PROP_NAME)
+         || !attachmentObj.has(C_ATTACHMENT_OWNER_ID_PROP_NAME))
+        {
+            return null;
+        }
+
+        long attachmentId = attachmentObj.get(C_ATTACHMENT_ID_PROP_NAME).getAsLong();
+        long attachmentOwnerId = attachmentObj.get(C_ATTACHMENT_OWNER_ID_PROP_NAME).getAsLong();
+
+        switch (attachmentType) {
+            case DOC: return processLinkedDocAttachment(attachmentType, attachmentId, attachmentOwnerId, attachmentObj);
+            case PHOTO: return processLinkedPhotoAttachment(attachmentType, attachmentId, attachmentOwnerId, attachmentObj);
         }
 
         return null;
     }
 
     private ResponseAttachmentBase processLinkedDocAttachment(VKAttachmentType attachmentType,
+                                                              long attachmentId,
+                                                              long attachmentOwnerId,
                                                               JsonObject attachmentObj)
     {
         if (attachmentObj.get(C_URL_PROP_NAME) == null)
             return null;
 
         String attachmentUrl = attachmentObj.get(C_URL_PROP_NAME).getAsString();
+        String attachmentExt = attachmentObj.get(ResponseAttachmentDoc.C_EXT_PROP_NAME).getAsString();
 
-        return new ResponseAttachmentLinked(attachmentType.getType(), attachmentUrl);
+        return new ResponseAttachmentDoc(
+                attachmentType.getType(), attachmentId,
+                attachmentOwnerId, attachmentUrl,
+                attachmentExt);
     }
 
     private ResponseAttachmentBase processLinkedPhotoAttachment(VKAttachmentType attachmentType,
+                                                                long attachmentId,
+                                                                long attachmentOwnerId,
                                                                 JsonObject attachmentObj)
     {
         if (attachmentObj.get(C_SIZES_PROP_NAME) == null)
@@ -139,17 +169,19 @@ public class ResponseDialogItemDeserializer implements JsonDeserializer<Response
 
         String photoUrl = biggestPhotoSizeObj.get(C_URL_PROP_NAME).getAsString();
 
-        return new ResponseAttachmentLinked(attachmentType.getType(), photoUrl);
+        return new ResponseAttachmentLinked(
+                attachmentType.getType(), attachmentId,
+                attachmentOwnerId, photoUrl);
     }
 
-    private ResponseAttachmentBase processStoredAttachment(VKAttachmentType attachmentType,
-                                                           JsonObject attachmentObj)
-    {
-        JsonObject attachmentData = attachmentObj.get(attachmentType.getType()).getAsJsonObject();
-
-        long attachmentId = attachmentData.get(C_ATTACHMENT_ID_PROP_NAME).getAsLong();
-        long attachmentOwnerId = attachmentData.get(C_ATTACHMENT_OWNER_ID_PROP_NAME).getAsLong();
-
-        return new ResponseAttachmentStored(attachmentType.getType(), attachmentId, attachmentOwnerId);
-    }
+//    private ResponseAttachmentBase processStoredAttachment(VKAttachmentType attachmentType,
+//                                                           JsonObject attachmentObj)
+//    {
+//        JsonObject attachmentData = attachmentObj.get(attachmentType.getType()).getAsJsonObject();
+//
+//        long attachmentId = attachmentData.get(C_ATTACHMENT_ID_PROP_NAME).getAsLong();
+//        long attachmentOwnerId = attachmentData.get(C_ATTACHMENT_OWNER_ID_PROP_NAME).getAsLong();
+//
+//        return new ResponseAttachmentStored(attachmentType.getType(), attachmentId, attachmentOwnerId);
+//    }
 }

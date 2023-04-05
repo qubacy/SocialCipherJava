@@ -3,9 +3,14 @@ package com.mcdead.busycoder.socialcipher.data;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityGenerator;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmentdata.AttachmentData;
 import com.mcdead.busycoder.socialcipher.setting.system.SettingsSystem;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -25,15 +30,75 @@ public class AttachmentsStore {
         return s_instance;
     }
 
-    public boolean addAttachment(final AttachmentEntityBase attachment)
+    public AttachmentEntityBase saveAttachment(
+            final AttachmentData attachmentData)
     {
-        if (attachment == null) return false;
-        if (attachment.getId() == null) return false;
-        if (attachment.getId().isEmpty()) return false;
+        if (attachmentData == null) return null;
+        if (!attachmentData.isValid()) return null;
 
-        m_attachmentsHash.put(attachment.getId(), attachment);
+        if (m_attachmentsHash.containsKey(attachmentData.getName()))
+            return m_attachmentsHash.get(attachmentData.getName());
 
-        return true;
+        String savedFilePath = saveAttachmentToFile(attachmentData.getName(), attachmentData);
+
+        if (savedFilePath == null) return null;
+
+        AttachmentEntityBase attachmentEntity = AttachmentEntityGenerator
+                .generateAttachmentByIdAndFilePath(attachmentData.getName(), savedFilePath);
+
+        if (attachmentEntity == null) return null;
+
+        m_attachmentsHash.put(attachmentData.getName(), attachmentEntity);
+
+        return m_attachmentsHash.get(attachmentData.getName());
+    }
+
+    private String saveAttachmentToFile(
+            final String attachmentId,
+            final AttachmentData attachmentData)
+    {
+        SettingsSystem settingsSystem = SettingsSystem.getInstance();
+
+        if (settingsSystem == null) return null;
+        if (settingsSystem.getAttachmentsDir() == null) return null;
+
+        String newAttachmentFilePath = generateAttachmentFilePath(
+                settingsSystem.getAttachmentsDir(),
+                attachmentId,
+                attachmentData.getExtension());
+
+        File newAttachmentFile = new File(newAttachmentFilePath);
+
+        try {
+            if (!newAttachmentFile.getParentFile().exists())
+                if (!newAttachmentFile.getParentFile().mkdirs())
+                    return null;
+
+            if (!newAttachmentFile.createNewFile())
+                return null;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            return null;
+        }
+
+        try (OutputStream out = new FileOutputStream(newAttachmentFile)) {
+            out.write(attachmentData.getBytes());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return newAttachmentFilePath;
+    }
+
+    private String generateAttachmentFilePath(
+            final String dirPath,
+            final String attachmentId,
+            final String attachmentExtension)
+    {
+        return (dirPath + '/' + attachmentId + '.' + attachmentExtension);
     }
 
     public AttachmentEntityBase getAttachmentById(final String id) {
