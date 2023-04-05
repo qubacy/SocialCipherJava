@@ -27,7 +27,7 @@ import com.mcdead.busycoder.socialcipher.signin.tokenchecker.TokenCheckResultInt
 import com.mcdead.busycoder.socialcipher.signin.tokenchecker.TokenCheckerBase;
 import com.mcdead.busycoder.socialcipher.signin.tokenchecker.TokenCheckerFactory;
 
-// Login activity;
+// Initial activity;
 // It has a mission to check whether the user is Signed In or not;
 
 
