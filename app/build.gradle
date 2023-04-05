@@ -6,7 +6,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.mcdead.busycoder.okapitry"
+        applicationId "com.mcdead.busycoder.socialcipher"
         minSdk 26
         targetSdk 33
         versionCode 1

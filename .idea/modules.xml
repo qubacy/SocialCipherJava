@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/OKApiTry.iml" filepath="$PROJECT_DIR$/.idea/modules/OKApiTry.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.androidTest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/OKApiTry.app.unitTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/SocialCipher.iml" filepath="$PROJECT_DIR$/.idea/modules/SocialCipher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SocialCipher.app.unitTest.iml" />
     </modules>
   </component>
 </project>
