@@ -38,19 +38,19 @@ public interface VKAPIInterface /*extends APIInterface*/ {
     @GET("docs.getById?v=5.131")
     Call<ResponseDocumentWrapper> document(
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token,
-            String docs
+            @Query("docs") String docs
     );
 
     @GET("photos.getById?v=5.131")
     Call<ResponsePhotoWrapper> photo(
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token,
-            String photos
+            @Query("photos") String photos
     );
 
     @GET("video.get?v=5.131")
     Call<ResponseVideoWrapper> video(
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token,
-            String videos
+            @Query("videos") String videos
     );
 
     @GET("messages.getLongPollServer?v=5.131")
