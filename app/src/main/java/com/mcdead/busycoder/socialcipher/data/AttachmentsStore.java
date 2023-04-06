@@ -36,19 +36,21 @@ public class AttachmentsStore {
         if (attachmentData == null) return null;
         if (!attachmentData.isValid()) return null;
 
-        if (m_attachmentsHash.containsKey(attachmentData.getName()))
-            return m_attachmentsHash.get(attachmentData.getName());
+        synchronized (m_attachmentsHash) {
+            if (m_attachmentsHash.containsKey(attachmentData.getName()))
+                return m_attachmentsHash.get(attachmentData.getName());
 
-        String savedFilePath = saveAttachmentToFile(attachmentData.getName(), attachmentData);
+            String savedFilePath = saveAttachmentToFile(attachmentData.getName(), attachmentData);
 
-        if (savedFilePath == null) return null;
+            if (savedFilePath == null) return null;
 
-        AttachmentEntityBase attachmentEntity = AttachmentEntityGenerator
-                .generateAttachmentByIdAndFilePath(attachmentData.getName(), savedFilePath);
+            AttachmentEntityBase attachmentEntity = AttachmentEntityGenerator
+                    .generateAttachmentByIdAndFilePath(attachmentData.getName(), savedFilePath);
 
-        if (attachmentEntity == null) return null;
+            if (attachmentEntity == null) return null;
 
-        m_attachmentsHash.put(attachmentData.getName(), attachmentEntity);
+            m_attachmentsHash.put(attachmentData.getName(), attachmentEntity);
+        }
 
         return m_attachmentsHash.get(attachmentData.getName());
     }
@@ -102,8 +104,10 @@ public class AttachmentsStore {
     }
 
     public AttachmentEntityBase getAttachmentById(final String id) {
-        if (!m_attachmentsHash.containsKey(id))
-            return loadAttachmentById(id);
+        synchronized (m_attachmentsHash) {
+            if (!m_attachmentsHash.containsKey(id))
+                return loadAttachmentById(id);
+        }
 
         return m_attachmentsHash.get(id);
     }
@@ -116,8 +120,10 @@ public class AttachmentsStore {
 
         File attachmentsDir = new File(settingsSystem.getAttachmentsDir());
 
-        if (!attachmentsDir.exists() || !attachmentsDir.isDirectory())
-            return null;
+        if (!attachmentsDir.exists() || !attachmentsDir.isDirectory()) {
+            if (!attachmentsDir.mkdirs()) return null;
+            if (!attachmentsDir.exists()) return null;
+        }
 
         File[] attachmentsFiles = attachmentsDir.listFiles();
 

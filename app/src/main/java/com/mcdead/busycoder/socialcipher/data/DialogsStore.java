@@ -56,11 +56,14 @@ public class DialogsStore {
         }
     }
 
-    public boolean addNewMessage(final MessageEntity message) {
+    public boolean addNewMessage(
+            final MessageEntity message,
+            final long chatId)
+    {
         if (message == null) return false;
 
         synchronized (m_dialogs) {
-            DialogEntity dialog = getDialogByPeerId(message.getFromPeerId());
+            DialogEntity dialog = getDialogByPeerId(chatId);
 
             if (dialog == null) return false;
 

@@ -9,6 +9,7 @@ import com.google.gson.JsonParseException;
 import com.mcdead.busycoder.socialcipher.api.vk.VKAttachmentType;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentBase;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentStored;
+import com.mcdead.busycoder.socialcipher.data.UsersStore;
 import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogType;
 import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogTypeDefinerVK;
 
@@ -19,6 +20,8 @@ import java.util.List;
 public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> {
     private static final int C_NEW_MESSAGE_UPDATE_TYPE = 4;
     private static final int C_NEW_MESSAGE_BASIC_FIELDS_COUNT = 7;
+
+    private static final int C_OUTCOMING_MESSAGE_FLAG = 0b10;
 
     @Override
     public ResponseUpdateBody deserialize(JsonElement json,
@@ -73,12 +76,26 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
         responseUpdateItem.timestamp = rawUpdateAsArray.get(4).getAsLong();
         responseUpdateItem.text = rawUpdateAsArray.get(5).getAsString();
 
+        long localUserPeerId = getLocalUserPeerId();
+
+        if (localUserPeerId == 0) return null;
+
         DialogType dialogType = (new DialogTypeDefinerVK()).getDialogTypeByPeerId(responseUpdateItem.chatId);
 
         switch (dialogType) {
             case GROUP:
             case USER: {
                 JsonObject titleObj = rawUpdateAsArray.get(6).getAsJsonObject();
+
+                if (responseUpdateItem.chatId == localUserPeerId) {
+                    responseUpdateItem.fromPeerId = localUserPeerId;
+
+                } else {
+                    if ((responseUpdateItem.flags & C_OUTCOMING_MESSAGE_FLAG) != 0)
+                        responseUpdateItem.fromPeerId = localUserPeerId;
+                    else
+                        responseUpdateItem.fromPeerId = responseUpdateItem.chatId;
+                }
 
                 // what to do with a title?
 
@@ -149,5 +166,14 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
         String attachmentId = attachmentsObj.get(attachPropName).getAsString();
 
         return new ResponseAttachmentStored(VKAttachmentType.DOC.getType(), attachmentId);
+    }
+
+    private long getLocalUserPeerId() {
+        UsersStore usersStore = UsersStore.getInstance();
+
+        if (usersStore == null) return 0;
+        if (usersStore.getLocalUser() == null) return 0;
+
+        return usersStore.getLocalUser().getPeerId();
     }
 }

@@ -103,7 +103,7 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
         if (newMessage == null)
             return new Error("Message processing error has been occurred!", true);
 
-        DialogEntity dialogEntity = DialogsStore.getInstance().getDialogByPeerId(newMessage.getFromPeerId());
+        DialogEntity dialogEntity = DialogsStore.getInstance().getDialogByPeerId(updateItem.chatId);
 
         if (dialogEntity == null) {
             DialogType dialogType = m_dialogTypeDefiner.getDialogTypeByPeerId(newMessage.getFromPeerId());
@@ -119,7 +119,7 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
             }
         }
 
-        if (!DialogsStore.getInstance().addNewMessage(newMessage))
+        if (!DialogsStore.getInstance().addNewMessage(newMessage, updateItem.chatId))
             return new Error("New message processing error!", true);
 
         Intent intent = new Intent(m_context.getApplicationContext(), DialogsBroadcastReceiver.class)

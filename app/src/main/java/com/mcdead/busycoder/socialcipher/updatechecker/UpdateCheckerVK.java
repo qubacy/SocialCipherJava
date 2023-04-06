@@ -179,7 +179,10 @@ public class UpdateCheckerVK extends UpdateCheckerBase {
         return null;
     }
 
-    private ResponseUpdateBody deserializeUpdate(final String rawJsonUpdate) throws JSONException {
+    private ResponseUpdateBody deserializeUpdate(
+            final String rawJsonUpdate)
+            throws JSONException
+    {
         Gson gson = new GsonBuilder().registerTypeAdapter(
                 ResponseUpdateBody.class,
                 new UpdateDeserializer()).create();

@@ -46,4 +46,8 @@ public class ResponseAttachmentStored extends ResponseAttachmentBase {
     public ResponseAttachmentType getAttachmentType() {
         return ResponseAttachmentType.STORED;
     }
+
+    public String getTypedAttachmentID() {
+        return attachmentType + attachmentID;
+    }
 }
