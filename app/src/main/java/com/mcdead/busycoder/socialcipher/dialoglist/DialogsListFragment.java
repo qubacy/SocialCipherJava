@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
 import com.mcdead.busycoder.socialcipher.dialog.DialogActivity;
+import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoaderBase;
+import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoaderFactory;
 import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoaderVK;
 import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoadingCallback;
 import com.mcdead.busycoder.socialcipher.error.Error;
@@ -35,7 +37,7 @@ public class DialogsListFragment extends Fragment
         RecyclerViewAdapterErrorCallback,
         DialogItemClickedCallback
 {
-    private DialogsLoaderVK m_loaderTask = null;
+    private DialogsLoaderBase m_loaderTask = null;
 
     private RecyclerView m_dialogsListRecyclerView = null;
     private DialogListAdapter m_dialogsListAdapter = null;
@@ -46,12 +48,7 @@ public class DialogsListFragment extends Fragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        m_loaderTask = new DialogsLoaderVK(
-                SettingsNetwork.getInstance().getToken(),
-                (DialogTypeDefinerVK) DialogTypeDefinerFactory.generateDialogTypeDefiner(),
-                this);
-
-        m_loaderTask.execute();
+        if (!launchDialogsLoader()) return;
 
         m_dialogChangeBroadcastReceiver = new DialogsBroadcastReceiver(this);
 
@@ -147,5 +144,22 @@ public class DialogsListFragment extends Fragment
         intent.putExtra(DialogActivity.C_PEER_ID_EXTRA_PROP_NAME, peerId);
 
         startActivity(intent);
+    }
+
+    private boolean launchDialogsLoader() {
+        m_loaderTask = DialogsLoaderFactory.generateDialogsLoader(this);
+
+        if (m_loaderTask == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("", true),
+                    getActivity().getApplicationContext()
+            );
+
+            return false;
+        }
+
+        m_loaderTask.execute();
+
+        return true;
     }
 }

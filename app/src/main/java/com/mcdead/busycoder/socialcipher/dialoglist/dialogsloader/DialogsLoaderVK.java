@@ -33,18 +33,12 @@ import java.util.List;
 
 import retrofit2.Response;
 
-public class DialogsLoaderVK extends AsyncTask<Void, Void, Error> {
-    private String m_token = null;
-    private DialogTypeDefinerVK m_dialogTypeDefiner = null;
-    private DialogsLoadingCallback m_callback = null;
-
+public class DialogsLoaderVK extends DialogsLoaderBase {
     public DialogsLoaderVK(final String token,
                            final DialogTypeDefinerVK dialogTypeDefiner,
                            final DialogsLoadingCallback callback)
     {
-        m_token = token;
-        m_dialogTypeDefiner = dialogTypeDefiner;
-        m_callback = callback;
+        super(token, dialogTypeDefiner, callback);
     }
 
 //    private Error loadUserData(final long userId) throws IOException {
