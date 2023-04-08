@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.messageprocessor;
 import android.webkit.URLUtil;
 
 import com.mcdead.busycoder.socialcipher.api.APIStore;
+import com.mcdead.busycoder.socialcipher.api.common.gson.dialog.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.api.common.gson.dialog.ResponseMessageInterface;
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
 import com.mcdead.busycoder.socialcipher.api.vk.VKAPIInterface;
@@ -14,10 +15,10 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseDialogItem;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.document.ResponseDocumentItem;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.document.ResponseDocumentWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoItem;
-import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoSize;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.data.AttachmentsStore;
+import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmentdata.AttachmentData;
@@ -26,6 +27,8 @@ import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.A
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
+import com.mcdead.busycoder.socialcipher.error.Error;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,14 +59,18 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (peerId == 0) return null;
 
         ResponseDialogItem messageVK = (ResponseDialogItem) message;
-        List<AttachmentEntityBase> attachmentList = processReceivedAttachments(messageVK.attachments);
+        //List<AttachmentEntityBase> attachmentList = processReceivedAttachments(messageVK.attachments);
+        List<ResponseAttachmentInterface> attachmentsToLoadList =
+                (messageVK.attachments == null
+                ? null
+                : new ArrayList<ResponseAttachmentInterface>(messageVK.attachments));
 
         MessageEntity messageEntity = new MessageEntity(
                 messageVK.id,
                 messageVK.fromId,
                 messageVK.text,
                 messageVK.timestamp,
-                attachmentList);
+                attachmentsToLoadList);
 
         return messageEntity;
     }
@@ -76,16 +83,93 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (peerId == 0) return null;
 
         ResponseUpdateItem updateVK = (ResponseUpdateItem) update;
-        List<AttachmentEntityBase> attachmentList = processReceivedAttachments(updateVK.attachments);
+        //List<AttachmentEntityBase> attachmentList = processReceivedAttachments(updateVK.attachments);
+        List<ResponseAttachmentInterface> attachmentsToLoadList =
+                (updateVK.attachments == null
+                        ? null
+                        : new ArrayList<ResponseAttachmentInterface>(updateVK.attachments));
 
         MessageEntity messageEntity = new MessageEntity(
                 updateVK.messageId,
                 updateVK.fromPeerId,
                 updateVK.text,
                 updateVK.timestamp,
-                attachmentList);
+                attachmentsToLoadList);
 
         return messageEntity;
+    }
+
+    @Override
+    public Error processMessageAttachments(
+            final MessageEntity message,
+            final long charId)
+    {
+        if (message == null)
+            return new Error("Message wasn't initialized!", true);
+        if (message.getAttachmentToLoad() == null)
+            return null;
+
+        List<AttachmentEntityBase> loadedAttachments = new ArrayList<>();
+
+        for (final ResponseAttachmentInterface attachmentToLoad : message.getAttachmentToLoad()) {
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
+            Error err = processAttachment(attachmentToLoad, attachmentEntityWrapper);
+
+            if (err != null) return err;
+
+            loadedAttachments.add(attachmentEntityWrapper.getValue());
+        }
+
+        if (loadedAttachments.isEmpty()) return null;
+
+        DialogsStore dialogsStore = DialogsStore.getInstance();
+
+        if (dialogsStore == null)
+            return new Error("Dialogs Store hasn't been initialized!", true);
+
+        if (!dialogsStore.setMessageAttachments(loadedAttachments, charId, message.getId()))
+            return new Error(
+                "Setting attachments to message process went wrong!",
+                true);
+
+//        if (!message.setAttachments(loadedAttachments))
+//            return new Error(
+//                    "Setting attachments to message process went wrong!",
+//                    true);
+
+        return null;
+    }
+
+    private Error processAttachment(
+            ResponseAttachmentInterface attachmentToLoad,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+    {
+        ResponseAttachmentBase attachmentVK = (ResponseAttachmentBase) attachmentToLoad;
+
+        if (attachmentVK == null)
+            return new Error("Raw attachment had a wrong type!", true);
+
+        AttachmentTypeDefinerVK attachmentTypeDefiner = (AttachmentTypeDefinerVK) AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
+
+        if (attachmentTypeDefiner == null)
+            return new Error("AttachmentTypeDefiner wasn't initialized!", true);
+
+        AttachmentEntityBase attachmentEntity = loadAttachment(attachmentVK);
+
+        if (attachmentEntity != null) {
+            attachmentEntityWrapper.setValue(attachmentEntity);
+
+            return null;
+        }
+
+        attachmentEntity = downloadAttachment(attachmentVK);
+
+        if (attachmentEntity == null)
+            return new Error("Attachment downloading error occurred!", true);
+
+        attachmentEntityWrapper.setValue(attachmentEntity);
+
+        return null;
     }
 
     private List<AttachmentEntityBase> processReceivedAttachments(List<ResponseAttachmentBase> attachments)

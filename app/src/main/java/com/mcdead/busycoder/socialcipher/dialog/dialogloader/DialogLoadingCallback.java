@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.dialog;
+package com.mcdead.busycoder.socialcipher.dialog.dialogloader;
 
 import com.mcdead.busycoder.socialcipher.error.Error;
 

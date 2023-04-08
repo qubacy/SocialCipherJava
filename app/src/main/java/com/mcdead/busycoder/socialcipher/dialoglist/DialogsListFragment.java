@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,26 +18,26 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
 import com.mcdead.busycoder.socialcipher.dialog.DialogActivity;
+import com.mcdead.busycoder.socialcipher.dialog.DialogBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoaderBase;
 import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoaderFactory;
-import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoaderVK;
 import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoadingCallback;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
-import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogTypeDefinerFactory;
-import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
-import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 import java.util.List;
 
 public class DialogsListFragment extends Fragment
     implements DialogsLoadingCallback,
         RecyclerViewAdapterErrorCallback,
-        DialogItemClickedCallback
+        DialogItemClickedCallback,
+        NewMessageReceivedCallback
 {
+    private DialogsViewModel m_dialogsViewModel = null;
+
     private DialogsLoaderBase m_loaderTask = null;
 
     private RecyclerView m_dialogsListRecyclerView = null;
@@ -50,9 +51,11 @@ public class DialogsListFragment extends Fragment
 
         if (!launchDialogsLoader()) return;
 
+        m_dialogsViewModel = new ViewModelProvider(this).get(DialogsViewModel.class);
+
         m_dialogChangeBroadcastReceiver = new DialogsBroadcastReceiver(this);
 
-        IntentFilter intentFilter =  new IntentFilter(DialogsBroadcastReceiver.C_NEW_MESSAGES_ADDED);
+        IntentFilter intentFilter =  new IntentFilter(DialogsBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
         intentFilter.addAction(DialogsBroadcastReceiver.C_UPDATES_RECEIVED);
 
@@ -119,6 +122,12 @@ public class DialogsListFragment extends Fragment
 
             return;
         }
+
+        Intent newMessagesIntent = new Intent(DialogBroadcastReceiver.C_NEW_MESSAGE_ADDED);
+
+        LocalBroadcastManager
+                .getInstance(getActivity().getApplicationContext())
+                .sendBroadcast(newMessagesIntent);
     }
 
     @Override
@@ -139,6 +148,8 @@ public class DialogsListFragment extends Fragment
 
     @Override
     public void onDialogItemClick(long peerId) {
+        m_dialogsViewModel.setCurrentChatId(peerId);
+
         Intent intent = new Intent(getActivity(), DialogActivity.class);
 
         intent.putExtra(DialogActivity.C_PEER_ID_EXTRA_PROP_NAME, peerId);
@@ -151,7 +162,7 @@ public class DialogsListFragment extends Fragment
 
         if (m_loaderTask == null) {
             ErrorBroadcastReceiver.broadcastError(
-                    new Error("", true),
+                    new Error("Dialogs loader hasn't been launched!", true),
                     getActivity().getApplicationContext()
             );
 
@@ -161,5 +172,27 @@ public class DialogsListFragment extends Fragment
         m_loaderTask.execute();
 
         return true;
+    }
+
+    @Override
+    public void onNewMessageReceived(long chatId) {
+        onDialogsLoaded();
+
+        if (m_dialogsViewModel.getCurrentChatId() != chatId)
+            return;
+
+        Intent newMessagesIntent = new Intent(DialogBroadcastReceiver.C_NEW_MESSAGE_ADDED);
+
+        LocalBroadcastManager
+                .getInstance(getActivity().getApplicationContext())
+                .sendBroadcast(newMessagesIntent);
+    }
+
+    @Override
+    public void onNewMessageReceivingError(Error error) {
+        ErrorBroadcastReceiver.broadcastError(
+                error,
+                getActivity().getApplicationContext()
+        );
     }
 }

@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.updateprocessor;
 
+import static com.mcdead.busycoder.socialcipher.dialoglist.DialogsBroadcastReceiver.C_NEW_MESSAGE_CHAT_ID_PROP_NAME;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Process;
@@ -7,6 +9,7 @@ import android.os.SystemClock;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.mcdead.busycoder.socialcipher.dialog.DialogBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
@@ -122,8 +125,11 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
         if (!DialogsStore.getInstance().addNewMessage(newMessage, updateItem.chatId))
             return new Error("New message processing error!", true);
 
-        Intent intent = new Intent(m_context.getApplicationContext(), DialogsBroadcastReceiver.class)
-                .setAction(DialogsBroadcastReceiver.C_NEW_MESSAGES_ADDED);
+        Intent intent
+                = new Intent(m_context.getApplicationContext(), DialogsBroadcastReceiver.class)
+                .setAction(DialogsBroadcastReceiver.C_NEW_MESSAGE_ADDED);
+
+        intent.putExtra(C_NEW_MESSAGE_CHAT_ID_PROP_NAME, updateItem.chatId);
 
         LocalBroadcastManager.getInstance(m_context).sendBroadcast(intent);
 

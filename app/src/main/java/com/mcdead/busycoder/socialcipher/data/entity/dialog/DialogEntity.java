@@ -29,10 +29,22 @@ public abstract class DialogEntity {
     }
 
     public MessageEntity getMessageByIndex(final int index) {
-        if (index >= m_messages.size())
-            return null;
+        synchronized (m_messages) {
+            if (index >= m_messages.size())
+                return null;
 
-        return m_messages.get(index);
+            return m_messages.get(index);
+        }
+    }
+
+    public MessageEntity getMessageById(final long id) {
+        synchronized (m_messages) {
+            for (final MessageEntity message : m_messages) {
+                if (message.getId() == id) return message;
+            }
+        }
+
+        return null;
     }
 
     public MessageEntity getLastMessage() {
@@ -71,23 +83,12 @@ public abstract class DialogEntity {
         return true;
     }
 
-//    public boolean addMessage(final MessageEntity message) {
-//        if (message == null) return false;
-//
-//        synchronized (m_messages) {
-//            m_messages.add(message);
-//        }
-//
-//        return true;
-//    }
-//
-//    public boolean removeMessage(final long messageId) {
-//        if (messageId == 0) return false;
-//
-//        synchronized (m_messages) {
-//            m_messages.remove(messageId);
-//        }
-//
-//        return true;
-//    }
+    public boolean areAttachmentsLoaded() {
+        for (final MessageEntity message : m_messages) {
+            if (!message.areAttachmentsLoaded())
+                return false;
+        }
+
+        return true;
+    }
 }

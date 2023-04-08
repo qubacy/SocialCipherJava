@@ -7,9 +7,9 @@ import android.content.Intent;
 public class DialogBroadcastReceiver extends BroadcastReceiver {
     public static final String C_NEW_MESSAGE_ADDED = "com.mcdead.busycoder.okapitry.dialog.DialogBroadcastReceiver.NEW_MESSAGE_ADDED";
 
-    private DialogLoadingCallback m_callback = null;
+    private DialogUpdatedCallback m_callback = null;
 
-    public DialogBroadcastReceiver(final DialogLoadingCallback callback) {
+    public DialogBroadcastReceiver(final DialogUpdatedCallback callback) {
         super();
 
         m_callback = callback;
@@ -25,6 +25,6 @@ public class DialogBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void processNewMessageAddedAction() {
-        m_callback.onDialogLoaded();
+        m_callback.onDialogUpdated();
     }
 }

@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.data;
 
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 
@@ -54,6 +55,29 @@ public class DialogsStore {
         synchronized (m_dialogs) {
             return m_dialogs.get(index);
         }
+    }
+
+    public boolean setMessageAttachments(
+            final List<AttachmentEntityBase> attachmentsList,
+            final long chatId,
+            final long messageId)
+    {
+        if (attachmentsList == null) return false;
+
+        synchronized (m_dialogs) {
+            DialogEntity dialog = getDialogByPeerId(chatId);
+
+            if (dialog == null) return false;
+
+            MessageEntity message = dialog.getMessageById(messageId);
+
+            if (message == null) return false;
+
+            if (!message.setAttachments(attachmentsList))
+                return false;
+        }
+
+        return true;
     }
 
     public boolean addNewMessage(

@@ -15,6 +15,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
 import com.mcdead.busycoder.socialcipher.data.UsersStore;
+import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderBase;
+import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderFactory;
+import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoadingCallback;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.R;
@@ -22,7 +25,7 @@ import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 
 public class DialogFragment extends Fragment
-    implements DialogLoadingCallback, RecyclerViewAdapterErrorCallback
+    implements DialogUpdatedCallback, DialogLoadingCallback, RecyclerViewAdapterErrorCallback
 {
     private long m_peerId = 0;
     private long m_localPeerId = 0;
@@ -49,6 +52,13 @@ public class DialogFragment extends Fragment
                 .getInstance(getContext().getApplicationContext())
                 .registerReceiver(m_broadcastReceiver,
                         new IntentFilter(DialogBroadcastReceiver.C_NEW_MESSAGE_ADDED));
+
+        Error error = initChat();
+
+        if (error != null) {
+            ErrorBroadcastReceiver.broadcastError(error,
+                    getActivity().getApplicationContext());
+        }
     }
 
     @Nullable
@@ -75,7 +85,7 @@ public class DialogFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
-        onDialogLoaded();
+        onDialogUpdated();
     }
 
     @Override
@@ -88,7 +98,7 @@ public class DialogFragment extends Fragment
     }
 
     @Override
-    public void onDialogLoaded() {
+    public void onDialogUpdated() {
         DialogEntity dialog = DialogsStore.getInstance().getDialogByPeerId(m_peerId);
 
         if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {
@@ -104,7 +114,7 @@ public class DialogFragment extends Fragment
     }
 
     @Override
-    public void onDialogLoadingError(Error error) {
+    public void onDialogUpdatingError(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
                 getContext().getApplicationContext()
@@ -117,5 +127,42 @@ public class DialogFragment extends Fragment
                 error,
                 getContext().getApplicationContext()
         );
+    }
+
+    @Override
+    public void onDialogLoaded() {
+        onDialogUpdated();
+    }
+
+    @Override
+    public void onDialogLoadingError(Error error) {
+        ErrorBroadcastReceiver.broadcastError(
+                error,
+                getContext().getApplicationContext()
+        );
+    }
+
+    private Error initChat() {
+        DialogsStore dialogsStore = DialogsStore.getInstance();
+
+        if (dialogsStore == null)
+            return new Error("Dialogs Store hasn't been initialized!", true);
+
+        DialogEntity dialog = dialogsStore.getDialogByPeerId(m_peerId);
+
+        if (dialog == null)
+            return new Error("Dialog hasn't been found!", true);
+
+        if (!dialog.areAttachmentsLoaded()) {
+            DialogLoaderBase dialogLoader
+                    = DialogLoaderFactory.generateDialogLoader(this, m_peerId);
+
+            if (dialogLoader == null)
+                return new Error("Dialog loader hasn't been initialized!", true);
+
+            dialogLoader.execute();
+        }
+
+        return null;
     }
 }

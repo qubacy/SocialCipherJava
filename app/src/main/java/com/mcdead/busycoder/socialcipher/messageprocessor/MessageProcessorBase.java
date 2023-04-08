@@ -4,6 +4,15 @@ import com.mcdead.busycoder.socialcipher.api.common.gson.dialog.ResponseMessageI
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
+import com.mcdead.busycoder.socialcipher.error.Error;
+
+/*
+*
+* MessageProcessor can be used as a dependent unit; so
+* it hasn't to have any proactive facilities (broadcasting
+* errors etc.);
+*
+*/
 
 public abstract class MessageProcessorBase {
     protected AttachmentTypeDefinerInterface m_attachmentTypeDefiner = null;
@@ -20,4 +29,6 @@ public abstract class MessageProcessorBase {
                                                          final long peerId);
     public abstract MessageEntity processReceivedUpdateMessage(final ResponseUpdateItemInterface update,
                                                                final long peerId);
+    public abstract Error processMessageAttachments(final MessageEntity message,
+                                                    final long charId);
 }

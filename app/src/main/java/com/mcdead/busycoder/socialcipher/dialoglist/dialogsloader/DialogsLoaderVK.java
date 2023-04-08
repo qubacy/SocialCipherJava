@@ -41,29 +41,6 @@ public class DialogsLoaderVK extends DialogsLoaderBase {
         super(token, dialogTypeDefiner, callback);
     }
 
-//    private Error loadUserData(final long userId) throws IOException {
-//        SystemClock.sleep(C_REQUEST_TIMEOUT);
-//
-//        Response<ResponseUserWrapper> userResponse = VKAPIStore.getVKAPIInstance().user(
-//                userId,
-//                m_token).execute();
-//
-//        if (!userResponse.isSuccessful())
-//            return new Error(VKAPIContext.C_REQUEST_FAILED_MESSAGE);
-//        if (userResponse.body().error != null)
-//            return new Error(userResponse.body().error.message);
-//
-//        String name = userResponse.body().response.get(0).firstName + ' '
-//                    + userResponse.body().response.get(0).lastName;
-//
-//        UserEntity user = new UserEntity(userId, name);
-//
-//        if (!UsersStore.getInstance().addUser(user))
-//            return new Error("User init. error!");
-//
-//        return null;
-//    }
-
     private Error initUserData(final List<ResponseDialogsItemUserProfile> usersData,
                                final List<ResponseDialogsItemGroup> groupsData)
     {

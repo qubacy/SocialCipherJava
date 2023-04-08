@@ -135,6 +135,9 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
 
             VKAttachmentType attachType = VKAttachmentType
                     .getTypeByString(attachmentsObj.get(attachTypePropName).getAsString());
+
+            if (attachType == null) continue;
+
             ResponseAttachmentBase attachment = null;
 
             switch (attachType) {
