@@ -14,6 +14,9 @@ public class UpdateProcessorFactory {
     {
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
+        if (settingsNetwork == null) return null;
+        if (settingsNetwork.getAPIType() == null) return null;
+
         switch (settingsNetwork.getAPIType()) {
             case VK: return new UpdateProcessorVK(settingsNetwork.getToken(), context, updateItemQueue);
         }
