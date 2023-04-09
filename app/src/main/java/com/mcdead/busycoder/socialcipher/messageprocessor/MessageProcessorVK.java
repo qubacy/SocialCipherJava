@@ -213,7 +213,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final ResponseAttachmentStored attachmentToDownload,
             final AttachmentType attachmentType)
     {
-        VKAPIInterface vkAPI = APIStore.getAPIInstance();
+        VKAPIInterface vkAPI = (VKAPIInterface) APIStore.getAPIInstance();
 
         if (vkAPI == null) return null;
 

@@ -48,12 +48,29 @@ public class MainActivity extends AppCompatActivity
 
         m_errorBroadcastReceiver = new ErrorBroadcastReceiver(this);
 
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(
+                        m_errorBroadcastReceiver,
+                        new IntentFilter(ErrorBroadcastReceiver.C_ERROR_RECEIVED));
+
         if (!SettingsManager.initializeSettings(getFilesDir().getAbsolutePath())) {
             Toast.makeText(this, "Settings loading error!", Toast.LENGTH_LONG)
                     .show();
+
+//            ErrorBroadcastReceiver.broadcastError(
+//                    new Error("Settings loading error!", true),
+//                    getApplicationContext());
+//
+//            return;
         }
 
-        APIStore.init();
+        Error apiError = APIStore.init();
+
+        if (apiError != null) {
+            ErrorBroadcastReceiver.broadcastError(apiError, getApplicationContext());
+
+            return;
+        }
 
         String token = SettingsNetwork.getInstance().getToken();
 
@@ -65,11 +82,6 @@ public class MainActivity extends AppCompatActivity
                 processSignIn();
             }
         });
-
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(
-                        m_errorBroadcastReceiver,
-                        new IntentFilter(ErrorBroadcastReceiver.C_ERROR_RECEIVED));
     }
 
     @Override
