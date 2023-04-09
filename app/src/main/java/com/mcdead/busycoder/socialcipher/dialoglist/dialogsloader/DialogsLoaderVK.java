@@ -26,6 +26,7 @@ import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntityConversation;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorVK;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -111,11 +112,16 @@ public class DialogsLoaderVK extends DialogsLoaderBase {
             Collections.reverse(messagesItems);
 
             for (final ResponseDialogItem messageItem : messagesItems) {
-                MessageEntity newMessage = messageProcessor.processReceivedMessage(
+                ObjectWrapper<MessageEntity> newMessageWrapper = new ObjectWrapper<>();
+                Error error = messageProcessor.processReceivedMessage(
                         messageItem,
-                        dialog.getDialogId());
+                        dialog.getDialogId(),
+                        newMessageWrapper);
 
-                if (!dialog.addMessage(newMessage))
+                if (error != null)
+                    return error;
+
+                if (!dialog.addMessage(newMessageWrapper.getValue()))
                     return new Error("Dialog message init. error!", true);
             }
         }

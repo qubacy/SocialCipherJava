@@ -5,6 +5,7 @@ import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateIt
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.error.Error;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 /*
 *
@@ -25,10 +26,12 @@ public abstract class MessageProcessorBase {
         m_token = token;
     }
 
-    public abstract MessageEntity processReceivedMessage(final ResponseMessageInterface message,
-                                                         final long peerId);
-    public abstract MessageEntity processReceivedUpdateMessage(final ResponseUpdateItemInterface update,
-                                                               final long peerId);
+    public abstract Error processReceivedMessage(final ResponseMessageInterface message,
+                                                         final long peerId,
+                                                         ObjectWrapper<MessageEntity> resultMessage);
+    public abstract Error processReceivedUpdateMessage(final ResponseUpdateItemInterface update,
+                                                               final long peerId,
+                                                               ObjectWrapper<MessageEntity> resultMessage);
     public abstract Error processMessageAttachments(final MessageEntity message,
                                                     final long charId);
 }

@@ -24,6 +24,7 @@ import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 import com.mcdead.busycoder.socialcipher.dialoglist.DialogsBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorVK;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -101,28 +102,29 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
         if (messageProcessor == null)
             return new Error("Message processor has not been initialized yet!", true);
 
-        MessageEntity newMessage = messageProcessor.processReceivedUpdateMessage(updateItem, updateItem.chatId);
+        ObjectWrapper<MessageEntity> newMessageWrapper = new ObjectWrapper<>();
+        Error error = messageProcessor.processReceivedUpdateMessage(
+                updateItem, updateItem.chatId, newMessageWrapper);
 
-        if (newMessage == null)
-            return new Error("Message processing error has been occurred!", true);
+        if (error != null) return error;
 
         DialogEntity dialogEntity = DialogsStore.getInstance().getDialogByPeerId(updateItem.chatId);
 
         if (dialogEntity == null) {
-            DialogType dialogType = m_dialogTypeDefiner.getDialogTypeByPeerId(newMessage.getFromPeerId());
+            DialogType dialogType = m_dialogTypeDefiner.getDialogTypeByPeerId(newMessageWrapper.getValue().getFromPeerId());
 
             if (dialogType == null)
                 return new Error("Unknown dialog type!", true);
 
             if (!DialogsStore.getInstance().addDialog(DialogGenerator.generateDialogByType(
-                    dialogType, newMessage.getFromPeerId()
+                    dialogType, newMessageWrapper.getValue().getFromPeerId()
             )))
             {
                 return new Error("New dialog addition error!", true);
             }
         }
 
-        if (!DialogsStore.getInstance().addNewMessage(newMessage, updateItem.chatId))
+        if (!DialogsStore.getInstance().addNewMessage(newMessageWrapper.getValue(), updateItem.chatId))
             return new Error("New message processing error!", true);
 
         Intent intent

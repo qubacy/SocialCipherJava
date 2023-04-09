@@ -52,14 +52,19 @@ public class MessageProcessorVK extends MessageProcessorBase {
     }
 
     @Override
-    public MessageEntity processReceivedMessage(ResponseMessageInterface message,
-                                                final long peerId)
+    public Error processReceivedMessage(
+            final ResponseMessageInterface message,
+            final long peerId,
+            ObjectWrapper<MessageEntity> resultMessage)
     {
-        if (message == null) return null;
-        if (peerId == 0) return null;
+        if (message == null)
+            return new Error("Update hasn't been initialized!", true);
+        if (peerId == 0)
+            return new Error("Invalid Peer Id has been provided!", true);
+        if (resultMessage == null)
+            return new Error("Result Message Wrapper hasn't been initialized!", true);
 
         ResponseDialogItem messageVK = (ResponseDialogItem) message;
-        //List<AttachmentEntityBase> attachmentList = processReceivedAttachments(messageVK.attachments);
         List<ResponseAttachmentInterface> attachmentsToLoadList =
                 (messageVK.attachments == null
                 ? null
@@ -72,18 +77,25 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 messageVK.timestamp,
                 attachmentsToLoadList);
 
-        return messageEntity;
+        resultMessage.setValue(messageEntity);
+
+        return null;
     }
 
     @Override
-    public MessageEntity processReceivedUpdateMessage(ResponseUpdateItemInterface update,
-                                                      final long peerId)
+    public Error processReceivedUpdateMessage(
+            final ResponseUpdateItemInterface update,
+            final long peerId,
+            ObjectWrapper<MessageEntity> resultMessage)
     {
-        if (update == null) return null;
-        if (peerId == 0) return null;
+        if (update == null)
+            return new Error("Update hasn't been initialized!", true);
+        if (peerId == 0)
+            return new Error("Invalid Peer Id has been provided!", true);
+        if (resultMessage == null)
+            return new Error("Result Message Wrapper hasn't been initialized!", true);
 
         ResponseUpdateItem updateVK = (ResponseUpdateItem) update;
-        //List<AttachmentEntityBase> attachmentList = processReceivedAttachments(updateVK.attachments);
         List<ResponseAttachmentInterface> attachmentsToLoadList =
                 (updateVK.attachments == null
                         ? null
@@ -96,7 +108,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 updateVK.timestamp,
                 attachmentsToLoadList);
 
-        return messageEntity;
+        resultMessage.setValue(messageEntity);
+
+        return null;
     }
 
     @Override
@@ -105,7 +119,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final long charId)
     {
         if (message == null)
-            return new Error("Message wasn't initialized!", true);
+            return new Error("Message hasn't been initialized!", true);
         if (message.getAttachmentToLoad() == null)
             return null;
 
@@ -132,11 +146,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 "Setting attachments to message process went wrong!",
                 true);
 
-//        if (!message.setAttachments(loadedAttachments))
-//            return new Error(
-//                    "Setting attachments to message process went wrong!",
-//                    true);
-
         return null;
     }
 
@@ -152,7 +161,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         AttachmentTypeDefinerVK attachmentTypeDefiner = (AttachmentTypeDefinerVK) AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
 
         if (attachmentTypeDefiner == null)
-            return new Error("AttachmentTypeDefiner wasn't initialized!", true);
+            return new Error("AttachmentTypeDefiner hasn't been initialized!", true);
 
         AttachmentEntityBase attachmentEntity = loadAttachment(attachmentVK);
 
@@ -170,39 +179,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
         attachmentEntityWrapper.setValue(attachmentEntity);
 
         return null;
-    }
-
-    private List<AttachmentEntityBase> processReceivedAttachments(List<ResponseAttachmentBase> attachments)
-    {
-        if (attachments == null) return null;
-
-        AttachmentTypeDefinerVK attachmentTypeDefiner = (AttachmentTypeDefinerVK) AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
-
-        if (attachmentTypeDefiner == null) return null;
-
-        List<AttachmentEntityBase> attachmentEntityList = new ArrayList<>();
-
-        for (final ResponseAttachmentBase attachment : attachments) {
-            AttachmentEntityBase attachmentEntity = loadAttachment(attachment);
-
-            if (attachmentEntity != null) {
-                attachmentEntityList.add(attachmentEntity);
-
-                continue;
-            }
-
-            attachmentEntity = downloadAttachment(attachment);
-
-            if (attachmentEntity == null) {
-                // todo: process downloading error..
-
-                continue;
-            }
-
-            attachmentEntityList.add(attachmentEntity);
-        }
-
-        return attachmentEntityList;
     }
 
     private AttachmentEntityBase loadAttachment(
