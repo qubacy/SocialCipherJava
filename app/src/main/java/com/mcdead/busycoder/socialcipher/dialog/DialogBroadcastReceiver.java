@@ -25,6 +25,6 @@ public class DialogBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void processNewMessageAddedAction() {
-        m_callback.onDialogUpdated();
+        m_callback.onNewDialogMessageReceived();
     }
 }

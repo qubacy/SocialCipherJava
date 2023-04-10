@@ -122,12 +122,6 @@ public class DialogsListFragment extends Fragment
 
             return;
         }
-
-        Intent newMessagesIntent = new Intent(DialogBroadcastReceiver.C_NEW_MESSAGE_ADDED);
-
-        LocalBroadcastManager
-                .getInstance(getActivity().getApplicationContext())
-                .sendBroadcast(newMessagesIntent);
     }
 
     @Override

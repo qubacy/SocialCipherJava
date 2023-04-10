@@ -18,23 +18,38 @@ import java.util.List;
 public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHolder> {
     private LayoutInflater m_inflater = null;
     private RecyclerViewAdapterErrorCallback m_errorCallback = null;
+    private AttachmentExternalLinkClickedCallback m_attachmentLinkCallback = null;
     private long m_localPeerId = 0;
 
     private List<MessageEntity> m_messages = null;
 
     public MessageListAdapter(Activity activity,
                               RecyclerViewAdapterErrorCallback errorCallback,
+                              AttachmentExternalLinkClickedCallback attachmentLinkCallback,
                               final long localPeerId)
     {
         m_inflater = activity.getLayoutInflater();
         m_errorCallback = errorCallback;
+        m_attachmentLinkCallback = attachmentLinkCallback;
         m_localPeerId = localPeerId;
     }
 
-    public boolean setMessagesList(List<MessageEntity> messages) {
+    public boolean setMessagesList(final List<MessageEntity> messages) {
         if (messages == null) return false;
 
         m_messages = messages;
+
+        notifyDataSetChanged();
+
+        return true;
+    }
+
+    public boolean addNewMessage(final MessageEntity message) {
+        if (message == null) return false;
+
+        m_messages.add(message);
+
+        notifyItemInserted(m_messages.size() - 1);
 
         return true;
     }
@@ -46,7 +61,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     {
         View view = m_inflater.inflate(R.layout.message_view_holder, parent, false);
 
-        return new MessageListViewHolder(view);
+        return new MessageListViewHolder(view, m_attachmentLinkCallback);
     }
 
     @Override

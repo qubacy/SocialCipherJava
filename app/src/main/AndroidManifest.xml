@@ -40,6 +40,16 @@
         <service
             android:name="com.mcdead.busycoder.socialcipher.updateprocessor.UpdateProcessorService"
             android:configChanges="keyboardHidden|orientation"/>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
     </application>
 
 </manifest>

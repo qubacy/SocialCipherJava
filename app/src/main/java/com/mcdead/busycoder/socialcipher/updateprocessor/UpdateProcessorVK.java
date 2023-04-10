@@ -127,6 +127,11 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
         if (!DialogsStore.getInstance().addNewMessage(newMessageWrapper.getValue(), updateItem.chatId))
             return new Error("New message processing error!", true);
 
+        Error attachmentsError = messageProcessor.processMessageAttachments(
+                newMessageWrapper.getValue(), updateItem.chatId);
+
+        if (attachmentsError != null) return attachmentsError;
+
         Intent intent
                 = new Intent(m_context.getApplicationContext(), DialogsBroadcastReceiver.class)
                 .setAction(DialogsBroadcastReceiver.C_NEW_MESSAGE_ADDED);

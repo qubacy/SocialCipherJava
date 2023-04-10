@@ -1,10 +1,12 @@
 package com.mcdead.busycoder.socialcipher.dialog;
 
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,6 +17,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
 import com.mcdead.busycoder.socialcipher.data.UsersStore;
+import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
+import com.mcdead.busycoder.socialcipher.dialog.dialogfile.LinkedFileOpener;
+import com.mcdead.busycoder.socialcipher.dialog.dialogfile.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderBase;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderFactory;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoadingCallback;
@@ -24,8 +29,15 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 
+import java.util.List;
+
 public class DialogFragment extends Fragment
-    implements DialogUpdatedCallback, DialogLoadingCallback, RecyclerViewAdapterErrorCallback
+    implements
+        DialogUpdatedCallback,
+        DialogLoadingCallback,
+        RecyclerViewAdapterErrorCallback,
+        AttachmentExternalLinkClickedCallback,
+        LinkedFileOpenerCallback
 {
     private long m_peerId = 0;
     private long m_localPeerId = 0;
@@ -70,7 +82,11 @@ public class DialogFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_dialog, container, false);
 
         m_messagesList = view.findViewById(R.id.messages_list);
-        m_messagesAdapter = new MessageListAdapter(getActivity(), this, m_localPeerId);
+        m_messagesAdapter = new MessageListAdapter(
+                getActivity(),
+                this,
+                this,
+                m_localPeerId);
 
         m_messagesList.setAdapter(m_messagesAdapter);
         m_messagesList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -85,7 +101,7 @@ public class DialogFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
-        onDialogUpdated();
+        onDialogLoaded();
     }
 
     @Override
@@ -98,10 +114,11 @@ public class DialogFragment extends Fragment
     }
 
     @Override
-    public void onDialogUpdated() {
+    public void onNewDialogMessageReceived() {
         DialogEntity dialog = DialogsStore.getInstance().getDialogByPeerId(m_peerId);
+        List<MessageEntity> messageList = dialog.getMessages();
 
-        if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {
+        if (!m_messagesAdapter.addNewMessage(messageList.get(messageList.size() - 1))) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Dialog doesn't exist!", true),
                     getContext().getApplicationContext()
@@ -110,7 +127,7 @@ public class DialogFragment extends Fragment
             return;
         }
 
-        m_messagesList.scrollToPosition(dialog.getMessages().size() - 1);
+        m_messagesList.scrollToPosition(m_messagesAdapter.getItemCount() - 1);
     }
 
     @Override
@@ -131,7 +148,18 @@ public class DialogFragment extends Fragment
 
     @Override
     public void onDialogLoaded() {
-        onDialogUpdated();
+        DialogEntity dialog = DialogsStore.getInstance().getDialogByPeerId(m_peerId);
+
+        if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Dialog doesn't exist!", true),
+                    getContext().getApplicationContext()
+            );
+
+            return;
+        }
+
+        m_messagesList.scrollToPosition(dialog.getMessages().size() - 1);
     }
 
     @Override
@@ -164,5 +192,26 @@ public class DialogFragment extends Fragment
         }
 
         return null;
+    }
+
+    @Override
+    public void onLinkClicked(Uri uri) {
+        if (uri.getPath().isEmpty()) return;
+
+        (new LinkedFileOpener(uri, getActivity(), this)).execute();
+    }
+
+    @Override
+    public void onFileOpeningFail(final Uri fileUri) {
+        Toast.makeText(
+                getActivity(),
+                "File is available here: " + fileUri.getPath(),
+                Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onFileOpeningError(Error error) {
+        ErrorBroadcastReceiver
+                .broadcastError(error, getActivity());
     }
 }

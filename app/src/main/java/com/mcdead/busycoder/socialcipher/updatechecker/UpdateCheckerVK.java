@@ -131,7 +131,6 @@ public class UpdateCheckerVK extends UpdateCheckerBase {
 
                 if (!updateBodyWrapper.getValue().updates.isEmpty())
                     sendUpdateReceivedBroadcast(updateBodyWrapper.getValue().updates);
-                    //m_receiver.onUpdatesReceived(updateBodyWrapper.getValue().updates);
 
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -154,13 +153,6 @@ public class UpdateCheckerVK extends UpdateCheckerBase {
 
     private void sendErrorBroadcast(final Error error) {
         ErrorBroadcastReceiver.broadcastError(error, m_context.getApplicationContext());
-//
-//        Intent intent = new Intent(m_context.getApplicationContext(), ErrorBroadcastReceiver.class)
-//                .setAction(ErrorBroadcastReceiver.C_ERROR_RECEIVED);
-//
-//        intent.putExtra(ErrorBroadcastReceiver.C_ERROR_EXTRA_PROP_NAME, error);
-//
-//        LocalBroadcastManager.getInstance(m_context).sendBroadcast(intent);
     }
 
     private Error getResponseUpdateBody(final okhttp3.Response response,

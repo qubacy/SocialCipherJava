@@ -61,10 +61,6 @@ public class DialogListAdapter extends RecyclerView.Adapter<DialogListViewHolder
 
         DialogEntity dialog = m_dialogs.get(position);
 
-//        DialogEntity dialog = DialogsStore.getInstance().getDialogByIndex(position);
-//
-//        if (dialog == null) return;
-
         if (!holder.setDialogData(dialog)) {
             m_errorCallback.onRecyclerViewAdapterErrorOccurred(
                     new Error("View Holder setting error has been occurred!", true)
@@ -93,7 +89,6 @@ public class DialogListAdapter extends RecyclerView.Adapter<DialogListViewHolder
 
     @Override
     public int getItemCount() {
-        //return DialogsStore.getInstance().getDialogs().size();
         return (m_dialogs == null ? 0 : m_dialogs.size());
     }
 }

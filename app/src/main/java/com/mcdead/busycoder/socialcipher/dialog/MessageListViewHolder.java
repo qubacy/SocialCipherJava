@@ -1,11 +1,8 @@
 package com.mcdead.busycoder.socialcipher.dialog;
 
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -17,8 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityDoc;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityImage;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 
 import java.time.LocalDateTime;
@@ -33,13 +30,20 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     private TextView m_timestamp = null;
     //private RecyclerView m_attachments = null;
 
-    public MessageListViewHolder(@NonNull View itemView) {
+    private AttachmentExternalLinkClickedCallback m_linkCallback = null;
+
+    public MessageListViewHolder(
+            @NonNull View itemView,
+            AttachmentExternalLinkClickedCallback linkCallback)
+    {
         super(itemView);
 
         m_itemWrapper = itemView.findViewById(R.id.message_view_holder_message_wrapper);
         m_text = itemView.findViewById(R.id.message_view_holder_message_text);
         m_attachmentPreview = itemView.findViewById(R.id.message_view_holder_attachment_preview);
         m_timestamp = itemView.findViewById(R.id.message_view_holder_timestamp);
+
+        m_linkCallback = linkCallback;
     }
 
     public boolean setMessageData(
@@ -110,7 +114,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         View attachmentPreview = null;
 
         switch (attachmentToPreview.getType()) {
-            case DOC: break;
+            case DOC: attachmentPreview = setMessageAttachmentDataDoc((AttachmentEntityDoc) attachmentToPreview); break;
             case IMAGE: attachmentPreview = setMessageAttachmentDataImage((AttachmentEntityImage) attachmentToPreview); break;
         }
 
@@ -134,6 +138,27 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         ImageView attachmentImageView = new ImageView(m_attachmentPreview.getContext());
 
         attachmentImageView.setImageURI(Uri.parse(attachmentImage.getURI().toString()));
+
+        return attachmentImageView;
+    }
+
+    private View setMessageAttachmentDataDoc(
+            final AttachmentEntityDoc attachmentDoc)
+    {
+        Drawable fileIcon = m_attachmentPreview.getContext().getDrawable(R.drawable.ic_file_24);
+
+        if (fileIcon == null) return null;
+
+        ImageView attachmentImageView = new ImageView(m_attachmentPreview.getContext());
+        Uri docUri = Uri.parse(attachmentDoc.getURI().toString());
+
+        attachmentImageView.setImageDrawable(fileIcon);
+        attachmentImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                m_linkCallback.onLinkClicked(docUri);
+            }
+        });
 
         return attachmentImageView;
     }
