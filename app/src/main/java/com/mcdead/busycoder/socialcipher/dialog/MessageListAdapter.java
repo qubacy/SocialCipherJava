@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
-import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.error.Error;
 
@@ -17,20 +16,17 @@ import java.util.List;
 
 public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHolder> {
     private LayoutInflater m_inflater = null;
-    private RecyclerViewAdapterErrorCallback m_errorCallback = null;
-    private AttachmentExternalLinkClickedCallback m_attachmentLinkCallback = null;
+    private MessageListAdapterCallback m_callback = null;
     private long m_localPeerId = 0;
 
     private List<MessageEntity> m_messages = null;
 
     public MessageListAdapter(Activity activity,
-                              RecyclerViewAdapterErrorCallback errorCallback,
-                              AttachmentExternalLinkClickedCallback attachmentLinkCallback,
+                              MessageListAdapterCallback callback,
                               final long localPeerId)
     {
         m_inflater = activity.getLayoutInflater();
-        m_errorCallback = errorCallback;
-        m_attachmentLinkCallback = attachmentLinkCallback;
+        m_callback = callback;
         m_localPeerId = localPeerId;
     }
 
@@ -61,7 +57,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     {
         View view = m_inflater.inflate(R.layout.message_view_holder, parent, false);
 
-        return new MessageListViewHolder(view, m_attachmentLinkCallback);
+        return new MessageListViewHolder(view, m_callback);
     }
 
     @Override
@@ -73,7 +69,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         MessageEntity message = m_messages.get(position);
 
         if (!holder.setMessageData(message, m_localPeerId)) {
-            m_errorCallback.onRecyclerViewAdapterErrorOccurred(
+            m_callback.onErrorOccurred(
                     new Error("View Holder setting error has been occurred!", true)
             );
 

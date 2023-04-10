@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.dialog;
 
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,11 +16,13 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
+import com.mcdead.busycoder.socialcipher.attachmentdoc.AttachmentDocUtility;
+import com.mcdead.busycoder.socialcipher.attachmentshower.AttachmentShowerActivity;
 import com.mcdead.busycoder.socialcipher.data.UsersStore;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
-import com.mcdead.busycoder.socialcipher.dialog.dialogfile.LinkedFileOpener;
-import com.mcdead.busycoder.socialcipher.dialog.dialogfile.LinkedFileOpenerCallback;
+import com.mcdead.busycoder.socialcipher.attachmentdoc.LinkedFileOpener;
+import com.mcdead.busycoder.socialcipher.attachmentdoc.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderBase;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderFactory;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoadingCallback;
@@ -29,14 +32,15 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 
+import java.io.Serializable;
 import java.util.List;
 
 public class DialogFragment extends Fragment
     implements
         DialogUpdatedCallback,
         DialogLoadingCallback,
-        RecyclerViewAdapterErrorCallback,
-        AttachmentExternalLinkClickedCallback,
+        MessageListAdapterCallback,
+        MessageListItemCallback,
         LinkedFileOpenerCallback
 {
     private long m_peerId = 0;
@@ -85,7 +89,6 @@ public class DialogFragment extends Fragment
         m_messagesAdapter = new MessageListAdapter(
                 getActivity(),
                 this,
-                this,
                 m_localPeerId);
 
         m_messagesList.setAdapter(m_messagesAdapter);
@@ -131,7 +134,7 @@ public class DialogFragment extends Fragment
     }
 
     @Override
-    public void onDialogUpdatingError(Error error) {
+    public void onDialogUpdatingError(final Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
                 getContext().getApplicationContext()
@@ -139,11 +142,46 @@ public class DialogFragment extends Fragment
     }
 
     @Override
-    public void onRecyclerViewAdapterErrorOccurred(Error error) {
+    public void onErrorOccurred(final Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
                 getContext().getApplicationContext()
         );
+    }
+
+    @Override
+    public void onAttachmentsShowClicked(final MessageEntity message) {
+        if (message == null) {
+            ErrorBroadcastReceiver
+                    .broadcastError(
+                            new Error("Message Data hasn't been provided!", true),
+                            getActivity().getApplicationContext()
+                    );
+
+            return;
+        }
+
+        List<AttachmentEntityBase> messageAttachments = message.getAttachments();
+
+        if (messageAttachments == null) return;
+
+        showAttachmentsShower(messageAttachments);
+    }
+
+    private void showAttachmentsShower(
+            final List<AttachmentEntityBase> messageAttachments)
+    {
+        Intent intent = new Intent(
+                getActivity().getApplicationContext(),
+                AttachmentShowerActivity.class);
+        Bundle args = new Bundle();
+
+        args.putSerializable(
+                AttachmentShowerActivity.C_ATTACHMENT_LIST_PROP_NAME,
+                (Serializable) messageAttachments);
+        intent.putExtra(AttachmentShowerActivity.C_ATTACHMENT_LIST_WRAPPER_PROP_NAME, args);
+
+        startActivity(intent);
     }
 
     @Override
@@ -194,19 +232,16 @@ public class DialogFragment extends Fragment
         return null;
     }
 
-    @Override
-    public void onLinkClicked(Uri uri) {
-        if (uri.getPath().isEmpty()) return;
-
-        (new LinkedFileOpener(uri, getActivity(), this)).execute();
-    }
+//    @Override
+//    public void onLinkedAttachmentClicked(Uri uri) {
+//        if (uri.getPath().isEmpty()) return;
+//
+//        (new LinkedFileOpener(uri, getActivity(), this)).execute();
+//    }
 
     @Override
     public void onFileOpeningFail(final Uri fileUri) {
-        Toast.makeText(
-                getActivity(),
-                "File is available here: " + fileUri.getPath(),
-                Toast.LENGTH_LONG).show();
+        AttachmentDocUtility.showFileShowingFailedToast(getActivity(), fileUri);
     }
 
     @Override

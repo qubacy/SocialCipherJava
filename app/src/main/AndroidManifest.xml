@@ -25,6 +25,9 @@
             android:name="com.mcdead.busycoder.socialcipher.dialog.DialogActivity"
             android:exported="false"/>
         <activity
+            android:name="com.mcdead.busycoder.socialcipher.attachmentshower.AttachmentShowerActivity"
+            android:exported="false"/>
+        <activity
             android:name="com.mcdead.busycoder.socialcipher.MainActivity"
             android:exported="true">
             <intent-filter>

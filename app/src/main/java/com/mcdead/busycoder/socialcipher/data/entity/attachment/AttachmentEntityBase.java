@@ -2,9 +2,10 @@ package com.mcdead.busycoder.socialcipher.data.entity.attachment;
 
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
 
+import java.io.Serializable;
 import java.net.URI;
 
-public abstract class AttachmentEntityBase {
+public abstract class AttachmentEntityBase implements Serializable {
     private String m_id = null;
     private URI m_uri = null;
 

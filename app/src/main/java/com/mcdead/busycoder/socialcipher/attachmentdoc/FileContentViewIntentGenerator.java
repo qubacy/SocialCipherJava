@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.dialog.dialogfile;
+package com.mcdead.busycoder.socialcipher.attachmentdoc;
 
 import android.content.Intent;
 import android.net.Uri;

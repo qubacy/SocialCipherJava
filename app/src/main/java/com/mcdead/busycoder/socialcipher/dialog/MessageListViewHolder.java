@@ -30,11 +30,11 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     private TextView m_timestamp = null;
     //private RecyclerView m_attachments = null;
 
-    private AttachmentExternalLinkClickedCallback m_linkCallback = null;
+    private MessageListItemCallback m_callback = null;
 
     public MessageListViewHolder(
             @NonNull View itemView,
-            AttachmentExternalLinkClickedCallback linkCallback)
+            MessageListItemCallback callback)
     {
         super(itemView);
 
@@ -43,7 +43,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         m_attachmentPreview = itemView.findViewById(R.id.message_view_holder_attachment_preview);
         m_timestamp = itemView.findViewById(R.id.message_view_holder_timestamp);
 
-        m_linkCallback = linkCallback;
+        m_callback = callback;
     }
 
     public boolean setMessageData(
@@ -121,12 +121,27 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         if (attachmentPreview == null)
             return true;
 
+        attachmentPreview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                m_callback.onAttachmentsShowClicked(message);
+            }
+        });
+
         attachmentPreviewFrame.addView(attachmentPreview);
         m_attachmentPreview.setVisibility(View.VISIBLE);
 
-        if (attachments.size() > 1)
+        if (attachments.size() > 1) {
             attachmentsExpandButton.setVisibility(View.VISIBLE);
-        else
+
+            attachmentsExpandButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    m_callback.onAttachmentsShowClicked(message);
+                }
+            });
+
+        } else
             attachmentsExpandButton.setVisibility(View.GONE);
 
         return true;
@@ -153,12 +168,15 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         Uri docUri = Uri.parse(attachmentDoc.getURI().toString());
 
         attachmentImageView.setImageDrawable(fileIcon);
-        attachmentImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                m_linkCallback.onLinkClicked(docUri);
-            }
-        });
+
+//        // todo: think of this kind of handlers' competition:
+//
+//        attachmentImageView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                m_callback.onLinkedAttachmentClicked(docUri);
+//            }
+//        });
 
         return attachmentImageView;
     }
