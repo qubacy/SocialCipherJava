@@ -17,9 +17,14 @@ import com.mcdead.busycoder.socialcipher.R;
 
 public class ErrorDialogFragment extends Fragment {
     private Error m_error = null;
+    private ErrorFragmentCallback m_callback = null;
 
-    public ErrorDialogFragment(final Error error) {
+    public ErrorDialogFragment(
+            final Error error,
+            ErrorFragmentCallback callback)
+    {
         m_error = error;
+        m_callback = callback;
     }
 
     @Override
@@ -61,14 +66,7 @@ public class ErrorDialogFragment extends Fragment {
     }
 
     private void onButtonClicked() {
-        if (getActivity() == null) return;
-
-        Intent intent = new Intent(getContext().getApplicationContext(), MainActivity.class);
-
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra(MainActivity.C_IS_CLOSING_EXTRA_PROP_NAME, true);
-
-        getActivity().startActivity(intent);
+        m_callback.onErrorClosed();
 
 //        if (m_error.isCritical())
 //            System.exit(-1);

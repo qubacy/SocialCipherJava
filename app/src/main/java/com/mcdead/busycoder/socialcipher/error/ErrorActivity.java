@@ -1,13 +1,17 @@
 package com.mcdead.busycoder.socialcipher.error;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.mcdead.busycoder.socialcipher.MainActivity;
 import com.mcdead.busycoder.socialcipher.R;
 
-public class ErrorActivity extends AppCompatActivity {
+public class ErrorActivity extends AppCompatActivity
+    implements ErrorFragmentCallback
+{
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,8 +30,25 @@ public class ErrorActivity extends AppCompatActivity {
         if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, new ErrorDialogFragment(error))
+                    .add(android.R.id.content, new ErrorDialogFragment(error, this))
                     .commit();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        onErrorClosed();
+    }
+
+    @Override
+    public void onErrorClosed() {
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(MainActivity.C_IS_CLOSING_EXTRA_PROP_NAME, true);
+
+        startActivity(intent);
     }
 }
