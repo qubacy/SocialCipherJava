@@ -36,12 +36,18 @@ public class DialogListViewHolder extends ViewHolder {
         MessageEntity lastMessage = dialog.getLastMessage();
 
         if (lastMessage != null)
-            m_lastMessageTextView.setText(lastMessage.getMessage());
+            setChatLastMessage(lastMessage);
 
         return true;
     }
 
     public void setItemClickedListener(View.OnClickListener listener) {
         m_itemView.setOnClickListener(listener);
+    }
+
+    private void setChatLastMessage(final MessageEntity lastMessage) {
+        String messageText = lastMessage.getMessage();
+
+        m_lastMessageTextView.setText(messageText);
     }
 }
