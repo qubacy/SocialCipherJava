@@ -27,6 +27,7 @@ import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
+import com.mcdead.busycoder.socialcipher.loadingscreen.LoadingPopUpWindow;
 
 import java.util.List;
 
@@ -36,6 +37,8 @@ public class DialogsListFragment extends Fragment
         DialogItemClickedCallback,
         NewMessageReceivedCallback
 {
+    private DialogsListFragmentCallback m_callback = null;
+
     private DialogsViewModel m_dialogsViewModel = null;
 
     private DialogsLoaderBase m_loaderTask = null;
@@ -44,6 +47,12 @@ public class DialogsListFragment extends Fragment
     private DialogListAdapter m_dialogsListAdapter = null;
 
     private DialogsBroadcastReceiver m_dialogChangeBroadcastReceiver = null;
+
+    public DialogsListFragment(
+            DialogsListFragmentCallback callback)
+    {
+        m_callback = callback;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -112,6 +121,8 @@ public class DialogsListFragment extends Fragment
 
     @Override
     public void onDialogsLoaded() {
+        m_callback.onDialogsLoaded();
+
         List<DialogEntity> dialogs = DialogsStore.getInstance().getDialogs();
 
         if (!m_dialogsListAdapter.setDialogsList(dialogs)) {

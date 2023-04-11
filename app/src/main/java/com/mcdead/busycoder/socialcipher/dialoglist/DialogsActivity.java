@@ -9,11 +9,15 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.mcdead.busycoder.socialcipher.loadingscreen.LoadingPopUpWindow;
 import com.mcdead.busycoder.socialcipher.updateprocessor.UpdateProcessorService;
 import com.mcdead.busycoder.socialcipher.R;
 
 public class DialogsActivity extends AppCompatActivity
+    implements DialogsListFragmentCallback
 {
+    private LoadingPopUpWindow m_loadingPopUpWindow = null;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +33,7 @@ public class DialogsActivity extends AppCompatActivity
         if (getSupportFragmentManager().findFragmentById(R.id.dialogs_list_fragment_frame) == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.dialogs_list_fragment_frame, new DialogsListFragment())
+                    .add(R.id.dialogs_list_fragment_frame, new DialogsListFragment(this))
                     .commit();
         }
     }
@@ -43,5 +47,29 @@ public class DialogsActivity extends AppCompatActivity
         intent.putExtra(C_OPERATION_ID_PROP_NAME, UpdateProcessorService.OperationType.START_UPDATE_CHECKER.getId());
 
         startService(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        m_loadingPopUpWindow
+                = LoadingPopUpWindow.generatePopUpWindow(this, getLayoutInflater());
+
+        if (m_loadingPopUpWindow == null) return;
+
+        m_loadingPopUpWindow.show(findViewById(android.R.id.content).getRootView());
+    }
+
+    @Override
+    public void onDialogsLoaded() {
+        if (m_loadingPopUpWindow == null) return;
+
+        m_loadingPopUpWindow.dismiss();
     }
 }

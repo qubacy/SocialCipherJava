@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.dialog;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -31,6 +32,7 @@ import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
+import com.mcdead.busycoder.socialcipher.loadingscreen.LoadingPopUpWindow;
 
 import java.io.Serializable;
 import java.util.List;
@@ -43,6 +45,8 @@ public class DialogFragment extends Fragment
         MessageListItemCallback,
         LinkedFileOpenerCallback
 {
+    private DialogFragmentCallback m_callback = null;
+
     private long m_peerId = 0;
     private long m_localPeerId = 0;
 
@@ -51,11 +55,15 @@ public class DialogFragment extends Fragment
     private RecyclerView m_messagesList = null;
     private MessageListAdapter m_messagesAdapter = null;
 
-    public DialogFragment(final long peerId) {
+    public DialogFragment(
+            final long peerId,
+            DialogFragmentCallback callback)
+    {
         super();
 
         m_peerId = peerId;
         m_localPeerId = UsersStore.getInstance().getLocalUser().getPeerId();
+        m_callback = callback;
     }
 
     @Override
@@ -104,7 +112,7 @@ public class DialogFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
-        onDialogLoaded();
+        //onDialogLoaded();
     }
 
     @Override
@@ -186,6 +194,8 @@ public class DialogFragment extends Fragment
 
     @Override
     public void onDialogLoaded() {
+        m_callback.onDialogLoaded();
+
         DialogEntity dialog = DialogsStore.getInstance().getDialogByPeerId(m_peerId);
 
         if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {

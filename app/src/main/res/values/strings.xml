@@ -7,4 +7,5 @@
 
     <string name="chat_list_action_bar_title">My Chats</string>
     <string name="attachment_shower_action_bar_title">Message Attachments</string>
+    <string name="loading_screen_caption">Stay Tuned</string>
 </resources>

@@ -13,12 +13,18 @@ import com.mcdead.busycoder.socialcipher.data.entity.DialogTitleExtractor;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.loadingscreen.LoadingPopUpWindow;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
-public class DialogActivity extends AppCompatActivity {
+public class DialogActivity extends AppCompatActivity
+    implements DialogFragmentCallback
+{
     public static final String C_PEER_ID_EXTRA_PROP_NAME = "peerId";
 
     public static final String C_DEFAULT_CHAT_NAME = "My Chat";
+
+    private LoadingPopUpWindow m_loadingPopUpWindow = null;
+    private boolean m_isDialogLoaded = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,7 +56,7 @@ public class DialogActivity extends AppCompatActivity {
         if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, new DialogFragment(peerIdWrapper.getValue()))
+                    .add(android.R.id.content, new DialogFragment(peerIdWrapper.getValue(), this))
                     .commit();
         }
     }
@@ -98,5 +104,28 @@ public class DialogActivity extends AppCompatActivity {
             chatTitleWrapper.setValue(title);
 
         return null;
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        if (m_isDialogLoaded) return;
+
+        m_loadingPopUpWindow
+                = LoadingPopUpWindow.generatePopUpWindow(this, getLayoutInflater());
+
+        if (m_loadingPopUpWindow == null) return;
+
+        m_loadingPopUpWindow.show(findViewById(android.R.id.content).getRootView());
+    }
+
+    @Override
+    public void onDialogLoaded() {
+        m_isDialogLoaded = true;
+
+        if (m_loadingPopUpWindow == null) return;
+
+        m_loadingPopUpWindow.dismiss();
     }
 }
