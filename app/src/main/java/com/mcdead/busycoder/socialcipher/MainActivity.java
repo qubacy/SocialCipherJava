@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -35,6 +36,10 @@ public class MainActivity extends AppCompatActivity
     implements TokenCheckResultInterface, ErrorReceivedInterface
 {
     public static final String C_IS_CLOSING_EXTRA_PROP_NAME = "isClosing";
+    public static final String C_IS_SIGNED_IN_PROP_NAME = "isSignedIn";
+
+    private boolean m_isClosing = false;
+    private boolean m_isSignedIn = false;
 
     private ErrorBroadcastReceiver m_errorBroadcastReceiver = null;
 
@@ -42,9 +47,17 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (getIntent() != null) {
+            m_isClosing = getIntent().getBooleanExtra(C_IS_CLOSING_EXTRA_PROP_NAME, false);
+            m_isSignedIn = getIntent().getBooleanExtra(C_IS_SIGNED_IN_PROP_NAME, false);
+        }
+
         checkIsClosing();
 
         setContentView(R.layout.activity_main);
+
+        if (getSupportActionBar() != null)
+            getSupportActionBar().hide();
 
         m_errorBroadcastReceiver = new ErrorBroadcastReceiver(this);
 
@@ -53,30 +66,19 @@ public class MainActivity extends AppCompatActivity
                         m_errorBroadcastReceiver,
                         new IntentFilter(ErrorBroadcastReceiver.C_ERROR_RECEIVED));
 
-        if (!SettingsManager.initializeSettings(getFilesDir().getAbsolutePath())) {
-            Toast.makeText(this, "Settings loading error!", Toast.LENGTH_LONG)
-                    .show();
+        if (!SettingsNetwork.getInstance().isFullyInitialized()) {
+            Error initError = init();
 
-//            ErrorBroadcastReceiver.broadcastError(
-//                    new Error("Settings loading error!", true),
-//                    getApplicationContext());
-//
-//            return;
+            if (initError != null) processError(initError);
         }
 
-        Error apiError = APIStore.init();
+        if (m_isSignedIn) {
+            String token = SettingsNetwork.getInstance().getToken();
 
-        if (apiError != null) {
-            ErrorBroadcastReceiver.broadcastError(apiError, getApplicationContext());
-
-            return;
+            launchTokenCheck(token);
         }
 
-        String token = SettingsNetwork.getInstance().getToken();
-
-        launchTokenCheck(token);
-
-        findViewById(R.id.signin_button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.main_activity_sign_in_vk_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 processSignIn();
@@ -97,16 +99,33 @@ public class MainActivity extends AppCompatActivity
         super.onStart();
     }
 
-    private void checkIsClosing() {
-        if (getIntent() == null) return;
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
 
-        boolean isClosing = getIntent().getBooleanExtra(C_IS_CLOSING_EXTRA_PROP_NAME, false);
-
-        if (isClosing) {
-            finish();
-
-            System.exit(-1);
+    private Error init() {
+        if (!SettingsManager.initializeSettings(getFilesDir().getAbsolutePath())) {
+            Toast.makeText(this, "Settings loading error!", Toast.LENGTH_LONG)
+                    .show();
         }
+
+        Error apiError = APIStore.init();
+
+        if (apiError != null) return apiError;
+
+        String token = SettingsNetwork.getInstance().getToken();
+
+        launchTokenCheck(token);
+
+        return null;
+    }
+
+    private void checkIsClosing() {
+        if (!m_isClosing) return;
+
+        finish();
+        System.exit(-1);
     }
 
     private void launchTokenCheck(final String token) {

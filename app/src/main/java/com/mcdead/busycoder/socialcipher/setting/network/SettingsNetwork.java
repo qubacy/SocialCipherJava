@@ -149,7 +149,7 @@ public class SettingsNetwork extends SettingsBase
 
     @Override
     public boolean isFullyInitialized() {
-        return (!m_token.isEmpty() && m_apiType != null);
+        return (m_token != null && m_apiType != null);
     }
 
     @Override

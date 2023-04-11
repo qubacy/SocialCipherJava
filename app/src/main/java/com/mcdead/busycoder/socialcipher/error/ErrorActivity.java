@@ -14,6 +14,9 @@ public class ErrorActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_error);
 
+        if (getSupportActionBar() != null)
+            getSupportActionBar().hide();
+
         if (getIntent() == null) finish();
 
         Error error = (Error) getIntent().getSerializableExtra(ErrorBroadcastReceiver.C_ERROR_EXTRA_PROP_NAME);

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.mcdead.busycoder.socialcipher.R;
@@ -34,6 +35,12 @@ public class AttachmentShowerActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_attachment_shower);
+
+        if (getSupportActionBar() != null) {
+            ActionBar actionBar = getSupportActionBar();
+
+            actionBar.setTitle(R.string.attachment_shower_action_bar_title);
+        }
 
         if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null) {
             ObjectWrapper<List<AttachmentEntityBase>> attachmentListWrapper

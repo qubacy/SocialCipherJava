@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.mcdead.busycoder.socialcipher.updateprocessor.UpdateProcessorService;
@@ -18,6 +19,12 @@ public class DialogsActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_dialogs);
+
+        if (getSupportActionBar() != null) {
+            ActionBar actionBar = getSupportActionBar();
+
+            actionBar.setTitle(R.string.chat_list_action_bar_title);
+        }
 
         if (getSupportFragmentManager().findFragmentById(R.id.dialogs_list_fragment_frame) == null) {
             getSupportFragmentManager()
