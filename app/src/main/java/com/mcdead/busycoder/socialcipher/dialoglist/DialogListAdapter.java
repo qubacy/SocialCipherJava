@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
-import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 import com.mcdead.busycoder.socialcipher.error.Error;
 
@@ -18,14 +17,14 @@ import java.util.List;
 public class DialogListAdapter extends RecyclerView.Adapter<DialogListViewHolder> {
     private LayoutInflater m_inflater = null;
 
-    private RecyclerViewAdapterErrorCallback m_errorCallback = null;
-    private DialogItemClickedCallback m_itemClickedCallback = null;
+    private DialogListAdapterCallback m_errorCallback = null;
+    private DialogListItemCallback m_itemClickedCallback = null;
 
     private List<DialogEntity> m_dialogs = null;
 
     public DialogListAdapter(Activity activity,
-                             RecyclerViewAdapterErrorCallback errorCallback,
-                             DialogItemClickedCallback itemClickedCallback)
+                             DialogListAdapterCallback errorCallback,
+                             DialogListItemCallback itemClickedCallback)
     {
         m_inflater = activity.getLayoutInflater();
 

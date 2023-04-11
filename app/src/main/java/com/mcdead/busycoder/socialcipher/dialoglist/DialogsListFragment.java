@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mcdead.busycoder.socialcipher.RecyclerViewAdapterErrorCallback;
 import com.mcdead.busycoder.socialcipher.dialog.DialogActivity;
 import com.mcdead.busycoder.socialcipher.dialog.DialogBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoaderBase;
@@ -27,14 +26,13 @@ import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
-import com.mcdead.busycoder.socialcipher.loadingscreen.LoadingPopUpWindow;
 
 import java.util.List;
 
 public class DialogsListFragment extends Fragment
     implements DialogsLoadingCallback,
-        RecyclerViewAdapterErrorCallback,
-        DialogItemClickedCallback,
+        DialogListAdapterCallback,
+        DialogListItemCallback,
         NewMessageReceivedCallback
 {
     private DialogsListFragmentCallback m_callback = null;

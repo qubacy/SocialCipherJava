@@ -1,5 +1,5 @@
 package com.mcdead.busycoder.socialcipher.dialoglist;
 
-public interface DialogItemClickedCallback {
+public interface DialogListItemCallback {
     public void onDialogItemClick(final long peerId);
 }
