@@ -71,18 +71,15 @@ public class DialogFragment extends Fragment
         super.onCreate(savedInstanceState);
 
         m_broadcastReceiver = new DialogBroadcastReceiver(this);
+        m_messagesAdapter = new MessageListAdapter(
+                getActivity(),
+                this,
+                m_localPeerId);
 
         LocalBroadcastManager
                 .getInstance(getContext().getApplicationContext())
                 .registerReceiver(m_broadcastReceiver,
                         new IntentFilter(DialogBroadcastReceiver.C_NEW_MESSAGE_ADDED));
-
-        Error error = initChat();
-
-        if (error != null) {
-            ErrorBroadcastReceiver.broadcastError(error,
-                    getActivity().getApplicationContext());
-        }
     }
 
     @Nullable
@@ -94,10 +91,6 @@ public class DialogFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_dialog, container, false);
 
         m_messagesList = view.findViewById(R.id.messages_list);
-        m_messagesAdapter = new MessageListAdapter(
-                getActivity(),
-                this,
-                m_localPeerId);
 
         m_messagesList.setAdapter(m_messagesAdapter);
         m_messagesList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -113,6 +106,13 @@ public class DialogFragment extends Fragment
         super.onViewCreated(view, savedInstanceState);
 
         //onDialogLoaded();
+
+        Error error = initChat();
+
+        if (error != null) {
+            ErrorBroadcastReceiver.broadcastError(error,
+                    getActivity().getApplicationContext());
+        }
     }
 
     @Override
@@ -237,6 +237,9 @@ public class DialogFragment extends Fragment
                 return new Error("Dialog loader hasn't been initialized!", true);
 
             dialogLoader.execute();
+
+        } else {
+            onDialogLoaded();
         }
 
         return null;
