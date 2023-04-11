@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.mcdead.busycoder.socialcipher.api.APIStore;
+import com.mcdead.busycoder.socialcipher.data.AttachmentsStore;
+import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.UsersStore;
 import com.mcdead.busycoder.socialcipher.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.dialoglist.DialogsActivity;
@@ -143,9 +145,32 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void processSignIn() {
+        Error error = resetStorages();
+
+        if (error != null) {
+            processError(error);
+
+            return;
+        }
+
         Intent intent = new Intent(this, SignInWebViewActivity.class);
 
         startActivity(intent);
+    }
+
+    private Error resetStorages() {
+        if (DialogsStore.getInstance() == null
+         || AttachmentsStore.getInstance() == null
+         || UsersStore.getInstance() == null)
+        {
+            return new Error("Stores haven't been initialized!", true);
+        }
+
+        DialogsStore.getInstance().clean();
+        AttachmentsStore.getInstance().clean();
+        UsersStore.getInstance().clean();
+
+        return null;
     }
 
     private void showDialogs() {

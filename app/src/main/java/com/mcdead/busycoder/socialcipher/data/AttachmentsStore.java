@@ -141,4 +141,10 @@ public class AttachmentsStore {
 
         return null;
     }
+
+    public void clean() {
+        synchronized (m_attachmentsHash) {
+            m_attachmentsHash.clear();
+        }
+    }
 }

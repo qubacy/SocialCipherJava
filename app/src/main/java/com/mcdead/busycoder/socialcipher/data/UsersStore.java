@@ -55,4 +55,11 @@ public class UsersStore {
     public UserEntity getLocalUser() {
         return m_localUser;
     }
+
+    public void clean() {
+        synchronized (m_users) {
+            m_users.clear();
+            m_localUser = null;
+        }
+    }
 }

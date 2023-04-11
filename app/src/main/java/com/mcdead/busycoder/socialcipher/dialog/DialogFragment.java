@@ -1,6 +1,5 @@
 package com.mcdead.busycoder.socialcipher.dialog;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -8,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,7 +20,6 @@ import com.mcdead.busycoder.socialcipher.attachmentshower.AttachmentShowerActivi
 import com.mcdead.busycoder.socialcipher.data.UsersStore;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
-import com.mcdead.busycoder.socialcipher.attachmentdoc.LinkedFileOpener;
 import com.mcdead.busycoder.socialcipher.attachmentdoc.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderBase;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderFactory;
@@ -32,7 +29,6 @@ import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
-import com.mcdead.busycoder.socialcipher.loadingscreen.LoadingPopUpWindow;
 
 import java.io.Serializable;
 import java.util.List;
@@ -104,8 +100,6 @@ public class DialogFragment extends Fragment
                               @Nullable Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
-
-        //onDialogLoaded();
 
         Error error = initChat();
 

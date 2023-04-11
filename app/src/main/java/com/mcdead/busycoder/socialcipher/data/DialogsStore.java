@@ -141,4 +141,10 @@ public class DialogsStore {
 
         return false;
     }
+
+    public void clean() {
+        synchronized (m_dialogs) {
+            m_dialogs.clear();
+        }
+    }
 }
