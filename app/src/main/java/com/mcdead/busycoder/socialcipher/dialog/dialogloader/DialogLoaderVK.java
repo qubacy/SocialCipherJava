@@ -20,8 +20,6 @@ public class DialogLoaderVK extends DialogLoaderBase {
 
     @Override
     protected Error doInBackground(Void... voids) {
-        // todo: load attachments of cur. dialog..
-
         DialogsStore dialogsStore = DialogsStore.getInstance();
 
         if (dialogsStore == null)

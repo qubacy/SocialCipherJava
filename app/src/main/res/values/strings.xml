@@ -4,6 +4,7 @@
     <string name="header_quote_caption">Nothing than ciphering</string>
     <string name="sign_in_vk_button_caption">VK</string>
     <string name="error_button_caption">OK</string>
+    <string name="message_sending_text_hint">Type a message..</string>
 
     <string name="chat_list_action_bar_title">My Chats</string>
     <string name="attachment_shower_action_bar_title">Message Attachments</string>

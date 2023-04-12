@@ -1,12 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messages_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/dialog_message_sending_wrapper"
+        android:padding="@dimen/default_gap"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/dialog_message_sending_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="@dimen/default_gap"
+        android:background="@drawable/message_sending_wrapper_shape">
+
+        <EditText
+            android:id="@+id/dialog_message_sending_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/dialog_message_sending_attachments_button"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:gravity="start|top"
+            android:lines="4"
+            android:maxLines="4"
+            android:minLines="4"
+            android:background="@android:color/transparent"
+            android:hint="@string/message_sending_text_hint"/>
+
+        <ImageButton
+            android:id="@+id/dialog_message_sending_attachments_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:src="@drawable/ic_attach_file_24"
+            android:background="@drawable/message_sending_button_shape"/>
+
+        <ImageButton
+            android:id="@+id/dialog_message_sending_ciphering_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/dialog_message_sending_attachments_button"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginTop="@dimen/default_gap"
+            android:src="@drawable/ic_ciphering_24"
+            android:background="@drawable/message_sending_button_shape"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

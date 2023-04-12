@@ -4,9 +4,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +28,9 @@ import com.mcdead.busycoder.socialcipher.attachmentdoc.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderBase;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoaderFactory;
 import com.mcdead.busycoder.socialcipher.dialog.dialogloader.DialogLoadingCallback;
+import com.mcdead.busycoder.socialcipher.dialog.messagesender.MessageSenderBase;
+import com.mcdead.busycoder.socialcipher.dialog.messagesender.MessageSenderFactory;
+import com.mcdead.busycoder.socialcipher.dialog.messagesender.MessageSendingCallback;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.R;
@@ -39,7 +46,8 @@ public class DialogFragment extends Fragment
         DialogLoadingCallback,
         MessageListAdapterCallback,
         MessageListItemCallback,
-        LinkedFileOpenerCallback
+        LinkedFileOpenerCallback,
+        MessageSendingCallback
 {
     private DialogFragmentCallback m_callback = null;
 
@@ -50,6 +58,8 @@ public class DialogFragment extends Fragment
 
     private RecyclerView m_messagesList = null;
     private MessageListAdapter m_messagesAdapter = null;
+
+    private EditText m_sendingMessageText = null;
 
     public DialogFragment(
             final long peerId,
@@ -91,6 +101,26 @@ public class DialogFragment extends Fragment
         m_messagesList.setAdapter(m_messagesAdapter);
         m_messagesList.setLayoutManager(new LinearLayoutManager(getContext()));
         //m_messagesList.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+
+        m_sendingMessageText = view.findViewById(R.id.dialog_message_sending_text);
+
+        m_sendingMessageText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(
+                    TextView textView,
+                    int i,
+                    KeyEvent keyEvent)
+            {
+                if (keyEvent.getKeyCode() != KeyEvent.KEYCODE_ENTER)
+                    return false;
+                if (keyEvent.getAction() == KeyEvent.ACTION_UP)
+                    return false;
+
+                sendNewMessage();
+
+                return true;
+            }
+        });
 
         return view;
     }
@@ -239,6 +269,27 @@ public class DialogFragment extends Fragment
         return null;
     }
 
+    private void sendNewMessage() {
+        // todo: work with attachments as well!
+        String text = m_sendingMessageText.getText().toString();
+
+        MessageSenderBase messageSender
+                = MessageSenderFactory.generateMessageSender(
+                        m_peerId, text, this);
+
+        if (messageSender == null) {
+            ErrorBroadcastReceiver
+                    .broadcastError(
+                            new Error("Message Sender hasn't been initialized!", true),
+                            getActivity().getApplicationContext());
+
+            return;
+        }
+
+        m_sendingMessageText.getText().clear();
+        messageSender.execute();
+    }
+
 //    @Override
 //    public void onLinkedAttachmentClicked(Uri uri) {
 //        if (uri.getPath().isEmpty()) return;
@@ -252,8 +303,24 @@ public class DialogFragment extends Fragment
     }
 
     @Override
-    public void onFileOpeningError(Error error) {
+    public void onFileOpeningError(final Error error) {
         ErrorBroadcastReceiver
-                .broadcastError(error, getActivity());
+                .broadcastError(error, getActivity().getApplicationContext());
+    }
+
+    @Override
+    public void onMessageSent() {
+        // todo: what to do?
+
+//        Toast.makeText(getActivity(),
+//                "Message has been sent!",
+//                Toast.LENGTH_SHORT)
+//                .show();
+    }
+
+    @Override
+    public void onMessageSendingError(final Error error) {
+        ErrorBroadcastReceiver
+                .broadcastError(error, getActivity().getApplicationContext());
     }
 }
