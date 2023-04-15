@@ -18,7 +18,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:/$USER_HOME$/AppData/Local/Android/Sdk/icons/material/materialicons/security/baseline_security_24.xml" />
+                                      <entry key="url" value="file:/$USER_HOME$/AppData/Local/Android/Sdk/icons/material/materialicons/folder/baseline_folder_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -28,7 +28,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="outputName" value="ic_ciphering_24" />
+                            <entry key="color" value="ffffff" />
+                            <entry key="outputName" value="ic_folder_24" />
                             <entry key="sourceFile" value="C:\Users\MCDead\AndroidStudioProjects\SocialCipher" />
                           </map>
                         </option>

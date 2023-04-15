@@ -9,4 +9,6 @@
     <string name="chat_list_action_bar_title">My Chats</string>
     <string name="attachment_shower_action_bar_title">Message Attachments</string>
     <string name="loading_screen_caption">Stay Tuned</string>
+    <string name="attachment_type_picker_header_caption">Choose an attachment\'s type:</string>
+    <string name="attachment_picker_confirm_button_caption">Confirm</string>
 </resources>

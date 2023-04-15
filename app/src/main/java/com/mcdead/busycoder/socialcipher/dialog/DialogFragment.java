@@ -4,10 +4,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,6 +40,7 @@ import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DialogFragment extends Fragment
@@ -47,7 +50,8 @@ public class DialogFragment extends Fragment
         MessageListAdapterCallback,
         MessageListItemCallback,
         LinkedFileOpenerCallback,
-        MessageSendingCallback
+        MessageSendingCallback,
+        AttachmentPickerCallback
 {
     private DialogFragmentCallback m_callback = null;
 
@@ -60,6 +64,7 @@ public class DialogFragment extends Fragment
     private MessageListAdapter m_messagesAdapter = null;
 
     private EditText m_sendingMessageText = null;
+    private List<Uri> m_uploadingAttachmentList = null;
 
     public DialogFragment(
             final long peerId,
@@ -70,6 +75,8 @@ public class DialogFragment extends Fragment
         m_peerId = peerId;
         m_localPeerId = UsersStore.getInstance().getLocalUser().getPeerId();
         m_callback = callback;
+
+        m_uploadingAttachmentList = new ArrayList<>();
     }
 
     @Override
@@ -121,6 +128,14 @@ public class DialogFragment extends Fragment
                 return true;
             }
         });
+
+        view.findViewById(R.id.dialog_message_sending_attachments_button)
+            .setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    pickAttachmentFiles();
+                }
+            });
 
         return view;
     }
@@ -269,6 +284,22 @@ public class DialogFragment extends Fragment
         return null;
     }
 
+    private void pickAttachmentFiles() {
+        DialogFragmentCallback dialogActivity = (DialogFragmentCallback) getActivity();
+
+        if (dialogActivity == null) {
+            ErrorBroadcastReceiver
+                    .broadcastError(
+                            new Error("DialogFragmentCallback hasn't been derived!", true),
+                            getActivity().getApplicationContext()
+                    );
+
+            return;
+        }
+
+        dialogActivity.onAttachmentPickerDemanded();
+    }
+
     private void sendNewMessage() {
         // todo: work with attachments as well!
         String text = m_sendingMessageText.getText().toString();
@@ -322,5 +353,12 @@ public class DialogFragment extends Fragment
     public void onMessageSendingError(final Error error) {
         ErrorBroadcastReceiver
                 .broadcastError(error, getActivity().getApplicationContext());
+    }
+
+    @Override
+    public void onAttachmentFilesPicked(final List<Uri> pickedFileUriList) {
+        // todo: uploading grasped attachments' files..
+
+        Log.d(getClass().getName(), pickedFileUriList.toString());
     }
 }

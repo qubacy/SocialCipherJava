@@ -12,7 +12,7 @@ public class ObjectWrapper<T> {
     }
 
     public boolean setValue(final T value) {
-        if (value == null || m_value != null)
+        if (value == null)
             return false;
 
         m_value = value;

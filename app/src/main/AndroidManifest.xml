@@ -4,6 +4,9 @@
     package="com.mcdead.busycoder.socialcipher">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -26,6 +29,9 @@
             android:exported="false"/>
         <activity
             android:name="com.mcdead.busycoder.socialcipher.attachmentshower.AttachmentShowerActivity"
+            android:exported="false"/>
+        <activity
+            android:name="com.mcdead.busycoder.socialcipher.attachmentpicker.AttachmentPickerActivity"
             android:exported="false"/>
         <activity
             android:name="com.mcdead.busycoder.socialcipher.MainActivity"

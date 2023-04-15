@@ -1,13 +1,18 @@
 package com.mcdead.busycoder.socialcipher.dialog;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.AttachmentPickerActivity;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.AttachmentPickerActivityCallback;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.AttachmentPickerActivityContract;
 import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.DialogTitleExtractor;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
@@ -16,12 +21,18 @@ import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.loadingscreen.LoadingPopUpWindow;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.util.List;
+
 public class DialogActivity extends AppCompatActivity
     implements DialogFragmentCallback
 {
     public static final String C_PEER_ID_EXTRA_PROP_NAME = "peerId";
 
     public static final String C_DEFAULT_CHAT_NAME = "My Chat";
+
+    private DialogFragment m_dialogFragment = null;
+
+    private ActivityResultLauncher<Void> m_attachmentPickerLauncher = null;
 
     private LoadingPopUpWindow m_loadingPopUpWindow = null;
     private boolean m_isDialogLoaded = false;
@@ -53,12 +64,22 @@ public class DialogActivity extends AppCompatActivity
             actionBar.setTitle(titleWrapper.getValue());
         }
 
-        if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null) {
+        m_dialogFragment = (DialogFragment) getSupportFragmentManager()
+                .findFragmentById(android.R.id.content);
+
+        if (m_dialogFragment == null) {
+            m_dialogFragment = new DialogFragment(peerIdWrapper.getValue(), this);
+
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, new DialogFragment(peerIdWrapper.getValue(), this))
+                    .add(android.R.id.content, m_dialogFragment)
                     .commit();
         }
+
+        m_attachmentPickerLauncher =
+                registerForActivityResult(
+                    new AttachmentPickerActivityContract(),
+                    new AttachmentPickerActivityCallback(m_dialogFragment));
     }
 
     private Error retrievePeerIdFromIntent(ObjectWrapper<Long> peerIdWrapper) {
@@ -127,5 +148,10 @@ public class DialogActivity extends AppCompatActivity
         if (m_loadingPopUpWindow == null) return;
 
         m_loadingPopUpWindow.dismiss();
+    }
+
+    @Override
+    public void onAttachmentPickerDemanded() {
+        m_attachmentPickerLauncher.launch(null);
     }
 }

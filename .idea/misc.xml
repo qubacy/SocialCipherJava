@@ -14,22 +14,36 @@
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/OKApiTry/app/src/main/res/layout/fragment_error.xml" value="0.18541666666666667" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/OKApiTry/app/src/main/res/layout/fragment_messages_list.xml" value="0.365625" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/OKApiTry/app/src/main/res/layout/fragment_signin_web_view.xml" value="0.1" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_doc_view_holder_chosen_background.xml" value="0.1935" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_image_view_holder_choosing_indication_icon_background.xml" value="0.1925" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_picker_button_choosen_shape.xml" value="0.1925" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_picker_button_chosen_shape.xml" value="0.1935" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_picker_button_shape.xml" value="0.1925" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/ic_baseline_attach_file_24.xml" value="0.1935" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/ic_check_24.xml" value="0.1935" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/ic_ciphering_24.xml" value="0.1935" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/ic_file_24.xml" value="0.2265" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/ic_image_24.xml" value="0.1935" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/loader_progress.xml" value="0.1925" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/message_sending_button_shape.xml" value="0.1925" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/message_sending_wrapper_shape.xml" value="0.1925" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_attachment_picker.xml" value="0.25" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_attachment_shower.xml" value="0.184375" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_dialogs.xml" value="0.21979166666666666" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_error.xml" value="0.18541666666666667" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_main.xml" value="0.33" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/attachment_doc_view_holder.xml" value="0.18541666666666667" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/attachment_image_view_holder.xml" value="0.184375" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/attachment_view_holder.xml" value="0.15128205128205127" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/attachments_preview_view.xml" value="0.1" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/attachments_view.xml" value="0.21875" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/dialog_view_holder.xml" value="0.2140625" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/file_view_holder.xml" value="0.33" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_chooser.xml" value="0.13828125" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_doc_picker.xml" value="0.184375" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_photo_picker.xml" value="0.184375" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_shower.xml" value="0.21654501216545013" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_type_picker.xml" value="0.33" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_dialog.xml" value="0.22" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/loader_screen.xml" value="0.24878345498783455" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/message_view_holder.xml" value="0.2140625" />
