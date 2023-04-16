@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.attachmentdoc.AttachmentDocUtility;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.attachmentshower.AttachmentShowerActivity;
 import com.mcdead.busycoder.socialcipher.data.UsersStore;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
@@ -64,7 +65,7 @@ public class DialogFragment extends Fragment
     private MessageListAdapter m_messagesAdapter = null;
 
     private EditText m_sendingMessageText = null;
-    private List<Uri> m_uploadingAttachmentList = null;
+    private List<AttachmentData> m_uploadingAttachmentList = null;
 
     public DialogFragment(
             final long peerId,
@@ -301,12 +302,15 @@ public class DialogFragment extends Fragment
     }
 
     private void sendNewMessage() {
-        // todo: work with attachments as well!
         String text = m_sendingMessageText.getText().toString();
 
         MessageSenderBase messageSender
                 = MessageSenderFactory.generateMessageSender(
-                        m_peerId, text, this);
+                        m_peerId,
+                        text,
+                        m_uploadingAttachmentList,
+                        this,
+                        getContext().getContentResolver());
 
         if (messageSender == null) {
             ErrorBroadcastReceiver
@@ -356,9 +360,7 @@ public class DialogFragment extends Fragment
     }
 
     @Override
-    public void onAttachmentFilesPicked(final List<Uri> pickedFileUriList) {
-        // todo: uploading grasped attachments' files..
-
-        Log.d(getClass().getName(), pickedFileUriList.toString());
+    public void onAttachmentFilesPicked(final List<AttachmentData> pickedFileUriList) {
+        m_uploadingAttachmentList = pickedFileUriList;
     }
 }

@@ -1,6 +1,5 @@
 package com.mcdead.busycoder.socialcipher.attachmentpicker.docs;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 
@@ -20,7 +20,7 @@ import java.util.List;
 
 public class AttachmentPickerDocFragment extends Fragment
     implements
-        DocSearcherCallback,
+//        DocSearcherCallback,
         AttachmentPickerDocAdapterCallback
 {
     private AttachmentPickerDocAdapter m_docListAdapter = null;
@@ -60,22 +60,22 @@ public class AttachmentPickerDocFragment extends Fragment
         //new DocSearcher(getContext(), this).execute();
     }
 
-    @Override
-    public void onDocSearcherErrorOccurred(final Error error) {
-        ErrorBroadcastReceiver
-                .broadcastError(
-                        error, getActivity().getApplicationContext());
-    }
+//    @Override
+//    public void onDocSearcherErrorOccurred(final Error error) {
+//        ErrorBroadcastReceiver
+//                .broadcastError(
+//                        error, getActivity().getApplicationContext());
+//    }
 
-    @Override
-    public void onDocSearcherDocsFound(final List<DocData> docDataList) {
-        if (!m_docListAdapter.setDocList(docDataList)) {
-            ErrorBroadcastReceiver
-                    .broadcastError(
-                            new Error("Image List setting problem has been occurred!", true),
-                            getActivity().getApplicationContext());
-        }
-    }
+//    @Override
+//    public void onDocSearcherDocsFound(final List<AttachmentData> docAttachmentDataList) {
+//        if (!m_docListAdapter.setDocList(docAttachmentDataList)) {
+//            ErrorBroadcastReceiver
+//                    .broadcastError(
+//                            new Error("Image List setting problem has been occurred!", true),
+//                            getActivity().getApplicationContext());
+//        }
+//    }
 
     @Override
     public void onAttachmentPickerDocAdapterErrorOccurred(final Error error) {
@@ -94,13 +94,13 @@ public class AttachmentPickerDocFragment extends Fragment
         );
     }
 
-    public void setDocList(final List<DocData> docDataList) {
-        if (docDataList == null) return;
+    public void setDocList(final List<AttachmentData> docAttachmentDataList) {
+        if (docAttachmentDataList == null) return;
 
-        m_docListAdapter.setDocList(docDataList);
+        m_docListAdapter.setDocList(docAttachmentDataList);
     }
 
-    public List<Uri> getChosenDocUriList() {
+    public List<AttachmentData> getChosenDocDataList() {
         return m_docListAdapter.getChosenDocList();
     }
 }

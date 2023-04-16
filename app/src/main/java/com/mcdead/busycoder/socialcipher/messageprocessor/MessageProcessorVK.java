@@ -163,74 +163,85 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (attachmentTypeDefiner == null)
             return new Error("AttachmentTypeDefiner hasn't been initialized!", true);
 
-        AttachmentEntityBase attachmentEntity = loadAttachment(attachmentVK);
+        Error loadAttachmentError = loadAttachment(attachmentVK, attachmentEntityWrapper);
 
-        if (attachmentEntity != null) {
-            attachmentEntityWrapper.setValue(attachmentEntity);
-
+        if (loadAttachmentError != null)
+            return loadAttachmentError;
+        if (attachmentEntityWrapper.getValue() != null)
             return null;
-        }
 
-        attachmentEntity = downloadAttachment(attachmentVK);
+        Error downloadAttachmentError = downloadAttachment(attachmentVK, attachmentEntityWrapper);
+
+        if (downloadAttachmentError != null)
+            return downloadAttachmentError;
+
+        return null;
+    }
+
+    private Error loadAttachment(
+            final ResponseAttachmentBase attachmentToDownload,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+    {
+        if (!(attachmentToDownload instanceof ResponseAttachmentStored))
+            return new Error("Provided Attachment wasn't an instance of Stored Attachment type!", true);
+
+        ResponseAttachmentStored attachmentStored = (ResponseAttachmentStored) attachmentToDownload;
+        AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
+
+        if (attachmentsStore == null)
+            return new Error("Attachment Store hasn't been initialized!", true);
+
+        AttachmentEntityBase attachmentEntity =
+                attachmentsStore.getAttachmentById(attachmentStored.getTypedAttachmentID());
 
         if (attachmentEntity == null)
-            return new Error("Attachment downloading error occurred!", true);
+            return null;
 
         attachmentEntityWrapper.setValue(attachmentEntity);
 
         return null;
     }
 
-    private AttachmentEntityBase loadAttachment(
-            final ResponseAttachmentBase attachmentToDownload)
-    {
-        if (!(attachmentToDownload instanceof ResponseAttachmentStored))
-            return null;
-
-        ResponseAttachmentStored attachmentStored = (ResponseAttachmentStored) attachmentToDownload;
-        AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
-
-        if (attachmentsStore == null) return null;
-
-        return attachmentsStore.getAttachmentById(attachmentStored.getTypedAttachmentID());
-    }
-
-    private AttachmentEntityBase downloadAttachment(
-            final ResponseAttachmentBase attachmentToDownload)
+    private Error downloadAttachment(
+            final ResponseAttachmentBase attachmentToDownload,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         AttachmentType attachmentType = m_attachmentTypeDefiner.defineAttachmentTypeByString(
                 attachmentToDownload.attachmentType);
 
         switch (attachmentToDownload.getAttachmentType()) {
-            case STORED: return downloadStoredAttachment((ResponseAttachmentStored) attachmentToDownload, attachmentType);
-            case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType);
+            case STORED: return downloadStoredAttachment((ResponseAttachmentStored) attachmentToDownload, attachmentType, attachmentEntityWrapper);
+            case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, attachmentEntityWrapper);
         }
 
-        return null;
+        return new Error("Downloading Stored Attachment operation cannot be executed on a provided attachment!", true);
     }
 
-    private AttachmentEntityBase downloadStoredAttachment(
+    private Error downloadStoredAttachment(
             final ResponseAttachmentStored attachmentToDownload,
-            final AttachmentType attachmentType)
+            final AttachmentType attachmentType,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         VKAPIInterface vkAPI = (VKAPIInterface) APIStore.getAPIInstance();
 
-        if (vkAPI == null) return null;
+        if (vkAPI == null)
+            return new Error("VKAPI instance hasn't been initialized!", true);
 
         switch (attachmentType) {
-            case IMAGE: return downloadStoredAttachmentImage(vkAPI, attachmentType, attachmentToDownload);
-            case DOC: return downloadStoredAttachmentDoc(vkAPI, attachmentType, attachmentToDownload);
+            case IMAGE: return downloadStoredAttachmentImage(vkAPI, attachmentType, attachmentToDownload, attachmentEntityWrapper);
+            case DOC: return downloadStoredAttachmentDoc(vkAPI, attachmentType, attachmentToDownload, attachmentEntityWrapper);
             case AUDIO: return null;
             case VIDEO: return null;
         }
 
-        return null;
+        return new Error("Downloading Stored Attachment operation cannot be executed on a provided attachment!", true);
     }
 
-    private AttachmentEntityBase downloadStoredAttachmentImage(
+    private Error downloadStoredAttachmentImage(
             final VKAPIInterface vkAPI,
             final AttachmentType attachmentType,
-            final ResponseAttachmentStored attachmentToDownload)
+            final ResponseAttachmentStored attachmentToDownload,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         ResponsePhotoItem responsePhotoItem = null;
 
@@ -239,30 +250,30 @@ public class MessageProcessorVK extends MessageProcessorBase {
                     = vkAPI.photo(m_token, attachmentToDownload.attachmentID).execute();
 
             if (!responsePhotoWrapper.isSuccessful())
-                return null;
+                return new Error("Getting Photo Attachment Data response process has been failed!", true);
 
             // todo: reckon of this poor design sign:
 
             if (responsePhotoWrapper.body().error != null)
-                return null;
+                return new Error(responsePhotoWrapper.body().error.message, true);
 
             if (responsePhotoWrapper.body().response == null)
-                return null;
+                return new Error("Getting Photo Attachment Data response process ended with a null response body!", true);
             if (responsePhotoWrapper.body().response.isEmpty())
-                return null;
+                return new Error("Getting Photo Attachment Data response process ended with an empty response body!", true);
 
             responsePhotoItem = responsePhotoWrapper.body().response.get(0);
 
         } catch (IOException e) {
             e.printStackTrace();
 
-            return null;
+            return new Error(e.getMessage(), true);
         }
 
         if (responsePhotoItem.sizes == null)
-            return null;
+            return new Error("Received array of photo sizes was null!", true);
         if (responsePhotoItem.sizes.isEmpty())
-            return null;
+            return new Error("Received array of photo sizes was empty!", true);
 
         String lastSizeUrl = responsePhotoItem.sizes.get(responsePhotoItem.sizes.size() - 1).url;
 
@@ -271,13 +282,15 @@ public class MessageProcessorVK extends MessageProcessorBase {
                         attachmentToDownload.attachmentType,
                         attachmentToDownload.attachmentID,
                         lastSizeUrl),
-                attachmentType);
+                attachmentType,
+                attachmentEntityWrapper);
     }
 
-    private AttachmentEntityBase downloadStoredAttachmentDoc(
+    private Error downloadStoredAttachmentDoc(
             final VKAPIInterface vkAPI,
             final AttachmentType attachmentType,
-            final ResponseAttachmentStored attachmentToDownload)
+            final ResponseAttachmentStored attachmentToDownload,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         ResponseDocumentItem responseDocItem = null;
 
@@ -286,24 +299,24 @@ public class MessageProcessorVK extends MessageProcessorBase {
                     = vkAPI.document(m_token, attachmentToDownload.attachmentID).execute();
 
             if (!responseDocWrapper.isSuccessful())
-                return null;
+                return new Error("Requesting Doc Link process ended with a failed request!", true);
 
             // todo: reckon of this poor design sign:
 
             if (responseDocWrapper.body().error != null)
-                return null;
+                return new Error(responseDocWrapper.body().error.message, true);
 
             if (responseDocWrapper.body().response == null)
-                return null;
+                return new Error("Requesting Doc Link process ended with an empty response part!", true);
             if (responseDocWrapper.body().response.isEmpty())
-                return null;
+                return new Error("Requesting Doc Link process ended with an empty response body!", true);
 
             responseDocItem = responseDocWrapper.body().response.get(0);
 
         } catch (IOException e) {
             e.printStackTrace();
 
-            return null;
+            return new Error(e.getMessage(), true);
         }
 
         return downloadLinkedAttachmentDefault(
@@ -312,26 +325,31 @@ public class MessageProcessorVK extends MessageProcessorBase {
                         attachmentToDownload.attachmentID,
                         responseDocItem.url,
                         responseDocItem.ext),
-                attachmentType);
+                attachmentType,
+                attachmentEntityWrapper);
     }
 
-    private AttachmentEntityBase downloadLinkedAttachment(
+    private Error downloadLinkedAttachment(
             final ResponseAttachmentLinked attachmentToDownload,
-            final AttachmentType attachmentType)
+            final AttachmentType attachmentType,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         switch (attachmentType) {
             case IMAGE:
-            case DOC: return downloadLinkedAttachmentDefault(attachmentToDownload, attachmentType);
+            case DOC: return downloadLinkedAttachmentDefault(attachmentToDownload, attachmentType, attachmentEntityWrapper);
             case AUDIO: return null;
             case VIDEO: return null;
         }
 
-        return null;
+        return new Error(
+                "Downloading cannot be processed on a provided attachment!",
+                true);
     }
 
-    private AttachmentEntityBase downloadLinkedAttachmentDefault(
+    private Error downloadLinkedAttachmentDefault(
             final ResponseAttachmentLinked attachmentToDownload,
-            final AttachmentType attachmentType)
+            final AttachmentType attachmentType,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .build();
@@ -343,73 +361,93 @@ public class MessageProcessorVK extends MessageProcessorBase {
         try {
             Response response = okHttpClient.newCall(request).execute();
 
-            if (!response.isSuccessful()) return null;
+            if (!response.isSuccessful())
+                return new Error("Downloading Attachment process has been failed!", true);
 
             attachmentBytes = response.body().bytes();
 
         } catch (IOException e) {
             e.printStackTrace();
 
-            return null;
+            return new Error(e.getMessage(), true);
         }
 
-        AttachmentData attachmentData = generateAttachmentData(
+        ObjectWrapper<AttachmentData> attachmentDataWrapper =
+                new ObjectWrapper<>();
+
+        Error attachmentDataError = generateAttachmentData(
                 attachmentType,
                 attachmentToDownload,
-                attachmentBytes);
+                attachmentBytes,
+                attachmentDataWrapper);
 
-        if (attachmentData == null) return null;
+        if (attachmentDataError != null)
+            return attachmentDataError;
 
-        return generateAttachmentEntity(attachmentData);
+        return generateAttachmentEntity(
+                attachmentDataWrapper.getValue(),
+                attachmentEntityWrapper);
     }
 
-    private AttachmentData generateAttachmentData(
+    private Error generateAttachmentData(
             final AttachmentType attachmentType,
             final ResponseAttachmentLinked attachmentToDownload,
-            final byte[] attachmentBytes)
+            final byte[] attachmentBytes,
+            ObjectWrapper<AttachmentData> attachmentDataWrapper)
     {
         switch (attachmentType) {
-            case IMAGE: return generateAttachmentDataImage(attachmentToDownload, attachmentBytes);
-            case DOC: return generateAttachmentDataDoc(attachmentToDownload, attachmentBytes);
+            case IMAGE: return generateAttachmentDataImage(attachmentToDownload, attachmentBytes, attachmentDataWrapper);
+            case DOC: return generateAttachmentDataDoc(attachmentToDownload, attachmentBytes, attachmentDataWrapper);
         }
 
         return null;
     }
 
-    private AttachmentData generateAttachmentDataImage(
+    private Error generateAttachmentDataImage(
             final ResponseAttachmentLinked attachmentToDownload,
-            final byte[] attachmentBytes)
+            final byte[] attachmentBytes,
+            ObjectWrapper<AttachmentData> attachmentDataWrapper)
     {
         String fileExtension = extractExtensionByUrl(attachmentToDownload.url);
 
-        if (fileExtension.isEmpty()) return null;
+        if (fileExtension.isEmpty())
+            return new Error("Attachment File Extension was empty!", true);
 
-        return new AttachmentData(
+        attachmentDataWrapper.setValue(new AttachmentData(
                 attachmentToDownload.getTypedAttachmentID(),
                 fileExtension,
-                attachmentBytes);
+                attachmentBytes));
+
+        return null;
     }
 
-    private AttachmentData generateAttachmentDataDoc(
+    private Error generateAttachmentDataDoc(
             final ResponseAttachmentLinked attachmentToDownload,
-            final byte[] attachmentBytes)
+            final byte[] attachmentBytes,
+            ObjectWrapper<AttachmentData> attachmentDataWrapper)
     {
         ResponseAttachmentDoc attachmentDoc = (ResponseAttachmentDoc) attachmentToDownload;
 
-        return new AttachmentData(
+        attachmentDataWrapper.setValue(new AttachmentData(
                 attachmentDoc.getTypedAttachmentID(),
                 attachmentDoc.ext,
-                attachmentBytes);
+                attachmentBytes));
+
+        return null;
     }
 
-    private AttachmentEntityBase generateAttachmentEntity(
-            final AttachmentData attachmentData)
+    private Error generateAttachmentEntity(
+            final AttachmentData attachmentData,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
 
-        if (attachmentsStore == null) return null;
+        if (attachmentsStore == null)
+            return new Error("Attachment Store hasn't been initialized!", true);
 
-        return attachmentsStore.saveAttachment(attachmentData);
+        attachmentEntityWrapper.setValue(attachmentsStore.saveAttachment(attachmentData));
+
+        return null;
     }
 
     private String extractExtensionByUrl(final String url) {

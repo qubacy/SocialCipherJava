@@ -4,11 +4,12 @@ import android.net.Uri;
 
 import androidx.activity.result.ActivityResultCallback;
 
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.dialog.AttachmentPickerCallback;
 
 import java.util.List;
 
-public class AttachmentPickerActivityCallback implements ActivityResultCallback<List<Uri>> {
+public class AttachmentPickerActivityCallback implements ActivityResultCallback<List<AttachmentData>> {
     private AttachmentPickerCallback m_callback = null;
 
     public AttachmentPickerActivityCallback(
@@ -19,7 +20,7 @@ public class AttachmentPickerActivityCallback implements ActivityResultCallback<
 
     @Override
     public void onActivityResult(
-            final List<Uri> result)
+            final List<AttachmentData> result)
     {
         m_callback.onAttachmentFilesPicked(result);
     }

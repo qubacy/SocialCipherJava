@@ -10,6 +10,8 @@ import android.provider.MediaStore;
 
 import androidx.annotation.NonNull;
 
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
@@ -28,7 +30,7 @@ public class ImageSearcher extends AsyncTask<Void, Void, ImageSearcherResult> {
         m_callback = callback;
     }
 
-    private Error getImages(ObjectWrapper<List<Uri>> resultImageList) {
+    private Error getImages(ObjectWrapper<List<AttachmentData>> resultImageAttachmentDataList) {
         Uri collection = null;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
@@ -37,7 +39,9 @@ public class ImageSearcher extends AsyncTask<Void, Void, ImageSearcherResult> {
             collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
         String[] projection = new String[] {
-                MediaStore.Images.Media._ID
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.MIME_TYPE,
+                MediaStore.Images.Media.DISPLAY_NAME
         };
 
         Cursor cursor = m_context.getContentResolver().query(
@@ -52,19 +56,27 @@ public class ImageSearcher extends AsyncTask<Void, Void, ImageSearcherResult> {
             return new Error("Images Retrieving process has been failed!", true);
 
         int imageIdColumnIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+        int imageContentTypeColumnIndex = cursor.getColumnIndex(MediaStore.Images.Media.MIME_TYPE);
+        int imageDisplayNameColumnIndex = cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME);
 
-        List<Uri> imageUriList = new ArrayList<>();
+        List<AttachmentData> imageAttachmentDataList = new ArrayList<>();
 
         while (cursor.moveToNext()) {
             long imageId = cursor.getLong(imageIdColumnIndex);
+            String imageContentType = cursor.getString(imageContentTypeColumnIndex);
+            String imageDisplayName = cursor.getString(imageDisplayNameColumnIndex);
             Uri imageUri = ContentUris.withAppendedId(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI, imageId);
 
-            imageUriList.add(imageUri);
+            imageAttachmentDataList.add(new AttachmentData(
+                    AttachmentType.IMAGE,
+                    imageContentType,
+                    imageDisplayName,
+                    imageUri));
         }
 
         cursor.close();
-        resultImageList.setValue(imageUriList);
+        resultImageAttachmentDataList.setValue(imageAttachmentDataList);
 
         return null;
     }
@@ -73,8 +85,8 @@ public class ImageSearcher extends AsyncTask<Void, Void, ImageSearcherResult> {
     protected ImageSearcherResult doInBackground(Void... voids) {
         ImageSearcherResult result = new ImageSearcherResult();
 
-        ObjectWrapper<List<Uri>> resultImageList = new ObjectWrapper<>();
-        Error error = getImages(resultImageList);
+        ObjectWrapper<List<AttachmentData>> resultImageAttachmentDataList = new ObjectWrapper<>();
+        Error error = getImages(resultImageAttachmentDataList);
 
         if (error != null) {
             result.error = error;
@@ -82,7 +94,7 @@ public class ImageSearcher extends AsyncTask<Void, Void, ImageSearcherResult> {
             return result;
         }
 
-        result.imageUriList = resultImageList.getValue();
+        result.imageAttachmentDataList = resultImageAttachmentDataList.getValue();
 
         return result;
     }
@@ -92,6 +104,6 @@ public class ImageSearcher extends AsyncTask<Void, Void, ImageSearcherResult> {
         if (imageSearcherResult.error != null)
             m_callback.onImageSearcherErrorOccurred(imageSearcherResult.error);
         else
-            m_callback.onImageSearcherImagesFound(imageSearcherResult.imageUriList);
+            m_callback.onImageSearcherImagesFound(imageSearcherResult.imageAttachmentDataList);
     }
 }

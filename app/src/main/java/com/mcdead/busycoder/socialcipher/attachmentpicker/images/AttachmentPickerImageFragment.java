@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 
@@ -86,8 +88,8 @@ public class AttachmentPickerImageFragment extends Fragment
     }
 
     @Override
-    public void onImageSearcherImagesFound(final List<Uri> imageUriList) {
-        if (!m_imageGridAdapter.setImageList(imageUriList)) {
+    public void onImageSearcherImagesFound(final List<AttachmentData> imageAttachmentDataList) {
+        if (!m_imageGridAdapter.setImageList(imageAttachmentDataList)) {
             ErrorBroadcastReceiver
                     .broadcastError(
                             new Error("Image List setting problem has been occurred!", true),
@@ -95,7 +97,7 @@ public class AttachmentPickerImageFragment extends Fragment
         }
     }
 
-    public ArrayList<Uri> getChosenImageUriList() {
+    public List<AttachmentData> getChosenImageDataList() {
         return m_imageGridAdapter.getChosenImages();
     }
 }

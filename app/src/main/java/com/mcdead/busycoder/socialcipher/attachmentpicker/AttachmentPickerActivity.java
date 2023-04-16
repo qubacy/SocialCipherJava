@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.attachmentpicker.docs.AttachmentPickerDocFragment;
 import com.mcdead.busycoder.socialcipher.attachmentpicker.docs.DocData;
 import com.mcdead.busycoder.socialcipher.attachmentpicker.docs.DocPickerCallback;
@@ -174,29 +175,29 @@ public class AttachmentPickerActivity extends AppCompatActivity
 
     private void onImagesChoiceConfirmClicked(final Fragment fragment) {
         AttachmentPickerImageFragment imageFragment = (AttachmentPickerImageFragment) fragment;
-        ArrayList<Uri> chosenImageUriList = imageFragment.getChosenImageUriList();
+        List<AttachmentData> chosenImageAttachmentDataList = imageFragment.getChosenImageDataList();
 
-        setActivityFileUriListResult(chosenImageUriList);
+        setActivityAttachmentDataListResult(chosenImageAttachmentDataList);
     }
 
     private void onDocChoiceConfirmClicked(final Fragment fragment) {
         AttachmentPickerDocFragment docFragment = (AttachmentPickerDocFragment) fragment;
-        List<Uri> chosenDocUriList = docFragment.getChosenDocUriList();
+        List<AttachmentData> chosenDocAttachmentDataList = docFragment.getChosenDocDataList();
 
-        setActivityFileUriListResult(chosenDocUriList);
+        setActivityAttachmentDataListResult(chosenDocAttachmentDataList);
     }
 
-    private void setActivityFileUriListResult(
-            final List<Uri> fileUriList)
+    private void setActivityAttachmentDataListResult(
+            final List<AttachmentData> fileDataList)
     {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
 
         bundle.putSerializable(
-                AttachmentPickerActivityContract.C_FILE_URI_LIST_PROP_NAME,
-                (Serializable) fileUriList);
+                AttachmentPickerActivityContract.C_FILE_DATA_LIST_PROP_NAME,
+                (Serializable) fileDataList);
         intent.putExtra(
-                AttachmentPickerActivityContract.C_FILE_URI_LIST_WRAPPER_PROP_NAME,
+                AttachmentPickerActivityContract.C_FILE_DATA_LIST_WRAPPER_PROP_NAME,
                 bundle);
 
         setResult(
@@ -224,20 +225,20 @@ public class AttachmentPickerActivity extends AppCompatActivity
             return;
         }
 
-        List<DocData> docDataList = new ArrayList<>();
+        List<AttachmentData> docAttachmentDataList = new ArrayList<>();
 
         for (final Uri docUri : docUriList) {
             DocumentFile docFile = DocumentFile.fromSingleUri(this, docUri);
-            DocData docData = null;
+            AttachmentData attachmentData =
+                    new AttachmentData(
+                            AttachmentType.DOC,
+                            docFile.getType(),
+                            docFile.getName(),
+                            docUri);
 
-            if (docFile == null)
-                docData = new DocData(docUri, "");
-            else
-                docData = new DocData(docUri, docFile.getName());
-
-            docDataList.add(docData);
+            docAttachmentDataList.add(attachmentData);
         }
 
-        fragment.setDocList(docDataList);
+        fragment.setDocList(docAttachmentDataList);
     }
 }

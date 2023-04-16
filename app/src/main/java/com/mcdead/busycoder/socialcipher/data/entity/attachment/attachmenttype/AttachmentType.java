@@ -1,8 +1,9 @@
 package com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public enum AttachmentType {
+public enum AttachmentType implements Serializable {
     IMAGE(1, new String[]{"png", "jpg", "jpeg"}),
     VIDEO(2, new String[]{"mp4", "webm"}),
     AUDIO(3, new String[]{"mp3"}),

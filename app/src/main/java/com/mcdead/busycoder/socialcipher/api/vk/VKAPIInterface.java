@@ -2,6 +2,11 @@ package com.mcdead.busycoder.socialcipher.api.vk;
 
 import static com.mcdead.busycoder.socialcipher.api.vk.VKAPIContext.C_API_VERSION;
 
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentStored;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.getserver.ResponseAttachmentDocUploadServerWrapper;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.getserver.ResponseAttachmentPhotoUploadServerWrapper;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentDocSaveWrapper;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentPhotoSaveWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseDialogWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseSendMessageWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialogs.ResponseDialogsWrapper;
@@ -13,6 +18,7 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.video.ResponseVideoWrapper;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface VKAPIInterface {

@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
@@ -22,7 +23,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         AttachmentPickerDocViewHolderCallback
 {
     private LayoutInflater m_inflater = null;
-    private List<Pair<DocData, ObjectWrapper<Boolean>>> m_docDataList = null;
+    private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_docAttachmentDataList = null;
 
     private AttachmentPickerDocAdapterCallback m_callback = null;
 
@@ -34,7 +35,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         setHasStableIds(true);
 
         m_inflater = LayoutInflater.from(context);
-        m_docDataList = new ArrayList<>();
+        m_docAttachmentDataList = new ArrayList<>();
 
         m_callback = callback;
     }
@@ -61,11 +62,12 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         if (!checkItemId(position))
             return;
 
-        Pair<DocData, ObjectWrapper<Boolean>> docItem = m_docDataList.get(position);
+        Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentItem =
+                m_docAttachmentDataList.get(position);
 
         if (!holder.setData(
-                docItem.first.getDisplayName(),
-                docItem.second.getValue()))
+                docAttachmentItem.first.getFileName(),
+                docAttachmentItem.second.getValue()))
         {
             m_callback.onAttachmentPickerDocAdapterErrorOccurred(
                     new Error("Doc Data setting has been occurred!", true)
@@ -75,7 +77,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
 
     @Override
     public int getItemCount() {
-        return m_docDataList.size();
+        return m_docAttachmentDataList.size();
     }
 
     @Override
@@ -84,7 +86,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
     }
 
     private boolean checkItemId(final int id) {
-        if (id < 0 || m_docDataList.size() <= id) {
+        if (id < 0 || m_docAttachmentDataList.size() <= id) {
 //            m_callback.onAttachmentPickerDocAdapterErrorOccurred(
 //                    new Error("Wrong Image Id has been provided!", true)
 //            );
@@ -96,12 +98,12 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
     }
 
     public boolean setDocList(
-            final List<DocData> docDataList)
+            final List<AttachmentData> docAttachmentDataList)
     {
-        if (docDataList == null) return false;
+        if (docAttachmentDataList == null) return false;
 
-        for (final DocData docData : docDataList) {
-            m_docDataList.add(new Pair<>(docData, new ObjectWrapper<>(false)));
+        for (final AttachmentData docAttachmentData : docAttachmentDataList) {
+            m_docAttachmentDataList.add(new Pair<>(docAttachmentData, new ObjectWrapper<>(false)));
         }
 
         notifyDataSetChanged();
@@ -109,15 +111,15 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         return true;
     }
 
-    public List<Uri> getChosenDocList() {
-        List<Uri> chosenDocDataList = new ArrayList<>();
+    public List<AttachmentData> getChosenDocList() {
+        List<AttachmentData> chosenDocAttachmentDataList = new ArrayList<>();
 
-        for (final Pair<DocData, ObjectWrapper<Boolean>> docItem : m_docDataList) {
-            if (docItem.second.getValue())
-                chosenDocDataList.add(docItem.first.getContentUri());
+        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentItem : m_docAttachmentDataList) {
+            if (docAttachmentItem.second.getValue())
+                chosenDocAttachmentDataList.add(docAttachmentItem.first);
         }
 
-        return chosenDocDataList;
+        return chosenDocAttachmentDataList;
     }
 
     @Override
@@ -125,7 +127,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         if (!checkItemId(position))
             return;
 
-        Pair<DocData, ObjectWrapper<Boolean>> docItem = m_docDataList.get(position);
+        Pair<AttachmentData, ObjectWrapper<Boolean>> docItem = m_docAttachmentDataList.get(position);
 
         docItem.second.setValue(!docItem.second.getValue());
     }

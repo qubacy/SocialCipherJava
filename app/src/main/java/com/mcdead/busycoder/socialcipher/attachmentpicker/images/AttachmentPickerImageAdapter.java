@@ -3,7 +3,6 @@ package com.mcdead.busycoder.socialcipher.attachmentpicker.images;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
-import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
-import com.mcdead.busycoder.socialcipher.error.Error;
+import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
     private LayoutInflater m_inflater = null;
     private AttachmentPickerImageAdapterCallback m_callback = null;
 
-    private ArrayList<Pair<Uri, ObjectWrapper<Boolean>>> m_imageDataList = null;
+    private ArrayList<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_imageAttachmentDataList = null;
 
     public AttachmentPickerImageAdapter(
             @NonNull Context context,
@@ -39,7 +38,7 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
         m_inflater = LayoutInflater.from(context);
         m_callback = callback;
 
-        m_imageDataList = new ArrayList();
+        m_imageAttachmentDataList = new ArrayList();
     }
 
     @NonNull
@@ -58,14 +57,14 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
             @NonNull AttachmentPickerImageViewHolder holder,
             int position)
     {
-        Pair<Uri, ObjectWrapper<Boolean>> imageData = m_imageDataList.get(position);
+        Pair<AttachmentData, ObjectWrapper<Boolean>> imageData = m_imageAttachmentDataList.get(position);
 
-        holder.setData(imageData.first, imageData.second.getValue());
+        holder.setData(imageData.first.getUri(), imageData.second.getValue());
     }
 
     @Override
     public int getItemCount() {
-        return m_imageDataList.size();
+        return m_imageAttachmentDataList.size();
     }
 
     @Override
@@ -74,12 +73,12 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
     }
 
     public boolean setImageList(
-            final List<Uri> imageUriList)
+            final List<AttachmentData> imageAttachmentDataList)
     {
-        if (imageUriList == null) return false;
+        if (imageAttachmentDataList == null) return false;
 
-        for (final Uri imageUri : imageUriList) {
-            m_imageDataList.add(new Pair<>(imageUri, new ObjectWrapper<>(false)));
+        for (final AttachmentData imageAttachmentData : imageAttachmentDataList) {
+            m_imageAttachmentDataList.add(new Pair<>(imageAttachmentData, new ObjectWrapper<>(false)));
         }
 
         notifyDataSetChanged();
@@ -87,20 +86,20 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
         return true;
     }
 
-    public ArrayList<Uri> getChosenImages() {
-        ArrayList<Uri> chosenImageUriList = new ArrayList<>();
+    public ArrayList<AttachmentData> getChosenImages() {
+        ArrayList<AttachmentData> chosenImageAttachmentDataList = new ArrayList<>();
 
-        for (final Pair<Uri, ObjectWrapper<Boolean>> imageData : m_imageDataList) {
+        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> imageData : m_imageAttachmentDataList) {
             if (!imageData.second.getValue()) continue;
 
-            chosenImageUriList.add(imageData.first);
+            chosenImageAttachmentDataList.add(imageData.first);
         }
 
-        return chosenImageUriList;
+        return chosenImageAttachmentDataList;
     }
 
     private boolean checkImageId(final int id) {
-        if (id < 0 || m_imageDataList.size() <= id) {
+        if (id < 0 || m_imageAttachmentDataList.size() <= id) {
 //            m_callback.onAttachmentPickerImageAdapterErrorOccurred(
 //                    new Error("Wrong Image Id has been provided!", true)
 //            );
@@ -115,8 +114,8 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
     public void onImageClicked(final int id) {
         if (!checkImageId(id)) return;
 
-        Pair<Uri, ObjectWrapper<Boolean>> imageData = m_imageDataList.get(id);
+        Pair<AttachmentData, ObjectWrapper<Boolean>> imageAttachmentData = m_imageAttachmentDataList.get(id);
 
-        imageData.second.setValue(!imageData.second.getValue());
+        imageAttachmentData.second.setValue(!imageAttachmentData.second.getValue());
     }
 }
