@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mcdead.busycoder.socialcipher.api.vk.VKAPIContext;
 import com.mcdead.busycoder.socialcipher.api.vk.VKAPIInterface;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentBase;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentDeserializer;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentDocSaveBody;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentDocSaveBodyDeserializer;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentDocSaveWrapper;
@@ -38,17 +40,13 @@ public class APIStore {
     }
 
     private static Error initVK() {
-        Gson responseDialogGson = new GsonBuilder().registerTypeAdapter(
-                ResponseDialogItem.class,
-                new ResponseDialogItemDeserializer()).create();
-        Gson responseAttachmentDocSaveBodyGson = new GsonBuilder().registerTypeAdapter(
-                ResponseAttachmentDocSaveBody.class,
-                new ResponseAttachmentDocSaveBodyDeserializer()).create();
+        Gson responseAttachmentGson = new GsonBuilder().registerTypeAdapter(
+                ResponseAttachmentBase.class,
+                new ResponseAttachmentDeserializer()).create();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(VKAPIContext.C_API_URL)
-                .addConverterFactory(GsonConverterFactory.create(responseDialogGson))
-                .addConverterFactory(GsonConverterFactory.create(responseAttachmentDocSaveBodyGson))
+                .addConverterFactory(GsonConverterFactory.create(responseAttachmentGson))
                 .build();
 
         s_api = retrofit.create(VKAPIInterface.class);

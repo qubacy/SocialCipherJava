@@ -127,6 +127,9 @@ public class UpdateCheckerVK extends UpdateCheckerBase {
                     return;
                 }
 
+                if (updateBodyWrapper.getValue() == null)
+                    continue;
+
                 ts = updateBodyWrapper.getValue().ts;
 
                 if (!updateBodyWrapper.getValue().updates.isEmpty())
@@ -159,12 +162,15 @@ public class UpdateCheckerVK extends UpdateCheckerBase {
                                         ObjectWrapper<ResponseUpdateBody> updateBodyWrapper)
             throws IOException, JSONException
     {
+        if (!response.isSuccessful())
+            return new Error("Updates getting error!", true);
+
         ResponseUpdateBody updateBodyBuf = deserializeUpdate(response.body().string());
 
-        if (!response.isSuccessful() || updateBodyBuf == null)
-            return new Error("Updates getting error!", true);
+        if (updateBodyBuf == null)
+            return null;
         if (updateBodyBuf.updates == null)
-            return new Error("Updates getting error!", true);
+            return new Error("Updates deserializing error has been occurred!", true);
 
         updateBodyWrapper.setValue(updateBodyBuf);
 

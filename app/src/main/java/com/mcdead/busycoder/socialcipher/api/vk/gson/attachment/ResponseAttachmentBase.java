@@ -5,7 +5,7 @@ import com.mcdead.busycoder.socialcipher.api.common.gson.dialog.ResponseAttachme
 import java.io.Serializable;
 
 public abstract class ResponseAttachmentBase implements Serializable, ResponseAttachmentInterface {
-    public String attachmentType;
+    protected String m_attachmentType = null;
 
     public ResponseAttachmentBase() {
 
@@ -13,8 +13,12 @@ public abstract class ResponseAttachmentBase implements Serializable, ResponseAt
 
     public ResponseAttachmentBase(final String attachmentType)
     {
-        this.attachmentType = attachmentType;
+        m_attachmentType = attachmentType;
     }
 
-    public abstract ResponseAttachmentType getAttachmentType();
+    public abstract ResponseAttachmentType getResponseAttachmentType();
+
+    public String getAttachmentType() {
+        return m_attachmentType;
+    }
 }

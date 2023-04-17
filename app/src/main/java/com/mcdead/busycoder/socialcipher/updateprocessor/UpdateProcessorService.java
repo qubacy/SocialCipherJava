@@ -102,7 +102,8 @@ public class UpdateProcessorService extends Service {
         }
 
         Bundle updatesWrapperBundle = data.getBundleExtra(DialogsBroadcastReceiver.C_UPDATES_WRAPPER_EXTRA_PROP_NAME);
-        List<ResponseUpdateItemInterface> updates = (List<ResponseUpdateItemInterface>) updatesWrapperBundle.getSerializable(DialogsBroadcastReceiver.C_UPDATES_LIST_EXTRA_PROP_NAME);
+        List<ResponseUpdateItemInterface> updates =
+                (List<ResponseUpdateItemInterface>) updatesWrapperBundle.getSerializable(DialogsBroadcastReceiver.C_UPDATES_LIST_EXTRA_PROP_NAME);
 
         try {
             for (final ResponseUpdateItemInterface update : updates)

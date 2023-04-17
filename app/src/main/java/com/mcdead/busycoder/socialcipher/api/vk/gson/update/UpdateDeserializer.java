@@ -23,6 +23,9 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
 
     private static final int C_OUTCOMING_MESSAGE_FLAG = 0b10;
 
+    private static final String C_TS_PROP_NAME = "ts";
+    private static final String C_UPDATES_PROP_NAME = "updates";
+
     @Override
     public ResponseUpdateBody deserialize(JsonElement json,
                                           Type typeOfT,
@@ -32,8 +35,21 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
         JsonObject rootObj = json.getAsJsonObject();
         ResponseUpdateBody responseUpdateBody = new ResponseUpdateBody();
 
-        responseUpdateBody.ts = rootObj.get("ts").getAsLong();
-        JsonArray updateItemArray = rootObj.getAsJsonArray("updates");
+        if (rootObj.get(C_TS_PROP_NAME) == null
+         || rootObj.get(C_UPDATES_PROP_NAME) == null)
+        {
+            return null;
+        }
+
+        if (!rootObj.get(C_TS_PROP_NAME).isJsonPrimitive()
+         || !rootObj.get(C_UPDATES_PROP_NAME).isJsonArray())
+        {
+            return null;
+        }
+
+        responseUpdateBody.ts = rootObj.get(C_TS_PROP_NAME).getAsLong();
+        JsonArray updateItemArray = rootObj.getAsJsonArray(C_UPDATES_PROP_NAME);
+
         List<ResponseUpdateItem> updateItems = new ArrayList<>();
 
         for (final JsonElement rawUpdate : updateItemArray) {
@@ -41,9 +57,12 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
 
             JsonArray rawUpdateAsArray = rawUpdate.getAsJsonArray();
 
+            if (rawUpdateAsArray.size() <= 0) return null;
+
             int eventType = rawUpdateAsArray.get(0).getAsInt();
 
-            ResponseUpdateItem updateItem = deserializeUpdateItemByType(eventType, rawUpdateAsArray);
+            ResponseUpdateItem updateItem =
+                    deserializeUpdateItemByType(eventType, rawUpdateAsArray);
 
             updateItems.add(updateItem);
         }
@@ -160,7 +179,10 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
     {
         String attachmentId = attachmentsObj.get(attachPropName).getAsString();
 
-        return new ResponseAttachmentStored(VKAttachmentType.PHOTO.getType(), attachmentId);
+        return ResponseAttachmentStored.
+                generateResponseAttachmentFromFullAttachmentId(
+                        VKAttachmentType.PHOTO.getType(),
+                        attachmentId);
     }
 
     private ResponseAttachmentBase deserializeDocAttachment(String attachPropName,
@@ -168,7 +190,10 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
     {
         String attachmentId = attachmentsObj.get(attachPropName).getAsString();
 
-        return new ResponseAttachmentStored(VKAttachmentType.DOC.getType(), attachmentId);
+        return ResponseAttachmentStored.
+                generateResponseAttachmentFromFullAttachmentId(
+                        VKAttachmentType.DOC.getType(),
+                        attachmentId);
     }
 
     private long getLocalUserPeerId() {

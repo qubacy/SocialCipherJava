@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.api.vk;
 import static com.mcdead.busycoder.socialcipher.api.vk.VKAPIContext.C_API_VERSION;
 
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentStored;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.chat.ResponseChatAttachmentsWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.getserver.ResponseAttachmentDocUploadServerWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.getserver.ResponseAttachmentPhotoUploadServerWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentDocSaveWrapper;
@@ -41,6 +42,13 @@ public interface VKAPIInterface {
     @GET("messages.getHistory?v=" + C_API_VERSION)
     Call<ResponseDialogWrapper> dialog(
             @Query("peer_id") long peerId,
+            @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
+    );
+
+    @GET("messages.getHistoryAttachments?v=" + C_API_VERSION)
+    Call<ResponseChatAttachmentsWrapper> getChatAttachments(
+            @Query("peer_id") long peerId,
+            @Query("media_type") String attachmentType,
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
     );
 

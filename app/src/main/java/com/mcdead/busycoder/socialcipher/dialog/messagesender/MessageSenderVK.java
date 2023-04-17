@@ -27,7 +27,6 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.uploaded.
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.uploaded.ResponseAttachmentUploaded;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseSendMessageWrapper;
 import com.mcdead.busycoder.socialcipher.attachmentpicker.data.AttachmentData;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
@@ -335,7 +334,7 @@ public class MessageSenderVK extends MessageSenderBase {
                             accessKey);
         }
 
-        attachmentIdWrapper.setValue(attachmentStored.getTypedAttachmentID());
+        attachmentIdWrapper.setValue(attachmentStored.getTypedFullAttachmentID());
 
         return null;
     }
@@ -365,7 +364,7 @@ public class MessageSenderVK extends MessageSenderBase {
         if (responseAttachmentDoc == null)
             return new Error("Doc Attachment saving operation response was null!", true);
 
-        attachmentIdWrapper.setValue(responseAttachmentDoc.getTypedAttachmentID());
+        attachmentIdWrapper.setValue(responseAttachmentDoc.getTypedFullAttachmentID());
 
         return null;
     }

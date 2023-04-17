@@ -1,6 +1,5 @@
 package com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader;
 
-import android.os.AsyncTask;
 import android.os.Process;
 import android.os.SystemClock;
 
