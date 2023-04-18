@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.mcdead.busycoder.socialcipher.dialoglist.dialogsloader.DialogsLoadingCallback;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.updateprocessor.UpdateProcessorService;
 

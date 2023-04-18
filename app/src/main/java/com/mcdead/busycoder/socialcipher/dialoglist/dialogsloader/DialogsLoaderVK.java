@@ -25,6 +25,8 @@ import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntityConversation;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorVK;
+import com.mcdead.busycoder.socialcipher.userloadersync.UserLoaderSyncFactory;
+import com.mcdead.busycoder.socialcipher.userloadersync.UserLoaderSyncVK;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
@@ -92,19 +94,10 @@ public class DialogsLoaderVK extends DialogsLoaderBase {
                 return new Error("Dialog init. error!", true);
 
             if (dialog.getType() == DialogType.CONVERSATION) {
-                ((DialogEntityConversation)dialog).setTitle(dialogItem.conversation.chatSettings.title);
+                DialogEntityConversation chatConversation = (DialogEntityConversation) dialog;
 
-                // todo: init. all members..
+                chatConversation.setTitle(dialogItem.conversation.chatSettings.title);
             }
-
-
-
-//            if (dialog.getType() == DialogType.USER) {
-//                Error userError;
-//
-//                if ((userError = loadUserData(dialog.getPeerId())) != null)
-//                    return userError;
-//            }
 
             List<ResponseDialogItem> messagesItems = messagesResponse.body().response.items;
 

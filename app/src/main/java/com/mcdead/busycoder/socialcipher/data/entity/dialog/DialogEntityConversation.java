@@ -43,6 +43,20 @@ public class DialogEntityConversation extends DialogEntity {
     }
 
     public List<Long> getUsersList() {
-        return new ArrayList<>(m_userIdList);
+        synchronized (m_userIdList) {
+            return new ArrayList<>(m_userIdList);
+        }
+    }
+
+    public boolean setUsersList(final List<Long> userIdList) {
+        if (userIdList == null) return false;
+
+        synchronized (m_userIdList) {
+            if (!m_userIdList.isEmpty()) return false;
+
+            m_userIdList = userIdList;
+        }
+
+        return true;
     }
 }

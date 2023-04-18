@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
 import com.mcdead.busycoder.socialcipher.dialoglist.DialogsBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.updatechecker.UpdateCheckerFactory;
+import com.mcdead.busycoder.socialcipher.updateprocessor.updateprocessorasync.UpdateProcessorAsyncFactory;
 
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -95,7 +96,7 @@ public class UpdateProcessorService extends Service {
             m_pendingUpdates = new LinkedBlockingQueue<ResponseUpdateItemInterface>();
 
             m_messageProcessorThread = new Thread(
-                UpdateProcessorFactory.generateUpdateProcessor(getApplicationContext(), m_pendingUpdates)
+                UpdateProcessorAsyncFactory.generateUpdateProcessor(getApplicationContext(), m_pendingUpdates)
             );
 
             m_messageProcessorThread.start();

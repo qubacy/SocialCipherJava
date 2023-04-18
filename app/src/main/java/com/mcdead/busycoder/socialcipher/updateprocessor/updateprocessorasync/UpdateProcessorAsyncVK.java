@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.updateprocessor;
+package com.mcdead.busycoder.socialcipher.updateprocessor.updateprocessorasync;
 
 import static com.mcdead.busycoder.socialcipher.dialoglist.DialogsBroadcastReceiver.C_NEW_MESSAGE_CHAT_ID_PROP_NAME;
 
@@ -14,7 +14,13 @@ import com.mcdead.busycoder.socialcipher.api.vk.VKAPIInterface;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatBody;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatContext;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatWrapper;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseDialogBody;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseDialogWrapper;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.group.ResponseGroupContext;
+import com.mcdead.busycoder.socialcipher.data.entity.DialogGenerator;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntityConversation;
+import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntityGroup;
+import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntityUser;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
@@ -23,12 +29,13 @@ import com.mcdead.busycoder.socialcipher.data.DialogsStore;
 import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogType;
 import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogTypeDefinerFactory;
 import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogTypeDefinerVK;
-import com.mcdead.busycoder.socialcipher.data.entity.DialogGenerator;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntity;
 import com.mcdead.busycoder.socialcipher.dialoglist.DialogsBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorVK;
+import com.mcdead.busycoder.socialcipher.userloadersync.UserLoaderSyncFactory;
+import com.mcdead.busycoder.socialcipher.userloadersync.UserLoaderSyncVK;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
@@ -36,23 +43,27 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import retrofit2.Response;
 
-public class UpdateProcessorVK extends UpdateProcessorBase {
+public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
     public static final long C_MESSAGE_PROCESS_TIMEOUT = 500;
 
     private DialogTypeDefinerVK m_dialogTypeDefiner = null;
+    private UserLoaderSyncVK m_userLoader = null;
 
-    public UpdateProcessorVK(final String token,
-                             Context context,
-                             LinkedBlockingQueue<ResponseUpdateItemInterface> updateQueue)
+    public UpdateProcessorAsyncVK(final String token,
+                                  Context context,
+                                  LinkedBlockingQueue<ResponseUpdateItemInterface> updateQueue)
     {
         super(token, context, updateQueue);
     }
 
     private Error init() {
         m_dialogTypeDefiner = (DialogTypeDefinerVK) DialogTypeDefinerFactory.generateDialogTypeDefiner();
+        m_userLoader = (UserLoaderSyncVK) UserLoaderSyncFactory.generateUserLoader();
 
         if (m_dialogTypeDefiner == null)
             return new Error("DialogTypeDefiner hasn't been initialized!", true);
+        if (m_userLoader == null)
+            return new Error("UserLoader hasn't been initialized!", true);
 
         return null;
     }
@@ -152,34 +163,81 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
         if (dialogType == null)
             return new Error("Unknown dialog type!", true);
 
-        Error initChatError = initChatData(chatId);
-
-        if (initChatError != null) return initChatError;
-
-        if (!DialogsStore.getInstance().addDialog(DialogGenerator.generateChatByType(
-                dialogType, chatId
-        )))
-        {
-            return new Error("New dialog addition error!", true);
+        switch (dialogType) {
+            case USER: return initChatUser(chatId);
+            case GROUP: return initChatGroup(chatId);
+            case CONVERSATION: return initChatConversation(chatId);
         }
 
         return null;
     }
 
-    private Error initChatData(
+    private Error initChatUser(
             final long chatId)
     {
         if (chatId == 0)
             return new Error("Incorrect chatId has been provided!", true);
-
-        // todo: getting chat data.. (including its users)
 
         VKAPIInterface vkAPI = (VKAPIInterface) APIStore.getAPIInstance();
 
         if (vkAPI == null)
             return new Error("VK API hasn't been initialized!", true);
 
-        DialogEntityConversation chatEntity = null;
+        DialogEntityUser chatUserEntity = chatUserEntity = new DialogEntityUser(chatId);
+        Error userLoadingError = m_userLoader.loadUserById(chatId);
+
+        if (userLoadingError != null)
+            return userLoadingError;
+
+        DialogsStore dialogsStore = DialogsStore.getInstance();
+
+        if (dialogsStore == null)
+            return new Error("Dialogs Store hasn't been initialized!", true);
+        if (!dialogsStore.addDialog(chatUserEntity))
+            return new Error("New Chat adding operation has been failed!", true);
+
+        return null;
+    }
+
+    private Error initChatGroup(
+            final long chatId)
+    {
+        if (ResponseGroupContext.isChatGroupId(chatId))
+            return new Error("Incorrect chatId has been provided!", true);
+
+        VKAPIInterface vkAPI = (VKAPIInterface) APIStore.getAPIInstance();
+
+        if (vkAPI == null)
+            return new Error("VK API hasn't been initialized!", true);
+
+        DialogEntityGroup chatGroupEntity = new DialogEntityGroup(chatId);
+        Error userLoadingError = m_userLoader.loadUserById(chatId);
+
+        if (userLoadingError != null)
+            return userLoadingError;
+
+        DialogsStore dialogsStore = DialogsStore.getInstance();
+
+        if (dialogsStore == null)
+            return new Error("Dialogs Store hasn't been initialized!", true);
+        if (!dialogsStore.addDialog(chatGroupEntity))
+            return new Error("New Chat adding operation has been failed!", true);
+
+        return null;
+    }
+
+    private Error initChatConversation(
+            final long chatId)
+    {
+        if (!ResponseChatContext.isChatConversationId(chatId))
+            return new Error("Incorrect chatId has been provided!", true);
+
+        VKAPIInterface vkAPI = (VKAPIInterface) APIStore.getAPIInstance();
+
+        if (vkAPI == null)
+            return new Error("VK API hasn't been initialized!", true);
+
+        DialogEntityConversation conversationEntity = null;
 
         try {
             Response<ResponseChatWrapper> response =
@@ -194,7 +252,7 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
 
             ResponseChatBody responseChatBody = response.body().response;
 
-            chatEntity =
+            conversationEntity =
                     new DialogEntityConversation(
                             chatId,
                             responseChatBody.title,
@@ -206,14 +264,19 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
             return new Error(e.getMessage(), true);
         }
 
-        // todo: load all chat users..
+        for (final long userId : conversationEntity.getUsersList()) {
+            Error userLoadingError = m_userLoader.loadUserById(userId);
 
+            if (userLoadingError == null) continue;
+
+            return userLoadingError;
+        }
 
         DialogsStore dialogsStore = DialogsStore.getInstance();
 
         if (dialogsStore == null)
             return new Error("Dialogs Store hasn't been initialized!", true);
-        if (!dialogsStore.addDialog(chatEntity))
+        if (!dialogsStore.addDialog(conversationEntity))
             return new Error("New Chat adding operation has been failed!", true);
 
         return null;

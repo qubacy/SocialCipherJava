@@ -13,6 +13,7 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseDialogWrappe
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseSendMessageWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialogs.ResponseDialogsWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.document.ResponseDocumentWrapper;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.group.ResponseGroupWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.longpoll.ResponseLongPollServerWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.user.ResponseUserWrapper;
@@ -32,6 +33,12 @@ public interface VKAPIInterface {
     @GET("users.get?v=" + C_API_VERSION)
     Call<ResponseUserWrapper> user(
             @Query("user_ids") long userId,
+            @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
+    );
+
+    @GET("groups.getById?v=" + C_API_VERSION)
+    Call<ResponseGroupWrapper> group(
+            @Query("group_id") long groupId,
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
     );
 

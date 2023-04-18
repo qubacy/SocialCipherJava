@@ -245,8 +245,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
             return new Error("VKAPI instance hasn't been initialized!", true);
 
         switch (attachmentType) {
-            case IMAGE: return prepareStoredAttachmentImageToDownload(vkAPI, attachmentToPrepare, charId, preparedAttachmentWrapper);
-            case DOC: return prepareStoredAttachmentDocToDownload(vkAPI, attachmentToPrepare, charId, preparedAttachmentWrapper);
+            case IMAGE:
+            case DOC: return prepareStoredAttachmentDefaultToDownload(vkAPI, attachmentToPrepare, charId, preparedAttachmentWrapper);
 //            case AUDIO:
 //            case VIDEO: return null;
         }
@@ -267,14 +267,12 @@ public class MessageProcessorVK extends MessageProcessorBase {
         return null;
     }
 
-    private Error prepareStoredAttachmentImageToDownload(
+    private Error prepareStoredAttachmentDefaultToDownload(
             final VKAPIInterface vkAPI,
             final ResponseAttachmentStored attachmentToPrepare,
             final long charId,
             ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
     {
-        // todo: get a list of attachments for a specified CHAT..
-
         List<ResponseChatAttachmentsItem> attachmentItemList = null;
 
         try {
@@ -326,19 +324,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
             break;
         }
-
-        return null;
-    }
-
-    private Error prepareStoredAttachmentDocToDownload(
-            final VKAPIInterface vkAPI,
-            final ResponseAttachmentStored attachmentToPrepare,
-            final long charId,
-            ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
-    {
-        // nothing to do this time..
-
-        preparedAttachmentWrapper.setValue(attachmentToPrepare);
 
         return null;
     }
