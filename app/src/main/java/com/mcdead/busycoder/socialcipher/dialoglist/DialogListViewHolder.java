@@ -30,8 +30,9 @@ public class DialogListViewHolder extends ViewHolder {
 
         String name = DialogTitleExtractor.getTitleByDialog(dialog);
 
-        if (name != null)
-            m_peerNameTextView.setText(name);
+        if (name == null) return false;
+
+        m_peerNameTextView.setText(name);
 
         MessageEntity lastMessage = dialog.getLastMessage();
 

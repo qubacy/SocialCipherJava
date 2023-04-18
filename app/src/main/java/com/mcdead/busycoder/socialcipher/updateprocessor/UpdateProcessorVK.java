@@ -9,7 +9,12 @@ import android.os.SystemClock;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.mcdead.busycoder.socialcipher.dialog.DialogBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.api.APIStore;
+import com.mcdead.busycoder.socialcipher.api.vk.VKAPIInterface;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatBody;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatContext;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatWrapper;
+import com.mcdead.busycoder.socialcipher.data.entity.dialog.DialogEntityConversation;
 import com.mcdead.busycoder.socialcipher.error.Error;
 import com.mcdead.busycoder.socialcipher.error.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
@@ -26,7 +31,10 @@ import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.messageprocessor.MessageProcessorVK;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import retrofit2.Response;
 
 public class UpdateProcessorVK extends UpdateProcessorBase {
     public static final long C_MESSAGE_PROCESS_TIMEOUT = 500;
@@ -111,21 +119,14 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
         DialogEntity dialogEntity = DialogsStore.getInstance().getDialogByPeerId(updateItem.chatId);
 
         if (dialogEntity == null) {
-            DialogType dialogType = m_dialogTypeDefiner.getDialogTypeByPeerId(newMessageWrapper.getValue().getFromPeerId());
+            Error newChatProcessingError = processNewChat(updateItem.chatId);
 
-            if (dialogType == null)
-                return new Error("Unknown dialog type!", true);
-
-            if (!DialogsStore.getInstance().addDialog(DialogGenerator.generateDialogByType(
-                    dialogType, newMessageWrapper.getValue().getFromPeerId()
-            )))
-            {
-                return new Error("New dialog addition error!", true);
-            }
+            if (newChatProcessingError != null)
+                return newChatProcessingError;
         }
 
         if (!DialogsStore.getInstance().addNewMessage(newMessageWrapper.getValue(), updateItem.chatId))
-            return new Error("New message processing error!", true);
+            return new Error("New message addition error!", true);
 
         Error attachmentsError = messageProcessor.processMessageAttachments(
                 newMessageWrapper.getValue(), updateItem.chatId);
@@ -139,6 +140,81 @@ public class UpdateProcessorVK extends UpdateProcessorBase {
         intent.putExtra(C_NEW_MESSAGE_CHAT_ID_PROP_NAME, updateItem.chatId);
 
         LocalBroadcastManager.getInstance(m_context).sendBroadcast(intent);
+
+        return null;
+    }
+
+    private Error processNewChat(
+            final long chatId)
+    {
+        DialogType dialogType = m_dialogTypeDefiner.getDialogTypeByPeerId(chatId);
+
+        if (dialogType == null)
+            return new Error("Unknown dialog type!", true);
+
+        Error initChatError = initChatData(chatId);
+
+        if (initChatError != null) return initChatError;
+
+        if (!DialogsStore.getInstance().addDialog(DialogGenerator.generateChatByType(
+                dialogType, chatId
+        )))
+        {
+            return new Error("New dialog addition error!", true);
+        }
+
+        return null;
+    }
+
+    private Error initChatData(
+            final long chatId)
+    {
+        if (chatId == 0)
+            return new Error("Incorrect chatId has been provided!", true);
+
+        // todo: getting chat data.. (including its users)
+
+        VKAPIInterface vkAPI = (VKAPIInterface) APIStore.getAPIInstance();
+
+        if (vkAPI == null)
+            return new Error("VK API hasn't been initialized!", true);
+
+        DialogEntityConversation chatEntity = null;
+
+        try {
+            Response<ResponseChatWrapper> response =
+                    vkAPI.chat(
+                            ResponseChatContext.getLocalChatIdByPeerId(chatId),
+                            m_token).execute();
+
+            if (!response.isSuccessful())
+                return new Error("Chat Data Request has been failed!", true);
+            if (response.body().error != null)
+                return new Error(response.body().error.message, true);
+
+            ResponseChatBody responseChatBody = response.body().response;
+
+            chatEntity =
+                    new DialogEntityConversation(
+                            chatId,
+                            responseChatBody.title,
+                            responseChatBody.userIdList);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            return new Error(e.getMessage(), true);
+        }
+
+        // todo: load all chat users..
+
+
+        DialogsStore dialogsStore = DialogsStore.getInstance();
+
+        if (dialogsStore == null)
+            return new Error("Dialogs Store hasn't been initialized!", true);
+        if (!dialogsStore.addDialog(chatEntity))
+            return new Error("New Chat adding operation has been failed!", true);
 
         return null;
     }

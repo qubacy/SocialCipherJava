@@ -18,6 +18,17 @@ public class DialogEntityConversation extends DialogEntity {
         m_userIdList = new ArrayList<>();
     }
 
+    public DialogEntityConversation(final long peerId,
+                                    final String title,
+                                    final List<Long> userIdList)
+    {
+        super(peerId, DialogType.CONVERSATION);
+
+        m_title = title;
+        m_userIdList = userIdList;
+    }
+
+
     public String getTitle() {
         return m_title;
     }

@@ -207,7 +207,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             return new Error("Attachment Store hasn't been initialized!", true);
 
         AttachmentEntityBase attachmentEntity =
-                attachmentsStore.getAttachmentById(attachmentStored.getTypedFullAttachmentID());
+                attachmentsStore.getAttachmentById(attachmentStored.getTypedShortAttachmentId());
 
         if (attachmentEntity == null)
             return null;
@@ -555,7 +555,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             return new Error("Attachment File Extension was empty!", true);
 
         attachmentDataWrapper.setValue(new AttachmentData(
-                attachmentToDownload.getTypedFullAttachmentID(),
+                attachmentToDownload.getTypedShortAttachmentId(),
                 fileExtension,
                 attachmentBytes));
 
@@ -570,7 +570,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         ResponseAttachmentDoc attachmentDoc = (ResponseAttachmentDoc) attachmentToDownload;
 
         attachmentDataWrapper.setValue(new AttachmentData(
-                attachmentDoc.getTypedFullAttachmentID(),
+                attachmentDoc.getTypedShortAttachmentId(),
                 attachmentDoc.getExtension(),
                 attachmentBytes));
 

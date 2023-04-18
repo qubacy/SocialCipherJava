@@ -8,6 +8,7 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.getserver
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.getserver.ResponseAttachmentPhotoUploadServerWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentDocSaveWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.upload.save.ResponseAttachmentPhotoSaveWrapper;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseDialogWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialog.ResponseSendMessageWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.dialogs.ResponseDialogsWrapper;
@@ -31,6 +32,12 @@ public interface VKAPIInterface {
     @GET("users.get?v=" + C_API_VERSION)
     Call<ResponseUserWrapper> user(
             @Query("user_ids") long userId,
+            @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
+    );
+
+    @GET("messages.getChat?v=" + C_API_VERSION)
+    Call<ResponseChatWrapper> chat(
+            @Query("chat_id") long localChatId,
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
     );
 

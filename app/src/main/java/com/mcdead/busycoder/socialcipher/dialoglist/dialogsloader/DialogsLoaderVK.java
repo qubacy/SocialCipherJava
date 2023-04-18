@@ -76,7 +76,7 @@ public class DialogsLoaderVK extends DialogsLoaderBase {
         for (final ResponseDialogsItem dialogItem : dialogsResponse.items) {
             SystemClock.sleep(VKAPIContext.C_REQUEST_TIMEOUT);
 
-            DialogEntity dialog = DialogGenerator.generateDialogByType(
+            DialogEntity dialog = DialogGenerator.generateChatByType(
                     m_dialogTypeDefiner.getDialogType(dialogItem),
                     dialogItem.conversation.peer.id);
 

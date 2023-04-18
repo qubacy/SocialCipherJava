@@ -94,10 +94,18 @@ public class ResponseAttachmentStored extends ResponseAttachmentBase {
         return m_attachmentAccessKey;
     }
 
+    public String getShortAttachmentId() {
+        return (String.valueOf(m_attachmentOwnerId) + '_' + String.valueOf(m_attachmentId));
+    }
+
     public String getFullAttachmentId() {
         return (
                 String.valueOf(m_attachmentOwnerId) + '_' + String.valueOf(m_attachmentId) +
                         (m_attachmentAccessKey.isEmpty() ? "" : "_" + m_attachmentAccessKey));
+    }
+
+    public String getTypedShortAttachmentId() {
+        return (m_attachmentType + getShortAttachmentId());
     }
 
     public String getTypedFullAttachmentID() {
