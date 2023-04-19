@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.processor.update;
+package com.mcdead.busycoder.socialcipher.processor.network.update.processor;
 
 import static com.mcdead.busycoder.socialcipher.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver.C_NEW_MESSAGE_CHAT_ID_PROP_NAME;
 

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -145,6 +146,8 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
 
         if (checkingUpdateError != null)
             sendErrorBroadcast(checkingUpdateError);
+
+        Log.d(getClass().getName(), "Exec. is over now!");
     }
 
     private void sendUpdateReceivedBroadcast(final List<ResponseUpdateItem> updates) {

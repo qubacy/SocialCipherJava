@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.processor.update;
+package com.mcdead.busycoder.socialcipher.processor.network.update.processor;
 
 import android.content.Context;
 

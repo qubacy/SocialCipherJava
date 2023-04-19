@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
 import com.mcdead.busycoder.socialcipher.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.processor.update.checker.UpdateCheckerAsyncFactory;
-import com.mcdead.busycoder.socialcipher.processor.update.UpdateProcessorAsyncFactory;
+import com.mcdead.busycoder.socialcipher.processor.network.update.processor.UpdateProcessorAsyncFactory;
 
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;

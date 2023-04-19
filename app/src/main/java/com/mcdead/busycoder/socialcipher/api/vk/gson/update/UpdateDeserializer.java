@@ -141,9 +141,11 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
         if (attachmentsObj.size() <= 0) return null;
 
         List<ResponseAttachmentBase> attachmentList = new ArrayList<>();
-        int curAttachmentIndex = 1;
+        int curAttachmentIndex = 0;
 
         while (true) {
+            ++curAttachmentIndex;
+
             String attachPropName = "attach" + String.valueOf(curAttachmentIndex);
             String attachTypePropName = attachPropName + "_type";
 
@@ -163,8 +165,6 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
                 case PHOTO: attachment = deserializePhotoAttachment(attachPropName, attachmentsObj); break;
                 case DOC: attachment = deserializeDocAttachment(attachPropName, attachmentsObj); break;
             }
-
-            ++curAttachmentIndex;
 
             if (attachment == null) continue;
 
