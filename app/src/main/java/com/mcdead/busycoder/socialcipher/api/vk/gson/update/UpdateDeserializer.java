@@ -141,11 +141,8 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
         if (attachmentsObj.size() <= 0) return null;
 
         List<ResponseAttachmentBase> attachmentList = new ArrayList<>();
-        int curAttachmentIndex = 0;
 
-        while (true) {
-            ++curAttachmentIndex;
-
+        for (int curAttachmentIndex = 1; true; ++curAttachmentIndex) {
             String attachPropName = "attach" + String.valueOf(curAttachmentIndex);
             String attachTypePropName = attachPropName + "_type";
 
