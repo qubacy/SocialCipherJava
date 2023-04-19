@@ -19,22 +19,22 @@
         android:theme="@style/Theme.SocialCipher"
         tools:targetApi="31">
         <activity
-            android:name="com.mcdead.busycoder.socialcipher.signin.SignInWebViewActivity"
+            android:name=".activity.signin.SignInWebViewActivity"
             android:exported="false" />
         <activity
-            android:name="com.mcdead.busycoder.socialcipher.dialoglist.DialogsActivity"
+            android:name=".activity.chatlist.ChatListActivity"
             android:exported="false" />
         <activity
-            android:name="com.mcdead.busycoder.socialcipher.dialog.DialogActivity"
+            android:name=".activity.chat.ChatActivity"
             android:exported="false"/>
         <activity
-            android:name="com.mcdead.busycoder.socialcipher.attachmentshower.AttachmentShowerActivity"
+            android:name=".activity.messageattachmentshower.AttachmentShowerActivity"
             android:exported="false"/>
         <activity
-            android:name="com.mcdead.busycoder.socialcipher.attachmentpicker.AttachmentPickerActivity"
+            android:name=".activity.attachmentpicker.AttachmentPickerActivity"
             android:exported="false"/>
         <activity
-            android:name="com.mcdead.busycoder.socialcipher.MainActivity"
+            android:name="com.mcdead.busycoder.socialcipher.activity.main.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,11 +43,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.mcdead.busycoder.socialcipher.error.ErrorActivity"
+            android:name=".activity.error.ErrorActivity"
             android:exported="false"/>
 
         <service
-            android:name="com.mcdead.busycoder.socialcipher.updateprocessor.UpdateProcessorService"
+            android:name=".processor.update.service.UpdateProcessorService"
             android:configChanges="keyboardHidden|orientation"/>
 
         <provider

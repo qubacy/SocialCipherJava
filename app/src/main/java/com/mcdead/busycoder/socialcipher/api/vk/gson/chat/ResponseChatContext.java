@@ -1,8 +1,8 @@
 package com.mcdead.busycoder.socialcipher.api.vk.gson.chat;
 
-import static com.mcdead.busycoder.socialcipher.api.vk.VKAPIContext.C_CHAT_PEER_ID_OFFSET;
-
 public class ResponseChatContext {
+    public static long C_CHAT_PEER_ID_OFFSET = 2000000000;
+
     public static int getLocalChatIdByPeerId(
             final long chatId)
     {

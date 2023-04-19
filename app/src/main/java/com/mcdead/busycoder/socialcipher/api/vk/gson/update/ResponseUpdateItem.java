@@ -1,7 +1,7 @@
 package com.mcdead.busycoder.socialcipher.api.vk.gson.update;
 
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
-import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentBase;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.ResponseAttachmentBase;
 
 import java.io.Serializable;
 import java.util.List;

@@ -3,7 +3,7 @@ package com.mcdead.busycoder.socialcipher.setting.network;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 
-import com.mcdead.busycoder.socialcipher.APIType;
+import com.mcdead.busycoder.socialcipher.api.APIType;
 import com.mcdead.busycoder.socialcipher.setting.SettingsBase;
 import com.mcdead.busycoder.socialcipher.setting.SettingsContext;
 

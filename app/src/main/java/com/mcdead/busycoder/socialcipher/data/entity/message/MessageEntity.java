@@ -1,6 +1,6 @@
 package com.mcdead.busycoder.socialcipher.data.entity.message;
 
-import com.mcdead.busycoder.socialcipher.api.common.gson.dialog.ResponseAttachmentInterface;
+import com.mcdead.busycoder.socialcipher.api.common.gson.chat.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 
 import java.util.ArrayList;

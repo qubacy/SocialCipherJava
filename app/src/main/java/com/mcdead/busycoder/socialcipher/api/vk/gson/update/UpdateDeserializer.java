@@ -6,12 +6,12 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.mcdead.busycoder.socialcipher.api.vk.VKAttachmentType;
-import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentBase;
-import com.mcdead.busycoder.socialcipher.api.vk.gson.attachment.ResponseAttachmentStored;
-import com.mcdead.busycoder.socialcipher.data.UsersStore;
-import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogType;
-import com.mcdead.busycoder.socialcipher.data.dialogtype.DialogTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.VKAttachmentType;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.ResponseAttachmentBase;
+import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.ResponseAttachmentStored;
+import com.mcdead.busycoder.socialcipher.data.store.UsersStore;
+import com.mcdead.busycoder.socialcipher.data.entity.chat.chattype.ChatType;
+import com.mcdead.busycoder.socialcipher.data.entity.chat.chattype.ChatTypeDefinerVK;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -99,11 +99,11 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
 
         if (localUserPeerId == 0) return null;
 
-        DialogType dialogType = (new DialogTypeDefinerVK()).getDialogTypeByPeerId(responseUpdateItem.chatId);
+        ChatType dialogType = (new ChatTypeDefinerVK()).getDialogTypeByPeerId(responseUpdateItem.chatId);
 
         switch (dialogType) {
-            case GROUP:
-            case USER: {
+            case WITH_GROUP:
+            case DIALOG: {
                 JsonObject titleObj = rawUpdateAsArray.get(6).getAsJsonObject();
 
                 if (responseUpdateItem.chatId == localUserPeerId) {
