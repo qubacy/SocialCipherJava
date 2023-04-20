@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.chooser;
+package com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.chooser.adapter;
 
 import android.view.View;
 import android.widget.TextView;

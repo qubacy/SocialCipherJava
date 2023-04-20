@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.processor.tokenchecker;
+package com.mcdead.busycoder.socialcipher.processor.network.tokenchecker.result;
 
 import com.mcdead.busycoder.socialcipher.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;

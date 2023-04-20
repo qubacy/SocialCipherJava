@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.chooser;
+package com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.chooser.adapter;
 
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;

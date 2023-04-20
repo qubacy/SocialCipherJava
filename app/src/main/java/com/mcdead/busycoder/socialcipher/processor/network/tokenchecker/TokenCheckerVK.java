@@ -10,6 +10,8 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.user.ResponseUserWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.webinterface.VKAPIProfile;
 import com.mcdead.busycoder.socialcipher.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.processor.network.tokenchecker.result.TokenCheckResult;
+import com.mcdead.busycoder.socialcipher.processor.network.tokenchecker.result.TokenCheckResultInterface;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;

@@ -26,7 +26,7 @@ import com.mcdead.busycoder.socialcipher.processor.chat.message.processor.Messag
 import com.mcdead.busycoder.socialcipher.setting.manager.SettingsManager;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 import com.mcdead.busycoder.socialcipher.activity.signin.SignInWebViewActivity;
-import com.mcdead.busycoder.socialcipher.processor.tokenchecker.TokenCheckResultInterface;
+import com.mcdead.busycoder.socialcipher.processor.network.tokenchecker.result.TokenCheckResultInterface;
 import com.mcdead.busycoder.socialcipher.processor.tokenchecker.TokenCheckerBase;
 import com.mcdead.busycoder.socialcipher.processor.tokenchecker.TokenCheckerFactory;
 

@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.data.utility.chat;
+package com.mcdead.busycoder.socialcipher.data.entity.chat;
 
 import com.mcdead.busycoder.socialcipher.data.entity.chat.chattype.ChatType;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntity;
@@ -6,7 +6,7 @@ import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityConversation
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityWithGroup;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityDialog;
 
-public class ChatGenerator {
+public class ChatEntityGenerator {
     public static ChatEntity generateChatByType(
             final ChatType chatType,
             final long chatId)
@@ -14,8 +14,8 @@ public class ChatGenerator {
         if (chatType == null) return null;
 
         switch (chatType) {
-            case WITH_GROUP:        return new ChatEntityWithGroup(chatId);
-            case DIALOG:         return new ChatEntityDialog(chatId);
+            case WITH_GROUP:   return new ChatEntityWithGroup(chatId);
+            case DIALOG:       return new ChatEntityDialog(chatId);
             case CONVERSATION: return new ChatEntityConversation(chatId, null);
         }
 

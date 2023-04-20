@@ -24,13 +24,13 @@ import com.mcdead.busycoder.socialcipher.activity.chat.broadcastreceiver.ChatUpd
 import com.mcdead.busycoder.socialcipher.activity.chat.fragment.adapter.MessageListAdapter;
 import com.mcdead.busycoder.socialcipher.activity.chat.fragment.adapter.MessageListAdapterCallback;
 import com.mcdead.busycoder.socialcipher.activity.chat.fragment.adapter.MessageListItemCallback;
-import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.attachmentdoc.AttachmentDocUtility;
+import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.AttachmentShowerActivity;
 import com.mcdead.busycoder.socialcipher.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
-import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.attachmentdoc.LinkedFileOpenerCallback;
+import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.doc.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
 import com.mcdead.busycoder.socialcipher.processor.chat.attachment.uploader.AttachmentUploaderSyncFactory;
 import com.mcdead.busycoder.socialcipher.processor.chat.loader.ChatLoaderBase;

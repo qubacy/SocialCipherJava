@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.attachmentdoc;
+package com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.doc;
 
 import android.content.Context;
 import android.net.Uri;

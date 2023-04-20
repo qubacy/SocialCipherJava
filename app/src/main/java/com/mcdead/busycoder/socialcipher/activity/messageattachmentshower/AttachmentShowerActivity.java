@@ -9,9 +9,9 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.mcdead.busycoder.socialcipher.R;
-import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.attachmentdoc.AttachmentDocUtility;
-import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.attachmentdoc.LinkedFileOpenerAsync;
-import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.attachmentdoc.LinkedFileOpenerCallback;
+import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.doc.AttachmentDocUtility;
+import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.doc.LinkedFileOpenerAsync;
+import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.doc.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.fragment.AttachmentShowerFragment;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityDoc;

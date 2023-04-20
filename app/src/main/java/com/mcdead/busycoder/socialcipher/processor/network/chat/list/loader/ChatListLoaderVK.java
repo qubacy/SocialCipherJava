@@ -19,7 +19,7 @@ import com.mcdead.busycoder.socialcipher.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.chattype.ChatType;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.chattype.ChatTypeDefinerVK;
-import com.mcdead.busycoder.socialcipher.data.utility.chat.ChatGenerator;
+import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityGenerator;
 import com.mcdead.busycoder.socialcipher.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
@@ -77,7 +77,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
         for (final ResponseChatListItem dialogItem : dialogsResponse.items) {
             SystemClock.sleep(VKAPIContext.C_REQUEST_TIMEOUT);
 
-            ChatEntity dialog = ChatGenerator.generateChatByType(
+            ChatEntity dialog = ChatEntityGenerator.generateChatByType(
                     m_dialogTypeDefiner.getDialogType(dialogItem),
                     dialogItem.conversation.peer.id);
 

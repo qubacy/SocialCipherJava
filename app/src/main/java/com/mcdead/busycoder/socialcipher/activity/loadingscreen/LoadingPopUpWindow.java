@@ -10,13 +10,6 @@ import android.widget.PopupWindow;
 import com.mcdead.busycoder.socialcipher.R;
 
 public class LoadingPopUpWindow extends PopupWindow {
-//    private LoadingPopUpWindow(View popUpView) {
-//        super(popUpView,
-//                LinearLayout.LayoutParams.MATCH_PARENT,
-//                LinearLayout.LayoutParams.MATCH_PARENT,
-//                true);
-//    }
-
     private LoadingPopUpWindow(Activity activity) {
         super(activity);
     }

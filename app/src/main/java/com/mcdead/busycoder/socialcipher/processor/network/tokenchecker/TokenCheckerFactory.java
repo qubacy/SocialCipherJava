@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.processor.tokenchecker;
 
+import com.mcdead.busycoder.socialcipher.processor.network.tokenchecker.result.TokenCheckResultInterface;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class TokenCheckerFactory {
