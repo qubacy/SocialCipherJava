@@ -9,8 +9,8 @@ public class ChatEntityConversation extends ChatEntity {
     private String m_title = null;
     private volatile List<Long> m_userIdList = null;
 
-    public ChatEntityConversation(final long peerId,
-                                  final String title)
+    protected ChatEntityConversation(final long peerId,
+                                     final String title)
     {
         super(peerId, ChatType.CONVERSATION);
 
@@ -18,9 +18,9 @@ public class ChatEntityConversation extends ChatEntity {
         m_userIdList = new ArrayList<>();
     }
 
-    public ChatEntityConversation(final long peerId,
-                                  final String title,
-                                  final List<Long> userIdList)
+    protected ChatEntityConversation(final long peerId,
+                                     final String title,
+                                     final List<Long> userIdList)
     {
         super(peerId, ChatType.CONVERSATION);
 

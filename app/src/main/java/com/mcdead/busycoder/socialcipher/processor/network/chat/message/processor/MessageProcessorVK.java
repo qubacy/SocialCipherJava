@@ -21,6 +21,7 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.document.ResponseDocumentWr
 import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoItem;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.update.ResponseUpdateItem;
+import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.data.store.AttachmentsStore;
 import com.mcdead.busycoder.socialcipher.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentContext;
@@ -74,12 +75,15 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 ? null
                 : new ArrayList<ResponseAttachmentInterface>(messageVK.attachments));
 
-        MessageEntity messageEntity = new MessageEntity(
+        MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 messageVK.id,
                 messageVK.fromId,
                 messageVK.text,
                 messageVK.timestamp,
                 attachmentsToLoadList);
+
+        if (messageEntity == null)
+            return new Error("New message generation process went wrong!", true);
 
         resultMessage.setValue(messageEntity);
 
@@ -105,12 +109,15 @@ public class MessageProcessorVK extends MessageProcessorBase {
                         ? null
                         : new ArrayList<ResponseAttachmentInterface>(updateVK.attachments));
 
-        MessageEntity messageEntity = new MessageEntity(
+        MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 updateVK.messageId,
                 updateVK.fromPeerId,
                 updateVK.text,
                 updateVK.timestamp,
                 attachmentsToLoadList);
+
+        if (messageEntity == null)
+            return new Error("New message generation process went wrong!", true);
 
         resultMessage.setValue(messageEntity);
 

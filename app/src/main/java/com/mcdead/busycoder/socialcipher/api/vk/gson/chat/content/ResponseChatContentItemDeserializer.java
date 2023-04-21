@@ -83,7 +83,7 @@ public class ResponseChatContentItemDeserializer implements JsonDeserializer<Res
         return true;
     }
 
-    private ResponseAttachmentBase processAttachment(JsonObject attachmentObj)
+    private ResponseAttachmentBase processAttachment(final JsonObject attachmentObj)
     {
         if (attachmentObj == null) return null;
 

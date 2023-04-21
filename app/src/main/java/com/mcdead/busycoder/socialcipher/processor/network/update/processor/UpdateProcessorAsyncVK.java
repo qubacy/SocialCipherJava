@@ -17,6 +17,7 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.ResponseChatContext;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.data.ResponseChatDataWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.group.ResponseGroupContext;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityConversation;
+import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityGenerator;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityWithGroup;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntityDialog;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
@@ -185,7 +186,9 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         if (chatId == 0)
             return new Error("Incorrect chatId has been provided!", true);
 
-        ChatEntityDialog chatUserEntity = new ChatEntityDialog(chatId);
+        //ChatEntityDialog chatUserEntity = new ChatEntityDialog(chatId);
+        ChatEntityDialog chatUserEntity =
+                (ChatEntityDialog) ChatEntityGenerator.generateChatByType(ChatType.DIALOG, chatId);
         Error userLoadingError = m_userLoader.loadUserById(chatId);
 
         if (userLoadingError != null)
@@ -208,7 +211,9 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         if (ResponseGroupContext.isChatGroupId(chatId))
             return new Error("Incorrect chatId has been provided!", true);
 
-        ChatEntityWithGroup chatGroupEntity = new ChatEntityWithGroup(chatId);
+        //ChatEntityWithGroup chatGroupEntity = new ChatEntityWithGroup(chatId);
+        ChatEntityWithGroup chatGroupEntity =
+                (ChatEntityWithGroup) ChatEntityGenerator.generateChatByType(ChatType.WITH_GROUP, chatId);
         Error userLoadingError = m_userLoader.loadUserById(chatId);
 
         if (userLoadingError != null)
@@ -246,11 +251,16 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
 
             ResponseChatDataBody responseChatBody = response.body().response;
 
+//            conversationEntity =
+//                    new ChatEntityConversation(
+//                            chatId,
+//                            responseChatBody.title,
+//                            responseChatBody.userIdList);
+
             conversationEntity =
-                    new ChatEntityConversation(
-                            chatId,
-                            responseChatBody.title,
-                            responseChatBody.userIdList);
+                    (ChatEntityConversation) ChatEntityGenerator
+                            .generateChatByType(ChatType.CONVERSATION, chatId);
+            conversationEntity.setUsersList(responseChatBody.userIdList);
 
         } catch (IOException e) {
             e.printStackTrace();

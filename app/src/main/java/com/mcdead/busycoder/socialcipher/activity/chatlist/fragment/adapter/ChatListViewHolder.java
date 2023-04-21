@@ -7,9 +7,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.api.common.gson.chat.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.data.utility.chat.ChatTitleExtractor;
 import com.mcdead.busycoder.socialcipher.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
+import com.mcdead.busycoder.socialcipher.data.utility.message.MessageTextGenerator;
+
+import java.util.List;
 
 public class ChatListViewHolder extends ViewHolder {
     private View m_itemView = null;
@@ -47,7 +51,7 @@ public class ChatListViewHolder extends ViewHolder {
     }
 
     private void setChatLastMessage(final MessageEntity lastMessage) {
-        String messageText = lastMessage.getMessage();
+        String messageText = MessageTextGenerator.generateChatPreviewMessageText(lastMessage);
 
         m_lastMessageTextView.setText(messageText);
     }

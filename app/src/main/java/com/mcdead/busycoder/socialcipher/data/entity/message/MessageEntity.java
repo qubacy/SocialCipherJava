@@ -15,7 +15,7 @@ public class MessageEntity {
     private List<ResponseAttachmentInterface> m_attachmentToLoadList = null;
     private volatile List<AttachmentEntityBase> m_attachmentsList = null;
 
-    public MessageEntity(
+    protected MessageEntity(
             final long id,
             final long fromPeerId,
             final String message,
@@ -51,7 +51,7 @@ public class MessageEntity {
         return m_attachmentsList;
     }
 
-    public boolean setAttachments(List<AttachmentEntityBase> attachmentsList) {
+    public boolean setAttachments(final List<AttachmentEntityBase> attachmentsList) {
         if (attachmentsList == null) return false;
 
         synchronized (m_attachmentsList) {
