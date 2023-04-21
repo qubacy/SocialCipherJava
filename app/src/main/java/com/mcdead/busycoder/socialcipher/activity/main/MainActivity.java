@@ -123,8 +123,7 @@ public class MainActivity extends AppCompatActivity
     private void checkIsClosing() {
         if (!m_isClosing) return;
 
-        finish();
-        System.exit(-1);
+        finishAndRemoveTask();
     }
 
     private void launchTokenCheck(final String token) {
@@ -171,6 +170,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showDialogs() {
+        processError(new Error("test", true));
+
         Intent intent = new Intent(this, ChatListActivity.class);
 
         startActivity(intent);

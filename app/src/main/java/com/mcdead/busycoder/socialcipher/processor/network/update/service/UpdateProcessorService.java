@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -55,6 +56,8 @@ public class UpdateProcessorService extends Service {
         if (m_messageProcessorThread != null)
             if (m_messageProcessorThread.isAlive())
                 m_messageProcessorThread.interrupt();
+
+        Log.d(getClass().getName(), "onDestroy() is on operating!");
 
         super.onDestroy();
     }

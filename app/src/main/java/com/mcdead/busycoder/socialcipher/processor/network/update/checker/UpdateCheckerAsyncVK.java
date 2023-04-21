@@ -28,7 +28,9 @@ import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.Serializable;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -128,7 +130,18 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
                 if (!updateBodyWrapper.getValue().updates.isEmpty())
                     sendUpdateReceivedBroadcast(updateBodyWrapper.getValue().updates);
 
-            } catch (Throwable e) {
+            } catch (InterruptedIOException e) {
+                e.printStackTrace();
+
+                // todo: how to handle?
+
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+
+                return new Error(e.getMessage(), true);
+            }
+            catch (IOException e) {
                 e.printStackTrace();
 
                 return new Error(e.getMessage(), true);

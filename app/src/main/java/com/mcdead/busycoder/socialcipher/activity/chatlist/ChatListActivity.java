@@ -38,11 +38,6 @@ public class ChatListActivity extends AppCompatActivity
                     .add(R.id.dialogs_list_fragment_frame, new ChatListFragment(this))
                     .commit();
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
         Intent intent = new Intent(this, UpdateProcessorService.class);
 
@@ -52,8 +47,21 @@ public class ChatListActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopService(new Intent(this, UpdateProcessorService.class));
+
+        super.onDestroy();
     }
 
     @Override
