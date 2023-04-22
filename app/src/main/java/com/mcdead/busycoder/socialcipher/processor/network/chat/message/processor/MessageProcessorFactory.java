@@ -1,7 +1,7 @@
 package com.mcdead.busycoder.socialcipher.processor.chat.message.processor;
 
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerFactory;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerInterface;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentTypeDefinerFactory;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class MessageProcessorFactory {

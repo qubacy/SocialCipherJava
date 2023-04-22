@@ -3,7 +3,8 @@ package com.mcdead.busycoder.socialcipher.data.store;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityGenerator;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmentdata.AttachmentData;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.data.AttachmentData;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
 import com.mcdead.busycoder.socialcipher.setting.system.SettingsSystem;
 
 import java.io.File;
@@ -11,6 +12,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class AttachmentsStore {
@@ -30,32 +33,56 @@ public class AttachmentsStore {
     }
 
     public AttachmentEntityBase saveAttachment(
-            final AttachmentData attachmentData)
+            final HashMap<AttachmentSize, AttachmentData> attachmentSizeDataHashMap)
     {
-        if (attachmentData == null) return null;
-        if (!attachmentData.isValid()) return null;
+        if (attachmentSizeDataHashMap == null) return null;
+        if (attachmentSizeDataHashMap.isEmpty()) return null;
+        if (!attachmentSizeDataHashMap.containsKey(AttachmentSize.STANDARD))
+            return null;
+
+        AttachmentData standardAttachmentData =
+                attachmentSizeDataHashMap.get(AttachmentSize.STANDARD);
+
+        for (final Map.Entry<AttachmentSize, AttachmentData> attachmentSizeData :
+                attachmentSizeDataHashMap.entrySet())
+        {
+            if (!attachmentSizeData.getValue().isValid()) return null;
+        }
 
         synchronized (m_attachmentsHash) {
-            if (m_attachmentsHash.containsKey(attachmentData.getName()))
-                return m_attachmentsHash.get(attachmentData.getName());
+            if (m_attachmentsHash.containsKey(standardAttachmentData.getName()))
+                return m_attachmentsHash.get(standardAttachmentData.getName());
 
-            String savedFilePath = saveAttachmentToFile(attachmentData.getName(), attachmentData);
+            HashMap<AttachmentSize, String> attachmentSizeFilePathHashMap = new HashMap<>();
 
-            if (savedFilePath == null) return null;
+            for (final Map.Entry<AttachmentSize, AttachmentData> attachmentSizeData :
+                    attachmentSizeDataHashMap.entrySet())
+            {
+                String savedFilePath = saveAttachmentToFile(
+                        standardAttachmentData.getName(),
+                        attachmentSizeData.getKey(),
+                        attachmentSizeData.getValue());
+
+                if (savedFilePath == null) return null;
+
+                attachmentSizeFilePathHashMap.put(attachmentSizeData.getKey(), savedFilePath);
+            }
 
             AttachmentEntityBase attachmentEntity = AttachmentEntityGenerator
-                    .generateAttachmentByIdAndFilePath(attachmentData.getName(), savedFilePath);
+                    .generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
+                            standardAttachmentData.getName(), attachmentSizeFilePathHashMap);
 
             if (attachmentEntity == null) return null;
 
-            m_attachmentsHash.put(attachmentData.getName(), attachmentEntity);
+            m_attachmentsHash.put(standardAttachmentData.getName(), attachmentEntity);
         }
 
-        return m_attachmentsHash.get(attachmentData.getName());
+        return m_attachmentsHash.get(standardAttachmentData.getName());
     }
 
     private String saveAttachmentToFile(
             final String attachmentId,
+            final AttachmentSize attachmentSize,
             final AttachmentData attachmentData)
     {
         SettingsSystem settingsSystem = SettingsSystem.getInstance();
@@ -66,6 +93,7 @@ public class AttachmentsStore {
         String newAttachmentFilePath = generateAttachmentFilePath(
                 settingsSystem.getAttachmentsDir(),
                 attachmentId,
+                attachmentSize,
                 attachmentData.getExtension());
 
         File newAttachmentFile = new File(newAttachmentFilePath);
@@ -89,6 +117,8 @@ public class AttachmentsStore {
 
         } catch (IOException e) {
             e.printStackTrace();
+
+            return null;
         }
 
         return newAttachmentFilePath;
@@ -97,9 +127,13 @@ public class AttachmentsStore {
     private String generateAttachmentFilePath(
             final String dirPath,
             final String attachmentId,
+            final AttachmentSize attachmentSize,
             final String attachmentExtension)
     {
-        return (dirPath + '/' + attachmentId + '.' + attachmentExtension);
+        return (dirPath +
+                '/' + String.valueOf(attachmentSize.getId()) +
+                '/' + attachmentId +
+                '.' + attachmentExtension);
     }
 
     public AttachmentEntityBase getAttachmentById(final String id) {
@@ -124,21 +158,35 @@ public class AttachmentsStore {
             if (!attachmentsDir.exists()) return null;
         }
 
-        File[] attachmentsFiles = attachmentsDir.listFiles();
+        HashMap<AttachmentSize, String> attachmentSizeFilePathHashMap = new HashMap<>();
 
-        for (final File attachmentFile : attachmentsFiles) {
-            String attachmentFileName = attachmentFile.getName();
+        for (final AttachmentSize attachmentSize : AttachmentSize.values()) {
+            File attachmentSizeDir = new File(attachmentsDir, String.valueOf(attachmentSize.getId()));
 
-            if (attachmentFileName.isEmpty()) continue;
+            if (!attachmentSizeDir.exists() || !attachmentSizeDir.isDirectory()) {
+                if (!attachmentSizeDir.mkdirs()) return null;
+                if (!attachmentSizeDir.exists()) return null;
+            }
 
-            String attachmentId = AttachmentContext.getAttachmentIdByFileName(attachmentFileName);
+            File[] attachmentsFiles = attachmentSizeDir.listFiles();
 
-            if (Objects.equals(attachmentId, id))
-                return AttachmentEntityGenerator.generateAttachmentByIdAndFilePath(
-                        attachmentId, attachmentFile.getPath());
+            for (final File attachmentFile : attachmentsFiles) {
+                String attachmentFileName = attachmentFile.getName();
+
+                if (attachmentFileName.isEmpty()) continue;
+
+                String attachmentId = AttachmentContext.getAttachmentIdByFileName(attachmentFileName);
+
+                if (Objects.equals(attachmentId, id)) {
+                    attachmentSizeFilePathHashMap.put(attachmentSize, attachmentFile.getPath());
+
+                    break;
+                }
+            }
         }
 
-        return null;
+        return AttachmentEntityGenerator.generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
+                id, attachmentSizeFilePathHashMap);
     }
 
     public void clean() {

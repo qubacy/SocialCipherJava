@@ -1,12 +1,18 @@
 package com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment;
 
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
+
+import java.util.HashMap;
+
 public class ResponseAttachmentLinked extends ResponseAttachmentStored {
     public static final String C_URL_PROP_NAME = "url";
 
-    protected String m_url;
+    protected HashMap<AttachmentSize, String> m_sizeUrlHashMap = null;
 
     public ResponseAttachmentLinked() {
         super();
+
+        m_sizeUrlHashMap = new HashMap<>();
     }
 
     @Override
@@ -26,51 +32,53 @@ public class ResponseAttachmentLinked extends ResponseAttachmentStored {
     public ResponseAttachmentLinked(final String attachmentType,
                                     final long attachmentId,
                                     final long attachmentOwnerId,
-                                    final String url)
+                                    final HashMap<AttachmentSize, String> sizeUrlHashMap)
     {
         super(attachmentType, attachmentId, attachmentOwnerId);
 
-        m_url = url;
+        m_sizeUrlHashMap = sizeUrlHashMap;
     }
 
     public ResponseAttachmentLinked(final String attachmentType,
                                     final long attachmentId,
                                     final long attachmentOwnerId,
                                     final String attachmentAccessKey,
-                                    final String url)
+                                    final HashMap<AttachmentSize, String> sizeUrlHashMap)
     {
         super(attachmentType, attachmentId, attachmentOwnerId, attachmentAccessKey);
 
-        m_url = url;
+        m_sizeUrlHashMap = sizeUrlHashMap;
     }
 
     protected ResponseAttachmentLinked(
             final ResponseAttachmentStored basis,
-            final String url)
+            final HashMap<AttachmentSize, String> sizeUrlHashMap)
     {
         super(basis);
 
-        m_url = url;
+        m_sizeUrlHashMap = sizeUrlHashMap;
     }
 
     protected ResponseAttachmentLinked(
             final ResponseAttachmentLinked basis)
     {
-        super(basis.m_attachmentType,
+        super(
+                basis.m_attachmentType,
                 basis.m_attachmentId,
                 basis.m_attachmentOwnerId,
                 basis.m_attachmentAccessKey);
 
-        m_url = basis.m_url;
+        m_sizeUrlHashMap = basis.m_sizeUrlHashMap;
     }
 
     public static ResponseAttachmentLinked generateAttachmentLinkedWithFullAttachmentId(
             final String attachmentType,
             final String fullAttachmentId,
-            final String url)
+            final HashMap<AttachmentSize, String> sizeUrlHashMap)
     {
-        if (url == null) return null;
-        if (url.isEmpty()) return null;
+        if (sizeUrlHashMap == null) return null;
+        if (sizeUrlHashMap.isEmpty()) return null;
+        if (!sizeUrlHashMap.containsKey(AttachmentSize.STANDARD)) return null;
 
         ResponseAttachmentStored attachmentBasis =
                 ResponseAttachmentStored.generateResponseAttachmentFromFullAttachmentId(
@@ -79,12 +87,19 @@ public class ResponseAttachmentLinked extends ResponseAttachmentStored {
         if (attachmentBasis == null) return null;
 
         ResponseAttachmentLinked attachmentLinked =
-                new ResponseAttachmentLinked(attachmentBasis, url);
+                new ResponseAttachmentLinked(attachmentBasis, sizeUrlHashMap);
 
         return attachmentLinked;
     }
 
-    public String getUrl() {
-        return m_url;
+    public String getUrlBySize(final AttachmentSize size) {
+        if (!m_sizeUrlHashMap.containsKey(size))
+            return null;
+
+        return m_sizeUrlHashMap.get(size);
+    }
+
+    public HashMap<AttachmentSize, String> getSizeUrlHashMap() {
+        return m_sizeUrlHashMap;
     }
 }

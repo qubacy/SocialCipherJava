@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype;
+package com.mcdead.busycoder.socialcipher.data.entity.attachment.type;
 
 public class AttachmentTypeDefinerVK implements AttachmentTypeDefinerInterface {
     public static final String C_IMAGE_TYPE_NAME = "photo";

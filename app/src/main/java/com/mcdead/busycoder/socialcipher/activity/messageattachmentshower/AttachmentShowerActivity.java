@@ -15,7 +15,8 @@ import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.doc.Li
 import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.fragment.AttachmentShowerFragment;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityDoc;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.activity.messageattachmentshower.chooser.AttachmentChooserCallback;
@@ -144,7 +145,7 @@ public class AttachmentShowerActivity extends AppCompatActivity
             return new Error("Attachment Data was wrong!", true);
 
         AttachmentEntityDoc attachmentDoc = (AttachmentEntityDoc) chosenAttachment;
-        Uri docUri = Uri.parse(attachmentDoc.getURI().toString());
+        Uri docUri = Uri.parse(attachmentDoc.getURIBySize(AttachmentSize.STANDARD).toString());
 
         (new LinkedFileOpenerAsync(docUri, this, this)).execute();
 

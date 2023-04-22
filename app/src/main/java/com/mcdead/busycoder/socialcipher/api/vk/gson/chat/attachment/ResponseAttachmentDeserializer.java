@@ -2,13 +2,16 @@ package com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment;
 
 import static com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.ResponseAttachmentLinked.C_URL_PROP_NAME;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 
 public class ResponseAttachmentDeserializer implements JsonDeserializer<ResponseAttachmentBase> {
     public static final String C_ATTACHMENT_TYPE_PROP_NAME = "type";
@@ -103,9 +106,15 @@ public class ResponseAttachmentDeserializer implements JsonDeserializer<Response
         String attachmentUrl = attachmentObj.get(C_URL_PROP_NAME).getAsString();
         String attachmentExt = attachmentObj.get(ResponseAttachmentDoc.C_EXT_PROP_NAME).getAsString();
 
+        HashMap<AttachmentSize, String> attachmentSizeUrlHashMap = new HashMap<>();
+
+        attachmentSizeUrlHashMap.put(AttachmentSize.STANDARD, attachmentUrl);
+
         return new ResponseAttachmentDoc(
-                attachmentType.getType(), attachmentId,
-                attachmentOwnerId, attachmentUrl,
+                attachmentType.getType(),
+                attachmentId,
+                attachmentOwnerId,
+                attachmentSizeUrlHashMap,
                 attachmentExt);
     }
 
@@ -120,26 +129,42 @@ public class ResponseAttachmentDeserializer implements JsonDeserializer<Response
         if (!attachmentObj.get(C_SIZES_PROP_NAME).isJsonArray())
             return null;
 
-        int sizesCount = attachmentObj.get(C_SIZES_PROP_NAME).getAsJsonArray().size();
+        JsonArray sizeArray = attachmentObj.get(C_SIZES_PROP_NAME).getAsJsonArray();
+        int sizesCount = sizeArray.size();
 
         if (sizesCount == 0) return null;
 
-        JsonElement biggestPhotoSize = attachmentObj.get(C_SIZES_PROP_NAME).getAsJsonArray().get(sizesCount - 1);
+        JsonElement smallPhotoSize = sizeArray.get(0);
+        JsonElement standardPhotoSize = sizeArray.get(sizesCount - 1);
 
-        if (!biggestPhotoSize.isJsonObject()) return null;
-
-        JsonObject biggestPhotoSizeObj = biggestPhotoSize.getAsJsonObject();
-
-        if (biggestPhotoSizeObj.get(C_URL_PROP_NAME) == null)
+        if (!smallPhotoSize.isJsonObject()
+         || !standardPhotoSize.isJsonObject())
+        {
             return null;
+        }
 
-        String photoUrl = biggestPhotoSizeObj.get(C_URL_PROP_NAME).getAsString();
+        JsonObject smallPhotoSizeObj = smallPhotoSize.getAsJsonObject();
+        JsonObject standardPhotoSizeObj = standardPhotoSize.getAsJsonObject();
+
+        if (smallPhotoSizeObj.get(C_URL_PROP_NAME) == null
+         || standardPhotoSizeObj.get(C_URL_PROP_NAME) == null)
+        {
+            return null;
+        }
+
+        String smallPhotoUrl = smallPhotoSizeObj.get(C_URL_PROP_NAME).getAsString();
+        String standardPhotoUrl = standardPhotoSizeObj.get(C_URL_PROP_NAME).getAsString();
+
+        HashMap<AttachmentSize, String> attachmentSizeUrlHashMap = new HashMap<>();
+
+        attachmentSizeUrlHashMap.put(AttachmentSize.SMALL, smallPhotoUrl);
+        attachmentSizeUrlHashMap.put(AttachmentSize.STANDARD, standardPhotoUrl);
 
         return new ResponseAttachmentLinked(
                 attachmentType.getType(),
                 attachmentId,
                 attachmentOwnerId,
                 attachmentAccessKey,
-                photoUrl);
+                attachmentSizeUrlHashMap);
     }
 }

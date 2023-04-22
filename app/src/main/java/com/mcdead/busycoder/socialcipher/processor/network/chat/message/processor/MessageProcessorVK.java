@@ -21,23 +21,26 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.document.ResponseDocumentWr
 import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoItem;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.update.ResponseUpdateItem;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.data.store.AttachmentsStore;
 import com.mcdead.busycoder.socialcipher.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmentdata.AttachmentData;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerFactory;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerInterface;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.data.AttachmentData;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentTypeDefinerFactory;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentTypeDefinerInterface;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -186,8 +189,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         ObjectWrapper<ResponseAttachmentBase> preparedToDownloadAttachmentWrapper =
                 new ObjectWrapper<>();
-
-        Error prepareToDownloadError = prepareAttachmentToDownload(attachmentVK, charId, preparedToDownloadAttachmentWrapper);
+        Error prepareToDownloadError = prepareAttachmentToDownload(
+                attachmentVK, charId, preparedToDownloadAttachmentWrapper);
 
         if (prepareToDownloadError != null)
             return prepareToDownloadError;
@@ -358,7 +361,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, attachmentEntityWrapper);
         }
 
-        return new Error("Downloading Stored Attachment operation cannot be executed on a provided attachment!", true);
+        return new Error("Downloading Attachment operation cannot be executed on a provided attachment!", true);
     }
 
     private Error downloadStoredAttachment(
@@ -432,13 +435,24 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (responsePhotoItem.sizes.isEmpty())
             return new Error("Received array of photo sizes was empty!", true);
 
+        HashMap<AttachmentSize, String> attachmentSizeUrlHashMap =
+                new HashMap<>();
+
+        String smallSizeUrl = responsePhotoItem.sizes.get(0).url;
         String lastSizeUrl = responsePhotoItem.sizes.get(responsePhotoItem.sizes.size() - 1).url;
 
-        return downloadLinkedAttachmentDefault(
+        attachmentSizeUrlHashMap.put(AttachmentSize.SMALL, smallSizeUrl);
+        attachmentSizeUrlHashMap.put(AttachmentSize.STANDARD, lastSizeUrl);
+
+        ResponseAttachmentLinked attachmentLinked =
                 ResponseAttachmentLinked.generateAttachmentLinkedWithFullAttachmentId(
                         attachmentToDownload.getAttachmentType(),
                         attachmentToDownload.getFullAttachmentId(),
-                        lastSizeUrl),
+                        attachmentSizeUrlHashMap
+                );
+
+        return downloadLinkedAttachmentDefault(
+                attachmentLinked,
                 attachmentType,
                 attachmentEntityWrapper);
     }
@@ -478,24 +492,32 @@ public class MessageProcessorVK extends MessageProcessorBase {
             return new Error(e.getMessage(), true);
         }
 
-        return downloadLinkedAttachmentDefault(
+        HashMap<AttachmentSize, String> attachmentSizeUrlHashMap =
+                new HashMap<>();
+
+        attachmentSizeUrlHashMap.put(AttachmentSize.STANDARD, responseDocItem.url);
+
+        ResponseAttachmentDoc responseAttachmentDoc =
                 ResponseAttachmentDoc.generateAttachmentDocWithFullAttachmentId(
-                        attachmentToDownload.getAttachmentType(),
-                        attachmentToDownload.getFullAttachmentId(),
-                        responseDocItem.url,
-                        responseDocItem.ext),
+                    attachmentToDownload.getAttachmentType(),
+                    attachmentToDownload.getFullAttachmentId(),
+                    attachmentSizeUrlHashMap,
+                    responseDocItem.ext);
+
+        return downloadLinkedAttachmentDefault(
+                responseAttachmentDoc,
                 attachmentType,
                 attachmentEntityWrapper);
     }
 
     private Error downloadLinkedAttachment(
-            final ResponseAttachmentLinked attachmentToDownload,
+            final ResponseAttachmentLinked attachmentLink,
             final AttachmentType attachmentType,
             ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         switch (attachmentType) {
             case IMAGE:
-            case DOC: return downloadLinkedAttachmentDefault(attachmentToDownload, attachmentType, attachmentEntityWrapper);
+            case DOC: return downloadLinkedAttachmentDefault(attachmentLink, attachmentType, attachmentEntityWrapper);
             case AUDIO: return null;
             case VIDEO: return null;
         }
@@ -506,24 +528,28 @@ public class MessageProcessorVK extends MessageProcessorBase {
     }
 
     private Error downloadLinkedAttachmentDefault(
-            final ResponseAttachmentLinked attachmentToDownload,
+            final ResponseAttachmentLinked attachmentLinked,
             final AttachmentType attachmentType,
             ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .build();
-        Request request = new Request.Builder()
-                .url(attachmentToDownload.getUrl())
-                .build();
-        byte[] attachmentBytes = null;
+        HashMap<AttachmentSize, byte[]> attachmentSizeBytesHashMap = new HashMap<>();
 
         try {
-            Response response = okHttpClient.newCall(request).execute();
+            for (final Map.Entry<AttachmentSize, String> attachmentSizeLink :
+                    attachmentLinked.getSizeUrlHashMap().entrySet())
+            {
+                Request request = new Request.Builder()
+                        .url(attachmentSizeLink.getValue())
+                        .build();
+                Response response = okHttpClient.newCall(request).execute();
 
-            if (!response.isSuccessful())
-                return new Error("Downloading Attachment process has been failed!", true);
+                if (!response.isSuccessful())
+                    return new Error("Downloading Attachment process has been failed!", true);
 
-            attachmentBytes = response.body().bytes();
+                attachmentSizeBytesHashMap.put(attachmentSizeLink.getKey(), response.body().bytes());
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -531,72 +557,96 @@ public class MessageProcessorVK extends MessageProcessorBase {
             return new Error(e.getMessage(), true);
         }
 
-        ObjectWrapper<AttachmentData> attachmentDataWrapper =
+        ObjectWrapper<HashMap<AttachmentSize, AttachmentData>> attachmentSizeDataHashMapWrapper =
                 new ObjectWrapper<>();
-
-        Error attachmentDataError = generateAttachmentData(
+        Error attachmentDataError = generateAttachmentSizeDataHashMap(
                 attachmentType,
-                attachmentToDownload,
-                attachmentBytes,
-                attachmentDataWrapper);
+                attachmentLinked,
+                attachmentSizeBytesHashMap,
+                attachmentSizeDataHashMapWrapper);
 
         if (attachmentDataError != null)
             return attachmentDataError;
 
         return generateAttachmentEntity(
-                attachmentDataWrapper.getValue(),
+                attachmentSizeDataHashMapWrapper.getValue(),
                 attachmentEntityWrapper);
     }
 
-    private Error generateAttachmentData(
+    private Error generateAttachmentSizeDataHashMap(
             final AttachmentType attachmentType,
-            final ResponseAttachmentLinked attachmentToDownload,
-            final byte[] attachmentBytes,
-            ObjectWrapper<AttachmentData> attachmentDataWrapper)
+            final ResponseAttachmentLinked attachmentLink,
+            final HashMap<AttachmentSize, byte[]> attachmentSizeBytesHashMap,
+            ObjectWrapper<HashMap<AttachmentSize, AttachmentData>> attachmentSizeDataHashMapWrapper)
     {
         switch (attachmentType) {
-            case IMAGE: return generateAttachmentDataImage(attachmentToDownload, attachmentBytes, attachmentDataWrapper);
-            case DOC: return generateAttachmentDataDoc(attachmentToDownload, attachmentBytes, attachmentDataWrapper);
+            case IMAGE: return generateAttachmentSizeDataImageHashMap(
+                    attachmentLink,
+                    attachmentSizeBytesHashMap,
+                    attachmentSizeDataHashMapWrapper);
+            case DOC: return generateAttachmentDataDoc(
+                    attachmentLink,
+                    attachmentSizeBytesHashMap,
+                    attachmentSizeDataHashMapWrapper);
         }
 
         return null;
     }
 
-    private Error generateAttachmentDataImage(
-            final ResponseAttachmentLinked attachmentToDownload,
-            final byte[] attachmentBytes,
-            ObjectWrapper<AttachmentData> attachmentDataWrapper)
+    private Error generateAttachmentSizeDataImageHashMap(
+            final ResponseAttachmentLinked attachmentLink,
+            final HashMap<AttachmentSize, byte[]> attachmentSizeBytesHashMap,
+            ObjectWrapper<HashMap<AttachmentSize, AttachmentData>> attachmentSizeDataHashMapWrapper)
     {
-        String fileExtension = extractExtensionByUrl(attachmentToDownload.getUrl());
+        String fileExtension = extractExtensionByUrl(attachmentLink.getUrlBySize(AttachmentSize.STANDARD));
 
         if (fileExtension.isEmpty())
             return new Error("Attachment File Extension was empty!", true);
 
-        attachmentDataWrapper.setValue(new AttachmentData(
-                attachmentToDownload.getTypedShortAttachmentId(),
-                fileExtension,
-                attachmentBytes));
+        HashMap<AttachmentSize, AttachmentData> attachmentSizeDataHashMap  = new HashMap<>();
+
+        for (final Map.Entry<AttachmentSize, byte[]> attachmentSizeBytes :
+                attachmentSizeBytesHashMap.entrySet())
+        {
+            AttachmentData attachmentSizeData = new AttachmentData(
+                    attachmentLink.getTypedShortAttachmentId(),
+                    fileExtension,
+                    attachmentSizeBytes.getValue());
+
+            attachmentSizeDataHashMap.put(attachmentSizeBytes.getKey(), attachmentSizeData);
+        }
+
+        attachmentSizeDataHashMapWrapper.setValue(attachmentSizeDataHashMap);
 
         return null;
     }
 
     private Error generateAttachmentDataDoc(
-            final ResponseAttachmentLinked attachmentToDownload,
-            final byte[] attachmentBytes,
-            ObjectWrapper<AttachmentData> attachmentDataWrapper)
+            final ResponseAttachmentLinked attachmentLink,
+            final HashMap<AttachmentSize, byte[]> attachmentSizeBytesHashMap,
+            ObjectWrapper<HashMap<AttachmentSize, AttachmentData>> attachmentSizeDataHashMapWrapper)
     {
-        ResponseAttachmentDoc attachmentDoc = (ResponseAttachmentDoc) attachmentToDownload;
+        ResponseAttachmentDoc attachmentDoc = (ResponseAttachmentDoc) attachmentLink;
+        HashMap<AttachmentSize, AttachmentData> attachmentSizeDataHashMap  = new HashMap<>();
 
-        attachmentDataWrapper.setValue(new AttachmentData(
-                attachmentDoc.getTypedShortAttachmentId(),
-                attachmentDoc.getExtension(),
-                attachmentBytes));
+        for (final Map.Entry<AttachmentSize, byte[]> attachmentSizeBytes :
+                attachmentSizeBytesHashMap.entrySet())
+        {
+            AttachmentData attachmentSizeData = new AttachmentData(
+                    attachmentDoc.getTypedShortAttachmentId(),
+                    attachmentDoc.getExtension(),
+                    attachmentSizeBytes.getValue());
+
+            attachmentSizeDataHashMap.put(attachmentSizeBytes.getKey(), attachmentSizeData);
+        }
+
+        attachmentSizeDataHashMapWrapper.setValue(attachmentSizeDataHashMap);
 
         return null;
     }
 
     private Error generateAttachmentEntity(
-            final AttachmentData attachmentData,
+            final HashMap<AttachmentSize, AttachmentData> attachmentSizeDataHashMap,
             ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
@@ -604,7 +654,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (attachmentsStore == null)
             return new Error("Attachment Store hasn't been initialized!", true);
 
-        attachmentEntityWrapper.setValue(attachmentsStore.saveAttachment(attachmentData));
+        attachmentEntityWrapper.setValue(attachmentsStore.saveAttachment(attachmentSizeDataHashMap));
 
         return null;
     }

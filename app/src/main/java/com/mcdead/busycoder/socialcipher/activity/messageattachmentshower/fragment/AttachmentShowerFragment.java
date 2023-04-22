@@ -15,7 +15,8 @@ import androidx.fragment.app.Fragment;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityImage;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 
@@ -85,7 +86,7 @@ public class AttachmentShowerFragment extends Fragment {
         AttachmentEntityImage imageAttachment = (AttachmentEntityImage) m_attachment;
         ImageView imageView = new ImageView(getActivity());
 
-        imageView.setImageURI(Uri.parse(imageAttachment.getURI().toString()));
+        imageView.setImageURI(Uri.parse(imageAttachment.getURIBySize(AttachmentSize.STANDARD).toString()));
 
         return imageView;
     }

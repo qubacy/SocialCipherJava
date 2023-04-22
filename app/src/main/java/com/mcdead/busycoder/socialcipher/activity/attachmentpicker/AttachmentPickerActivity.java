@@ -27,7 +27,7 @@ import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.fragment.imag
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.intent.AttachmentPickerActivityContract;
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.fragment.type.AttachmentTypePickerFragment;
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.fragment.type.AttachmentTypePickerFragmentCallback;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 

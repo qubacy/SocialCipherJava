@@ -16,9 +16,11 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityDoc;
 import com.mcdead.busycoder.socialcipher.data.entity.attachment.AttachmentEntityImage;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.data.utility.message.MessageTextGenerator;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -152,8 +154,12 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
             final AttachmentEntityImage attachmentImage)
     {
         ImageView attachmentImageView = new ImageView(m_attachmentPreview.getContext());
+        URI imageUri = attachmentImage.getURIBySize(AttachmentSize.SMALL);
 
-        attachmentImageView.setImageURI(Uri.parse(attachmentImage.getURI().toString()));
+        if (imageUri == null)
+            imageUri = attachmentImage.getURIBySize(AttachmentSize.STANDARD);
+
+        attachmentImageView.setImageURI(Uri.parse(imageUri.toString()));
 
         return attachmentImageView;
     }
@@ -166,7 +172,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         if (fileIcon == null) return null;
 
         ImageView attachmentImageView = new ImageView(m_attachmentPreview.getContext());
-        Uri docUri = Uri.parse(attachmentDoc.getURI().toString());
+//        Uri docUri = Uri.parse(attachmentDoc.getURI().toString());
 
         attachmentImageView.setImageDrawable(fileIcon);
 

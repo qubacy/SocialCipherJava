@@ -2,7 +2,7 @@ package com.mcdead.busycoder.socialcipher.processor.chat.message.processor;
 
 import com.mcdead.busycoder.socialcipher.api.common.gson.chat.ResponseMessageInterface;
 import com.mcdead.busycoder.socialcipher.api.common.gson.update.ResponseUpdateItemInterface;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerInterface;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;

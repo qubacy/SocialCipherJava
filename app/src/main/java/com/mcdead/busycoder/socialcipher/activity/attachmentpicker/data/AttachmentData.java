@@ -6,7 +6,7 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 
 public class AttachmentData implements Parcelable {
     private AttachmentType m_type = null;

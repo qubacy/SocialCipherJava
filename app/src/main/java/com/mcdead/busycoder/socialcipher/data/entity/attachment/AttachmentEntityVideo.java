@@ -1,14 +1,16 @@
 package com.mcdead.busycoder.socialcipher.data.entity.attachment;
 
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 
 import java.net.URI;
+import java.util.HashMap;
 
 public class AttachmentEntityVideo extends AttachmentEntityBase {
     public AttachmentEntityVideo(String id,
-                                 URI uri)
+                                 final HashMap<AttachmentSize, URI> sizeUriHashMap)
     {
-        super(id, uri);
+        super(id, sizeUriHashMap);
     }
 
     @Override

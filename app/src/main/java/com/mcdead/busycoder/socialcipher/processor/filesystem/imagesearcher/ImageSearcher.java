@@ -11,7 +11,7 @@ import android.provider.MediaStore;
 import androidx.annotation.NonNull;
 
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.data.AttachmentData;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 

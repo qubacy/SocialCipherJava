@@ -1,5 +1,9 @@
 package com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment;
 
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
+
+import java.util.HashMap;
+
 public class ResponseAttachmentDoc extends ResponseAttachmentLinked {
     public static final String C_EXT_PROP_NAME = "ext";
 
@@ -18,10 +22,10 @@ public class ResponseAttachmentDoc extends ResponseAttachmentLinked {
     public ResponseAttachmentDoc(final String attachmentType,
                                  final long attachmentId,
                                  final long attachmentOwnerId,
-                                 final String url,
+                                 final HashMap<AttachmentSize, String> sizeUrlHashMap,
                                  final String ext)
     {
-        super(attachmentType, attachmentId, attachmentOwnerId, url);
+        super(attachmentType, attachmentId, attachmentOwnerId, sizeUrlHashMap);
 
         this.m_ext = ext;
     }
@@ -38,14 +42,14 @@ public class ResponseAttachmentDoc extends ResponseAttachmentLinked {
     public static ResponseAttachmentDoc generateAttachmentDocWithFullAttachmentId(
             final String attachmentType,
             final String fullAttachmentId,
-            final String url,
+            HashMap<AttachmentSize, String> sizeUrlHashMap,
             final String ext)
     {
         if (ext == null) return null;
 
         ResponseAttachmentLinked attachmentBasis =
                 ResponseAttachmentLinked.generateAttachmentLinkedWithFullAttachmentId(
-                        attachmentType, fullAttachmentId, url);
+                        attachmentType, fullAttachmentId, sizeUrlHashMap);
 
         if (attachmentBasis == null) return null;
 

@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmentdata;
+package com.mcdead.busycoder.socialcipher.data.entity.attachment.data;
 
 public class AttachmentData {
     private String m_name = null;

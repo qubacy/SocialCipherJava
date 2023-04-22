@@ -13,7 +13,7 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
 import com.mcdead.busycoder.socialcipher.R;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 
 import java.util.ArrayList;
 import java.util.List;

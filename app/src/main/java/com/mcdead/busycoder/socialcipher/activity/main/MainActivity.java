@@ -170,8 +170,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showDialogs() {
-        processError(new Error("test", true));
-
         Intent intent = new Intent(this, ChatListActivity.class);
 
         startActivity(intent);

@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype;
+package com.mcdead.busycoder.socialcipher.data.entity.attachment.type;
 
 import java.io.Serializable;
 import java.util.Objects;

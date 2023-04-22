@@ -22,7 +22,7 @@ import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.upload.uplo
 import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.upload.uploaded.ResponseAttachmentPhotoUploaded;
 import com.mcdead.busycoder.socialcipher.api.vk.gson.chat.attachment.upload.uploaded.ResponseAttachmentUploaded;
 import com.mcdead.busycoder.socialcipher.api.vk.webinterface.VKAPIUploadAttachment;
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.processor.chat.attachment.uploader.result.AttachmentUploadedResult;
 import com.mcdead.busycoder.socialcipher.processor.chat.attachment.uploader.result.AttachmentUploadedResultVK;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;

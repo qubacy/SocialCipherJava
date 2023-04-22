@@ -1,18 +1,26 @@
 package com.mcdead.busycoder.socialcipher.data.entity.attachment;
 
-import com.mcdead.busycoder.socialcipher.data.entity.attachment.attachmenttype.AttachmentType;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.size.AttachmentSize;
+import com.mcdead.busycoder.socialcipher.data.entity.attachment.type.AttachmentType;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AttachmentEntityGenerator {
-    public static AttachmentEntityBase generateAttachmentByIdAndFilePath(
+    public static AttachmentEntityBase generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
             final String fileId,
-            final String filePath)
+            final HashMap<AttachmentSize, String> attachmentSizeFilePathHashMap)
     {
-        if (filePath == null) return null;
-        if (filePath.isEmpty()) return null;
+        if (attachmentSizeFilePathHashMap == null) return null;
+        if (attachmentSizeFilePathHashMap.isEmpty()) return null;
+        if (!attachmentSizeFilePathHashMap.containsKey(AttachmentSize.STANDARD))
+            return null;
 
-        String attachmentExtension = AttachmentContext.getExtensionByFilePath(filePath);
+        String standardSizeAttachmentFilePath =
+                attachmentSizeFilePathHashMap.get(AttachmentSize.STANDARD);
+        String attachmentExtension =
+                AttachmentContext.getExtensionByFilePath(standardSizeAttachmentFilePath);
 
         if (attachmentExtension == null) return null;
 
@@ -20,23 +28,29 @@ public class AttachmentEntityGenerator {
 
         if (attachmentType == null) return null;
 
-        URI uri = AttachmentContext.getURIByFilePath(filePath);
+        HashMap<AttachmentSize, URI> attachmentSizeURIHashMap = new HashMap<>();
 
-        if (uri == null) return null;
+        for (final Map.Entry attachmentSizeFilePathItem : attachmentSizeFilePathHashMap.entrySet()) {
+            URI uri = AttachmentContext.getURIByFilePath((String) attachmentSizeFilePathItem.getValue());
 
-        return generateAttachmentByIdAndURI(attachmentType, fileId, uri);
+            if (uri == null) return null;
+
+            attachmentSizeURIHashMap.put((AttachmentSize) attachmentSizeFilePathItem.getKey(), uri);
+        }
+
+        return generateAttachmentByIdAndURI(attachmentType, fileId, attachmentSizeURIHashMap);
     }
 
     private static AttachmentEntityBase generateAttachmentByIdAndURI(
             final AttachmentType attachmentType,
             final String fileId,
-            final URI uri)
+            final HashMap<AttachmentSize, URI> attachmentSizeURIHashMap)
     {
         switch (attachmentType) {
-            case IMAGE: return new AttachmentEntityImage(fileId, uri);
-            case DOC: return new AttachmentEntityDoc(fileId, uri);
-            case AUDIO: return new AttachmentEntityAudio(fileId, uri);
-            case VIDEO: return new AttachmentEntityVideo(fileId, uri);
+            case IMAGE: return new AttachmentEntityImage(fileId, attachmentSizeURIHashMap);
+            case DOC: return new AttachmentEntityDoc(fileId, attachmentSizeURIHashMap);
+            case AUDIO: return new AttachmentEntityAudio(fileId, attachmentSizeURIHashMap);
+            case VIDEO: return new AttachmentEntityVideo(fileId, attachmentSizeURIHashMap);
         }
 
         return null;
