@@ -308,6 +308,13 @@ public class ChatFragment extends Fragment
 
     private void sendNewMessage() {
         String text = m_sendingMessageText.getText().toString();
+        List<AttachmentData> attachmentDataList = new ArrayList<>(m_uploadingAttachmentList);
+
+        if (text.isEmpty() && m_uploadingAttachmentList.isEmpty()) {
+            // todo: may be it needs to show something..
+
+            return;
+        }
 
         AttachmentUploaderSyncBase attachmentUploader =
                 AttachmentUploaderSyncFactory.generateAttachmentUploader(
@@ -327,7 +334,7 @@ public class ChatFragment extends Fragment
                 = MessageSenderFactory.generateMessageSender(
                         m_peerId,
                         text,
-                        m_uploadingAttachmentList,
+                        attachmentDataList,
                         attachmentUploader,
                         this);
 
@@ -341,6 +348,8 @@ public class ChatFragment extends Fragment
         }
 
         m_sendingMessageText.getText().clear();
+        m_uploadingAttachmentList.clear();
+
         messageSender.execute();
     }
 
