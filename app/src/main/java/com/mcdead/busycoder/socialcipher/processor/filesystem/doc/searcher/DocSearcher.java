@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.processor.filesystem.docsearcher;
+package com.mcdead.busycoder.socialcipher.processor.filesystem.doc.searcher;
 
 import android.content.Context;
 import android.database.Cursor;

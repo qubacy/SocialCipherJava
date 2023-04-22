@@ -1,6 +1,6 @@
 package com.mcdead.busycoder.socialcipher.activity.attachmentpicker.fragment.images.adapter;
 
-import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
@@ -13,16 +13,21 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.processor.filesystem.image.loader.ImageLoader;
+import com.mcdead.busycoder.socialcipher.processor.filesystem.image.loader.ImageLoaderCallback;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder {
+public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder
+    implements ImageLoaderCallback
+{
     private static final int C_THUMBNAIL_SIZE = 256;
 
     private boolean m_isChosen = false;
 
-    private ContentResolver m_contentResolver = null;
+    private Context m_context = null;
 
     private ImageView m_image = null;
     private ImageView m_choosingIndicationIcon = null;
@@ -32,7 +37,7 @@ public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder {
     public AttachmentPickerImageViewHolder(
             @NonNull View itemView,
             @NonNull AttachmentPickerImageViewHolderCallback callback,
-            @NonNull ContentResolver contentResolver)
+            @NonNull Context context)
     {
         super(itemView);
 
@@ -41,7 +46,7 @@ public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder {
 
         m_callback = callback;
 
-        m_contentResolver = contentResolver;
+        m_context = context;
     }
 
     public boolean setData(
@@ -71,7 +76,8 @@ public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder {
     }
 
     private void loadImageThumbnail(final Uri imageUri) {
-        new LoadImage().execute(imageUri);
+        new ImageLoader(imageUri, m_context, this).execute();
+        //new LoadImage().execute(imageUri);
     }
 
     private void setImageBitmap(final Bitmap image) {
@@ -87,35 +93,45 @@ public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder {
         m_isChosen = isChosen;
     }
 
-    private class LoadImage extends AsyncTask<Uri, Void, Bitmap> {
-        @Override
-        protected Bitmap doInBackground(final Uri... imageUriList) {
-            if (imageUriList.length <= 0) return null;
-
-            Uri imageUri = imageUriList[0];
-            Bitmap thumbnail = null;
-
-            try (InputStream imageStream = m_contentResolver.openInputStream(imageUri)) {
-                thumbnail = ThumbnailUtils.extractThumbnail(
-                        BitmapFactory.decodeStream(imageStream),
-                        C_THUMBNAIL_SIZE, C_THUMBNAIL_SIZE);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-
-                return null;
-            }
-
-            return thumbnail;
-        }
-
-        @Override
-        protected void onPostExecute(final Bitmap bitmap) {
-            if (bitmap == null) return;
-
-            setImageBitmap(bitmap);
-        }
+    @Override
+    public void onImagesLoaded(final Uri imageUri) {
+        m_image.setImageURI(imageUri);
     }
+
+    @Override
+    public void onImagesLoadingError(final Error error) {
+        m_callback.onViewHolderErrorOccurred(error);
+    }
+
+//    private class LoadImage extends AsyncTask<Uri, Void, Bitmap> {
+//        @Override
+//        protected Bitmap doInBackground(final Uri... imageUriList) {
+//            if (imageUriList.length <= 0) return null;
+//
+//            Uri imageUri = imageUriList[0];
+//            Bitmap thumbnail = null;
+//
+//            try (InputStream imageStream = m_contentResolver.openInputStream(imageUri)) {
+//                thumbnail = ThumbnailUtils.extractThumbnail(
+//                        BitmapFactory.decodeStream(imageStream),
+//                        C_THUMBNAIL_SIZE, C_THUMBNAIL_SIZE);
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//
+//                return null;
+//            }
+//
+//            return thumbnail;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(final Bitmap bitmap) {
+//            if (bitmap == null) return;
+//
+//            setImageBitmap(bitmap);
+//        }
+//    }
 
 
 }

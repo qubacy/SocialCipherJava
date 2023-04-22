@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.processor.filesystem.imagesearcher;
+package com.mcdead.busycoder.socialcipher.processor.filesystem.image.searcher;
 
 import android.content.ContentUris;
 import android.content.Context;

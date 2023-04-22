@@ -15,8 +15,8 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.fragment.images.adapter.AttachmentPickerImageAdapter;
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.fragment.images.adapter.AttachmentPickerImageAdapterCallback;
-import com.mcdead.busycoder.socialcipher.processor.filesystem.imagesearcher.ImageSearcher;
-import com.mcdead.busycoder.socialcipher.processor.filesystem.imagesearcher.ImageSearcherCallback;
+import com.mcdead.busycoder.socialcipher.processor.filesystem.image.searcher.ImageSearcher;
+import com.mcdead.busycoder.socialcipher.processor.filesystem.image.searcher.ImageSearcherCallback;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 

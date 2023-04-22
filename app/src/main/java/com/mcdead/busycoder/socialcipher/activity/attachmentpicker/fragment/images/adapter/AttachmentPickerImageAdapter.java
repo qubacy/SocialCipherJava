@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.data.AttachmentData;
+import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
     {
         View viewHolder = m_inflater.inflate(R.layout.attachment_image_view_holder, parent, false);
 
-        return new AttachmentPickerImageViewHolder(viewHolder, this, m_contentResolver);
+        return new AttachmentPickerImageViewHolder(viewHolder, this, m_inflater.getContext());
     }
 
     @Override
@@ -116,5 +117,10 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
         Pair<AttachmentData, ObjectWrapper<Boolean>> imageAttachmentData = m_imageAttachmentDataList.get(id);
 
         imageAttachmentData.second.setValue(!imageAttachmentData.second.getValue());
+    }
+
+    @Override
+    public void onViewHolderErrorOccurred(final Error error) {
+        m_callback.onAttachmentPickerImageAdapterErrorOccurred(error);
     }
 }

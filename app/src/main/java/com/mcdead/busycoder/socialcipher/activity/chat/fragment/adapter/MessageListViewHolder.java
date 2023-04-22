@@ -117,8 +117,10 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         View attachmentPreview = null;
 
         switch (attachmentToPreview.getType()) {
-            case DOC: attachmentPreview = setMessageAttachmentDataDoc((AttachmentEntityDoc) attachmentToPreview); break;
-            case IMAGE: attachmentPreview = setMessageAttachmentDataImage((AttachmentEntityImage) attachmentToPreview); break;
+            case DOC: attachmentPreview =
+                    setMessageAttachmentDataDoc((AttachmentEntityDoc) attachmentToPreview); break;
+            case IMAGE: attachmentPreview =
+                    setMessageAttachmentDataImage((AttachmentEntityImage) attachmentToPreview); break;
         }
 
         if (attachmentPreview == null)

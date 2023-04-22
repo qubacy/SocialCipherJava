@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.processor.filesystem.imagesearcher;
+package com.mcdead.busycoder.socialcipher.processor.filesystem.image.searcher;
 
 import com.mcdead.busycoder.socialcipher.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
