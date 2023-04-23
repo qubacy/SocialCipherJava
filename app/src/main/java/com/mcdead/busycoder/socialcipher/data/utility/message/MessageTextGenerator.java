@@ -38,8 +38,12 @@ public class MessageTextGenerator {
                 message.getAttachments();
 
         if (attachmentToLoadList != null || !attachmentList.isEmpty()) {
-            int attachmentListSize = (attachmentToLoadList == null ?
-                    attachmentList.size() : attachmentToLoadList.size());
+            int attachmentListSize =
+                    (attachmentToLoadList == null ?
+                    attachmentList.size() :
+                            (attachmentToLoadList.isEmpty() ?
+                            attachmentList.size() :
+                            attachmentToLoadList.size()));
 
             if (isChatPreview) {
                 messageText.append(C_ATTACHMENT_COUNT_LABEL_TEXT);
