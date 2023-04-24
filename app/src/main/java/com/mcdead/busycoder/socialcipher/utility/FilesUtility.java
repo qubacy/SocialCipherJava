@@ -2,7 +2,7 @@ package com.mcdead.busycoder.socialcipher.utility;
 
 import android.net.Uri;
 
-import com.mcdead.busycoder.socialcipher.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 
 import java.io.File;
 import java.io.FileInputStream;
