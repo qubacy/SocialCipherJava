@@ -4,14 +4,30 @@ import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.Cipher
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.CipherSessionState;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.data.CipherSessionInitRoute;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.List;
 
+import javax.crypto.KeyAgreement;
+
 public class CipherSessionStateInit implements CipherSessionState {
+    final private PrivateKey m_privateKey;
+    final private PublicKey m_publicKey;
+
+    final private KeyAgreement m_keyAgreement;
+
     final private List<CipherSessionInitRoute> m_routeList;
 
     protected CipherSessionStateInit(
+            final PrivateKey privateKey,
+            final PublicKey publicKey,
+            final KeyAgreement keyAgreement,
             final List<CipherSessionInitRoute> routeList)
     {
+        m_privateKey = privateKey;
+        m_publicKey = publicKey;
+
+        m_keyAgreement = keyAgreement;
         m_routeList = routeList;
     }
 
@@ -35,6 +51,8 @@ public class CipherSessionStateInit implements CipherSessionState {
     public boolean isInitCompleted() {
         return m_routeList.isEmpty();
     }
+
+
 
     @Override
     public CipherSessionStateOverall getOverallState() {
