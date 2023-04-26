@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherAlgorithm;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherMode;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherPadding;
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
 public class CipherCommandDataInitRequest extends CipherCommandData {
     final private CipherAlgorithm m_cipherAlgorithm;
@@ -47,5 +48,10 @@ public class CipherCommandDataInitRequest extends CipherCommandData {
 
     public CipherPadding getCipherPadding() {
         return m_cipherPadding;
+    }
+
+    @Override
+    public CipherCommandType getType() {
+        return CipherCommandType.CIPHER_SESSION_INIT_REQUEST;
     }
 }

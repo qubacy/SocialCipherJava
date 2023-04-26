@@ -1,10 +1,12 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandData;
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitAccept;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherSessionPreInitData;
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.parser.CipherCommandDataParser;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.data.entity.CommandData;
 import com.mcdead.busycoder.socialcipher.command.processor.CommandProcessor;
-import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;
 
 import java.util.HashMap;
 
@@ -28,11 +30,28 @@ public class CipherCommandProcessor implements CommandProcessor {
     public Error processCommand(
             final CommandData commandData)
     {
-        // todo: processing new command;
+        if (commandData == null)
+            return new Error("Provided Ciphering Command data was null!", true);
 
+        CipherCommandData cipherCommandData =
+                CipherCommandDataParser.parseCipherCommandData(
+                        commandData.getSpecificCommandTypeData());
 
+        if (cipherCommandData == null)
+            return new Error("Cipher Command Data parsing went wrong!", true);
 
-        return null;
+        switch (cipherCommandData.getType()) {
+            case CIPHER_SESSION_INIT_REQUEST:
+                return processInitRequestCommand((CipherCommandDataInitAccept) cipherCommandData);
+            case CIPHER_SESSION_INIT_ACCEPT:
+                return processInitAcceptCommand((CipherCommandDataInitAccept) cipherCommandData);
+            case CIPHER_SESSION_INIT_ROUTE:
+                return processInitRouteCommand((CipherCommandDataInitAccept) cipherCommandData);
+            case CIPHER_SESSION_INIT_COMPLETED:
+                return processInitCompletedCommand((CipherCommandDataInitAccept) cipherCommandData);
+        }
+
+        return new Error("Unknown type of Cipher Command Data has been provided!", true);
     }
 
     @Override
@@ -43,5 +62,28 @@ public class CipherCommandProcessor implements CommandProcessor {
 
     }
 
+    private Error processInitRequestCommand(
+            final CipherCommandDataInitAccept initAcceptCommand)
+    {
+        // todo: asking user for participating in a new cipher session..
 
+    }
+
+    private Error processInitAcceptCommand(
+            final CipherCommandDataInitAccept initAcceptCommand)
+    {
+
+    }
+
+    private Error processInitRouteCommand(
+            final CipherCommandDataInitAccept initAcceptCommand)
+    {
+
+    }
+
+    private Error processInitCompletedCommand(
+            final CipherCommandDataInitAccept initAcceptCommand)
+    {
+
+    }
 }

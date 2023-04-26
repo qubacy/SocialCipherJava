@@ -49,6 +49,9 @@
         <service
             android:name=".client.processor.update.service.UpdateProcessorService"
             android:configChanges="keyboardHidden|orientation"/>
+        <service
+            android:name=".command.processor.service.CommandProcessorService"
+            android:configChanges="keyboardHidden|orientation"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"

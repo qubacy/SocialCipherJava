@@ -1,36 +1,35 @@
 package com.mcdead.busycoder.socialcipher.command.processor.data;
 
-import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
+import java.io.Serializable;
 
-public class CommandMessage {
+public class CommandMessage implements Serializable {
     final private long m_peerId;
-    final private MessageEntity m_messageEntity;
+    final private String m_commandString;
 
     private CommandMessage(
             final long peerId,
-            final MessageEntity messageEntity)
+            final String commandString)
     {
         m_peerId = peerId;
-        m_messageEntity = messageEntity;
+        m_commandString = commandString;
     }
 
     public static CommandMessage getInstance(
             final long peerId,
-            final MessageEntity messageEntity)
+            final String commandString)
     {
         if (peerId == 0) return null;
-        if (messageEntity == null) return null;
-        if (messageEntity.getMessage() == null) return null;
-        if (messageEntity.getMessage().isEmpty()) return null;
+        if (commandString == null) return null;
+        if (commandString.isEmpty()) return null;
 
-        return new CommandMessage(peerId, messageEntity);
+        return new CommandMessage(peerId, commandString);
     }
 
     public long getPeerId() {
         return m_peerId;
     }
 
-    public MessageEntity getMessageEntity() {
-        return m_messageEntity;
+    public String getCommandString() {
+        return m_commandString;
     }
 }

@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.client.data.entity.message;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,14 +65,6 @@ public class MessageEntity {
 
         return true;
     }
-
-//    public boolean addAttachment(AttachmentEntityBase attachment) {
-//        if (attachment == null) return false;
-//
-//        m_attachmentsList.add(attachment);
-//
-//        return false;
-//    }
 
     public List<ResponseAttachmentInterface> getAttachmentToLoad() {
         return m_attachmentToLoadList;

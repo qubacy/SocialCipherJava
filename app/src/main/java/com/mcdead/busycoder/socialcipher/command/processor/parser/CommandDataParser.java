@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CommandDataParser {
     private static final int C_COMMAND_PART_COUNT = 2;
-    private static final int C_COMMAND_HEADER_PART_COUNT = 3;
+    private static final int C_COMMAND_HEADER_PART_COUNT = 4;
 
     public static Error parseCommandMessage(
             final CommandMessage commandMessage,
@@ -21,7 +21,7 @@ public class CommandDataParser {
         if (commandMessage == null || commandDataWrapper == null)
             return new Error("Incorrect command has been provided!", true);
 
-        String commandText = commandMessage.getMessageEntity().getMessage();
+        String commandText = commandMessage.getCommandString();
         String[] commandParts =
                 commandText.split(String.valueOf(CommandContext.C_PART_DIVIDER_CHAR));
 
@@ -43,10 +43,19 @@ public class CommandDataParser {
         if (retrievingCategoryError != null)
             return retrievingCategoryError;
 
+        ObjectWrapper<Long> chatIdWrapper =
+                new ObjectWrapper<>();
+        Error retrievingChatIdError = retrieveChatId(
+                commandHeaderParts[1],
+                chatIdWrapper);
+
+        if (retrievingChatIdError != null)
+            return retrievingChatIdError;
+
         ObjectWrapper<List<Long>> receiverPeerIdListWrapper =
                 new ObjectWrapper<>();
         Error retrievingReceiversError = retrieveReceiverPeerIdList(
-                commandHeaderParts[1],
+                commandHeaderParts[2],
                 receiverPeerIdListWrapper);
 
         if (retrievingReceiversError != null)
@@ -55,6 +64,7 @@ public class CommandDataParser {
         CommandData commandData =
                 new CommandData(
                         commandCategoryWrapper.getValue(),
+                        chatIdWrapper.getValue(),
                         receiverPeerIdListWrapper.getValue(),
                         commandParts[1]);
 
@@ -75,6 +85,17 @@ public class CommandDataParser {
             return new Error("A command with an invalid category has been provided!", true);
 
         commandCategoryWrapper.setValue(commandCategory);
+
+        return null;
+    }
+
+    private static Error retrieveChatId(
+            final String chatIdString,
+            ObjectWrapper<Long> chatIdWrapper)
+    {
+        long chatId = Long.parseLong(chatIdString);
+
+        chatIdWrapper.setValue(chatId);
 
         return null;
     }

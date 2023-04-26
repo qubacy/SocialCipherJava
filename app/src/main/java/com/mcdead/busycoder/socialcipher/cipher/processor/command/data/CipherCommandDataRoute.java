@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
+
 public class CipherCommandDataRoute extends CipherCommandData {
     final private int m_routeId;
     final private byte[] m_data;
@@ -29,5 +31,10 @@ public class CipherCommandDataRoute extends CipherCommandData {
 
     public byte[] getData() {
         return m_data;
+    }
+
+    @Override
+    public CipherCommandType getType() {
+        return CipherCommandType.CIPHER_SESSION_INIT_ROUTE;
     }
 }

@@ -1,8 +1,8 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command;
 
 public enum CipherCommandType {
-    CIPHER_SESSION_REQUEST(1),
-    CIPHER_SESSION_ACCEPT(2),
+    CIPHER_SESSION_INIT_REQUEST(1),
+    CIPHER_SESSION_INIT_ACCEPT(2),
     CIPHER_SESSION_INIT_COMPLETED(3),
     CIPHER_SESSION_INIT_ROUTE(4);
 

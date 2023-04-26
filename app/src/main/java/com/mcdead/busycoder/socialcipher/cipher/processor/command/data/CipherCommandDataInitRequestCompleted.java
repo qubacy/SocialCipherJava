@@ -2,6 +2,8 @@ package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 
 import android.util.Pair;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
+
 import java.security.PublicKey;
 import java.util.List;
 
@@ -50,5 +52,10 @@ public class CipherCommandDataInitRequestCompleted extends CipherCommandData {
 
     public byte[] getSidePublicData() {
         return m_sidePublicData;
+    }
+
+    @Override
+    public CipherCommandType getType() {
+        return CipherCommandType.CIPHER_SESSION_INIT_COMPLETED;
     }
 }
