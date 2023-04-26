@@ -51,14 +51,16 @@ public class MessageSenderVK extends MessageSenderBase {
             ObjectWrapper<AttachmentUploadedResult> resultAttachmentListStringWrapper =
                     new ObjectWrapper<>();
 
-            Error uploadAttachmentsError =
-                    m_attachmentUploader.uploadAttachments(
-                            vkAPIUploadAttachment,
-                            m_uploadingAttachmentList,
-                            resultAttachmentListStringWrapper);
+            if (m_uploadingAttachmentList != null) {
+                Error uploadAttachmentsError =
+                        m_attachmentUploader.uploadAttachments(
+                                vkAPIUploadAttachment,
+                                m_uploadingAttachmentList,
+                                resultAttachmentListStringWrapper);
 
-            if (uploadAttachmentsError != null)
-                return uploadAttachmentsError;
+                if (uploadAttachmentsError != null)
+                    return uploadAttachmentsError;
+            }
 
             AttachmentUploadedResultVK attachmentUploadedResult =
                     (AttachmentUploadedResultVK) resultAttachmentListStringWrapper.getValue();
@@ -90,6 +92,8 @@ public class MessageSenderVK extends MessageSenderBase {
 
     @Override
     protected void onPostExecute(Error error) {
+        if (m_callback == null) return;
+
         if (error == null)
             m_callback.onMessageSent();
         else

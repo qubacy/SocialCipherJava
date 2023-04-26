@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver;
+package com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment;
 
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 

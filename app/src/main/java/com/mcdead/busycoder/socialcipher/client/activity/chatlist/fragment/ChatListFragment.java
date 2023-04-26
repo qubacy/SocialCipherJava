@@ -22,7 +22,6 @@ import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapt
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListAdapterCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListItemCallback;
-import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.NewMessageReceivedCallback;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoaderBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoaderFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoadingCallback;
@@ -38,7 +37,8 @@ public class ChatListFragment extends Fragment
     implements ChatListLoadingCallback,
         ChatListAdapterCallback,
         ChatListItemCallback,
-        NewMessageReceivedCallback
+        NewMessageReceivedCallback,
+        CommandSendingCallback
 {
     private ChatListFragmentCallback m_callback = null;
 
@@ -65,7 +65,7 @@ public class ChatListFragment extends Fragment
 
         m_dialogsViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
 
-        m_dialogChangeBroadcastReceiver = new ChatListBroadcastReceiver(this);
+        m_dialogChangeBroadcastReceiver = new ChatListBroadcastReceiver(this, this);
 
         IntentFilter intentFilter =  new IntentFilter(ChatListBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
@@ -198,6 +198,14 @@ public class ChatListFragment extends Fragment
 
     @Override
     public void onNewMessageReceivingError(Error error) {
+        ErrorBroadcastReceiver.broadcastError(
+                error,
+                getActivity().getApplicationContext()
+        );
+    }
+
+    @Override
+    public void onNewCommandSendingError(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
                 getActivity().getApplicationContext()

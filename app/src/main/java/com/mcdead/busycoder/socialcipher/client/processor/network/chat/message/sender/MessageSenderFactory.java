@@ -14,7 +14,7 @@ public class MessageSenderFactory {
             final AttachmentUploaderSyncBase attachmentUploader,
             final MessageSendingCallback callback)
     {
-        if (peerId == 0 || text == null || callback == null || attachmentUploader == null)
+        if (peerId == 0 || text == null || (uploadingAttachmentList != null && attachmentUploader == null))
             return null;
 
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
