@@ -2,29 +2,39 @@ package com.mcdead.busycoder.socialcipher.command.processor.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandProcessor;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;
 import com.mcdead.busycoder.socialcipher.command.processor.executor.CommandExecutorAsync;
+import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class CommandProcessorService extends Service {
+public class CommandProcessorService extends Service
+    implements CommandProcessorServiceBroadcastReceiverCallback
+{
     public static final String C_LOCAL_USER_ID_PROP_NAME = "localPeerId";
 
     public static final String C_OPERATION_ID_PROP_NAME = "operationID";
     public static final String C_COMMAND_MESSAGE_PROP_NAME = "commandMessage";
 
-    private Thread m_cipherProcessorThread = null;
+    public static final String C_REQUEST_ANSWER_PROP_NAME = "requestAnswer";
+
+    private CommandExecutorAsync m_commandExecutorRef = null;
+    private Thread m_commandExecutorThread = null;
 
     private long m_localPeerId = 0;
 
     private volatile LinkedBlockingQueue<CommandMessage> m_pendingCommandMessageQueue;
+
+    private CommandProcessorServiceBroadcastReceiver m_broadcastReceiver = null;
 
     @Override
     public int onStartCommand(Intent intent,
@@ -41,8 +51,8 @@ public class CommandProcessorService extends Service {
         Error operationError = null;
 
         switch (operationType) {
-            case INIT_SERVICE: operationError = processInit(intent); break;
-            case PROCESS_COMMAND_MESSAGE: operationError = processCommandMessage(intent); break;
+            case INIT_SERVICE:
+                operationError = processInit(intent); break;
         }
 
         if (operationError != null) {
@@ -58,14 +68,22 @@ public class CommandProcessorService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        IntentFilter intentFilter =
+                new IntentFilter(CommandProcessorServiceBroadcastReceiver.C_PROVIDE_REQUEST_ANSWER);
 
+        m_broadcastReceiver = new CommandProcessorServiceBroadcastReceiver(this);
+
+        registerReceiver(m_broadcastReceiver, intentFilter);
     }
 
     @Override
     public void onDestroy() {
-        if (m_cipherProcessorThread != null)
-            if (m_cipherProcessorThread.isAlive())
-                m_cipherProcessorThread.interrupt();
+        if (m_commandExecutorThread != null) {
+            if (m_commandExecutorThread.isAlive())
+                m_commandExecutorThread.interrupt();
+        }
+
+        unregisterReceiver(m_broadcastReceiver);
 
         Log.d(getClass().getName(), "onDestroy() is on operating!");
 
@@ -94,14 +112,15 @@ public class CommandProcessorService extends Service {
     private Error processCommandMessage(
             final Intent intent)
     {
-        if (m_cipherProcessorThread == null) {
-            m_cipherProcessorThread =
-                    new Thread(CommandExecutorAsync.getInstance(
-                            m_localPeerId,
-                            getApplicationContext(),
-                            m_pendingCommandMessageQueue));
+        if (m_commandExecutorThread == null) {
+            m_commandExecutorRef =
+                    CommandExecutorAsync.getInstance(
+                        m_localPeerId,
+                        getApplicationContext(),
+                        m_pendingCommandMessageQueue);
+            m_commandExecutorThread = new Thread(m_commandExecutorRef);
 
-            m_cipherProcessorThread.start();
+            m_commandExecutorThread.start();
         }
 
         CommandMessage commandMessage =
@@ -115,9 +134,59 @@ public class CommandProcessorService extends Service {
         return null;
     }
 
+    private Error processRequestAnswered(
+            final Intent intent)
+    {
+        if (m_commandExecutorThread == null || m_commandExecutorRef == null)
+            return new Error("Command Processor hasn't been started yet!", true);
+
+        RequestAnswer requestAnswer =
+                (RequestAnswer) intent.getSerializableExtra(C_REQUEST_ANSWER_PROP_NAME);
+
+        if (requestAnswer == null)
+            return new Error("Bad Request Answer has been provided!", true);
+
+        m_commandExecutorRef.processRequestAnswer(requestAnswer);
+
+        return null;
+    }
+
+    @Override
+    public void onDataReceived(
+            final Intent data)
+    {
+        int operationID = data.getIntExtra(C_OPERATION_ID_PROP_NAME, -1);
+        OperationType operationType = OperationType.getOperationTypeById(operationID);
+
+        if (operationType == null) return;
+
+        Error operationError = null;
+
+        switch (operationType) {
+            case PROCESS_COMMAND_MESSAGE:
+                operationError = processCommandMessage(data); break;
+            case PROCESS_REQUEST_ANSWERED:
+                operationError = processRequestAnswered(data); break;
+        }
+
+        if (operationError != null)
+            ErrorBroadcastReceiver.broadcastError(operationError, this);
+    }
+
+    @Override
+    public void onServiceBroadcastReceiverErrorOccurred(
+            final Error error)
+    {
+        if (error == null) return;
+
+        ErrorBroadcastReceiver.broadcastError(error, this);
+    }
+
     public enum OperationType {
         INIT_SERVICE(1),
-        PROCESS_COMMAND_MESSAGE(2);
+
+        PROCESS_COMMAND_MESSAGE(2),
+        PROCESS_REQUEST_ANSWERED(3);
 
         private int m_id = 0;
 

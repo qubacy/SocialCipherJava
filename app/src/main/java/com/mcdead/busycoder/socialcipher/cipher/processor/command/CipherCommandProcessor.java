@@ -4,6 +4,7 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCom
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitAccept;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherSessionPreInitData;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.parser.CipherCommandDataParser;
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.request.data.CipherRequestAnswerSettingSession;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.data.entity.CommandData;
 import com.mcdead.busycoder.socialcipher.command.processor.CommandProcessor;
@@ -22,8 +23,14 @@ import java.util.HashMap;
 public class CipherCommandProcessor implements CommandProcessor {
     final private HashMap<Long, CipherSessionPreInitData> m_chatIdPreInitDataHashMap;
 
-    public CipherCommandProcessor() {
+    final private CipherCommandProcessorCallback m_callback;
+
+    public CipherCommandProcessor(
+            final CipherCommandProcessorCallback callback)
+    {
         m_chatIdPreInitDataHashMap = new HashMap<>();
+
+        m_callback = callback;
     }
 
     @Override
@@ -66,6 +73,10 @@ public class CipherCommandProcessor implements CommandProcessor {
             final CipherCommandDataInitAccept initAcceptCommand)
     {
         // todo: asking user for participating in a new cipher session..
+
+        CipherRequestAnswerSettingSession answer =
+                m_callback.onCipherSessionSettingRequestReceived();
+
 
     }
 

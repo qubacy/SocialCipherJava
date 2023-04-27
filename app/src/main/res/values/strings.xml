@@ -11,4 +11,7 @@
     <string name="loading_screen_caption">Stay Tuned</string>
     <string name="attachment_type_picker_header_caption">Choose an attachment\'s type:</string>
     <string name="attachment_picker_confirm_button_caption">Confirm</string>
+
+    <string name="request_answer_accept_button_caption">Accept</string>
+    <string name="request_answer_cancel_button_caption">Cancel</string>
 </resources>

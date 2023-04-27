@@ -1,5 +1,8 @@
 package com.mcdead.busycoder.socialcipher.client.activity.chat.fragment;
 
+import static com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragment.C_FRAGMENT_TAG;
+import static com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorService.C_REQUEST_ANSWER_PROP_NAME;
+
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -14,19 +17,25 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.request.data.CipherRequestAnswerSettingSession;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.AttachmentPickerCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver;
-import com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatUpdatedCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiverCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListAdapterCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListItemCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragment;
+import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragmentCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.AttachmentShowerActivity;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
@@ -44,6 +53,9 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
+import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
+import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswerType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -51,13 +63,14 @@ import java.util.List;
 
 public class ChatFragment extends Fragment
     implements
-        ChatUpdatedCallback,
+        ChatBroadcastReceiverCallback,
         ChatLoadingCallback,
         MessageListAdapterCallback,
         MessageListItemCallback,
         LinkedFileOpenerCallback,
         MessageSendingCallback,
-        AttachmentPickerCallback
+        AttachmentPickerCallback,
+        RequestAnswerDialogFragmentCallback
 {
     private ChatFragmentCallback m_callback = null;
 
@@ -170,7 +183,7 @@ public class ChatFragment extends Fragment
     }
 
     @Override
-    public void onNewDialogMessageReceived() {
+    public void onNewChatMessageReceived() {
         ChatEntity dialog = ChatsStore.getInstance().getChatByPeerId(m_peerId);
         List<MessageEntity> messageList = dialog.getMessages();
 
@@ -187,11 +200,52 @@ public class ChatFragment extends Fragment
     }
 
     @Override
-    public void onDialogUpdatingError(final Error error) {
+    public void onChatBroadcastReceiverErrorOccurred(final Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
                 getContext().getApplicationContext()
         );
+    }
+
+    @Override
+    public void onSettingCipherSessionAnswerRequested(
+            final long chatId,
+            final long initializerPeerId)
+    {
+        if (chatId != m_peerId) {
+            onRequestAnswerDialogResultGotten(new CipherRequestAnswerSettingSession(false));
+
+            return;
+        }
+
+        UsersStore usersStore = UsersStore.getInstance();
+
+        if (usersStore == null) {
+            onErrorOccurred(new Error("Users Store hasn't been initialized!", true));
+
+            return;
+        }
+
+        UserEntity initializerData = usersStore.getUserByPeerId(initializerPeerId);
+
+        if (initializerData == null) {
+            onErrorOccurred(new Error("Initializer User Data was null!", true));
+
+            return;
+        }
+
+        String requestText =
+                String.format(
+                        RequestAnswerType.SETTING_CIPHER_SESSION.getText(),
+                        initializerData.getName());
+        RequestAnswerDialogFragment dialogFragment =
+                RequestAnswerDialogFragment.getInstance(
+                        RequestAnswerType.SETTING_CIPHER_SESSION,
+                        requestText,
+                        this);
+        FragmentManager fragmentManager = getParentFragmentManager();
+
+        dialogFragment.show(fragmentManager, C_FRAGMENT_TAG);
     }
 
     @Override
@@ -359,7 +413,9 @@ public class ChatFragment extends Fragment
     }
 
     @Override
-    public void onFileOpeningError(final Error error) {
+    public void onFileOpeningError(
+            final Error error)
+    {
         ErrorBroadcastReceiver
                 .broadcastError(error, getActivity().getApplicationContext());
     }
@@ -375,13 +431,37 @@ public class ChatFragment extends Fragment
     }
 
     @Override
-    public void onMessageSendingError(final Error error) {
+    public void onMessageSendingError(
+            final Error error)
+    {
         ErrorBroadcastReceiver
                 .broadcastError(error, getActivity().getApplicationContext());
     }
 
     @Override
-    public void onAttachmentFilesPicked(final List<AttachmentData> pickedFileUriList) {
+    public void onAttachmentFilesPicked(
+            final List<AttachmentData> pickedFileUriList)
+    {
         m_uploadingAttachmentList = pickedFileUriList;
+    }
+
+    @Override
+    public void onRequestAnswerDialogResultGotten(
+            final RequestAnswer requestAnswer)
+    {
+        Intent intent = new Intent(CommandProcessorServiceBroadcastReceiver.C_PROVIDE_REQUEST_ANSWER);
+
+        intent.putExtra(C_REQUEST_ANSWER_PROP_NAME, requestAnswer);
+
+        LocalBroadcastManager.
+                getInstance(getActivity().getApplicationContext()).
+                sendBroadcast(intent);
+    }
+
+    @Override
+    public void onRequestAnswerDialogErrorOccurred(
+            final Error error)
+    {
+        onErrorOccurred(error);
     }
 }

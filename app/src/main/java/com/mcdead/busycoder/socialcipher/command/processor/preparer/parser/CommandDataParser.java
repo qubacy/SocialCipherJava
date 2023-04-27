@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.command.processor.parser;
+package com.mcdead.busycoder.socialcipher.command.processor.preparer.parser;
 
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandCategory;
@@ -21,7 +21,8 @@ public class CommandDataParser {
         if (commandMessage == null || commandDataWrapper == null)
             return new Error("Incorrect command has been provided!", true);
 
-        String commandText = commandMessage.getCommandString();
+        String commandText = commandMessage.getCommandString().substring(
+                CommandContext.C_COMMAND_BEGINNING_SYMBOLS.length());
         String[] commandParts =
                 commandText.split(String.valueOf(CommandContext.C_PART_DIVIDER_CHAR));
 

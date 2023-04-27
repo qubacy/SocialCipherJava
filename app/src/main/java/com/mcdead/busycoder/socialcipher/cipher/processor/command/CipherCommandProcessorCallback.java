@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command;
 
-public interface CipherCommandProcessorCallback {
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.request.data.CipherRequestAnswerSettingSession;
 
+public interface CipherCommandProcessorCallback {
+    public CipherRequestAnswerSettingSession onCipherSessionSettingRequestReceived();
 }
