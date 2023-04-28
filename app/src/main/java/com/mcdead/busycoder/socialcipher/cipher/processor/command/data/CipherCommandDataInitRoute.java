@@ -2,35 +2,28 @@ package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
+import java.util.HashMap;
+
 public class CipherCommandDataInitRoute extends CipherCommandData {
-    final private int m_routeId;
-    final private byte[] m_data;
+    final private HashMap<Integer, byte[]> m_routeIdDataHashMap;
 
     private CipherCommandDataInitRoute(
-            final int routeId,
-            final byte[] data)
+            final HashMap<Integer, byte[]> routeIdDataHashMap)
     {
-        m_routeId = routeId;
-        m_data = data;
+        m_routeIdDataHashMap = routeIdDataHashMap;
     }
 
     public static CipherCommandDataInitRoute getInstance(
-            final int routeId,
-            final byte[] data)
+            final HashMap<Integer, byte[]> routeIdDataHashMap)
     {
-        if (routeId < 0) return null;
-        if (data == null) return null;
-        if (data.length <= 0) return null;
+        if (routeIdDataHashMap == null) return null;
+        if (routeIdDataHashMap.isEmpty()) return null;
 
-        return new CipherCommandDataInitRoute(routeId, data);
+        return new CipherCommandDataInitRoute(routeIdDataHashMap);
     }
 
-    public int getRouteId() {
-        return m_routeId;
-    }
-
-    public byte[] getData() {
-        return m_data;
+    public HashMap<Integer, byte[]> getRouteIdDataHashMap() {
+        return m_routeIdDataHashMap;
     }
 
     @Override

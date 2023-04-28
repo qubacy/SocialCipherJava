@@ -12,6 +12,7 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCom
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRequest;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRequestCompleted;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRoute;
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataSessionSet;
 import com.mcdead.busycoder.socialcipher.cipher.utility.CipherKeyUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandContext;
@@ -20,6 +21,7 @@ import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 
 public class CipherCommandDataParser {
@@ -29,7 +31,8 @@ public class CipherCommandDataParser {
     private static final int C_INIT_REQUEST_SECTION_COUNT = 3;
     private static final int C_INIT_ACCEPT_SECTION_COUNT = 0;
     private static final int C_INIT_COMPLETED_SECTION_COUNT = 3;
-    private static final int C_INIT_ROUTE_SECTION_COUNT = 2;
+    private static final int C_INIT_ROUTE_SECTION_COUNT = 1;
+    private static final int C_SESSION_SET_SECTION_COUNT = 0;
 
     private static final int C_MIN_PEER_ID_SIDE_ID_PAIR_COUNT = 2;
 
@@ -227,24 +230,56 @@ public class CipherCommandDataParser {
         if (serializedCipherCommandDataSections.length < C_INIT_ROUTE_SECTION_COUNT + C_SHARED_SECTION_COUNT)
             return new Error("Incorrect Serialized Cipher Command Data Init Route has been provided", true);
 
-        int routeId = Integer.parseInt(serializedCipherCommandDataSections[1]);
+        String[] routeIdDataPairs =
+                serializedCipherCommandDataSections[1].split(
+                        String.valueOf(CommandContext.C_SAME_TYPE_DATA_PIECE_DIVIDER_CHAR));
 
-        if (routeId < 0)
-            return new Error("Incorrect Serialized Cipher Command Data Init Route has been provided", true);
+        if (routeIdDataPairs.length <= 0)
+            return new Error("Incorrect Serialized Cipher Command Data Init Route has been provided!", true);
 
-        byte[] data =
-                Base64.getDecoder().decode(serializedCipherCommandDataSections[2]);
+        HashMap<Integer, byte[]> routeIdDataHashMap = new HashMap<>();
 
-        if (data == null)
-            return new Error("Data was null during parsing process!", true);
+        for (final String routeIdDataPair : routeIdDataPairs) {
+            String[] routeIdDataPairParts =
+                    routeIdDataPair.split(String.valueOf(CommandContext.C_PAIR_DATA_DIVIDER_CHAR));
+
+            if (routeIdDataPairParts.length < 2)
+                return new Error("Route Id Data pair parts count was incorrect during parsing process!", true);
+
+            int routeId = Integer.parseInt(routeIdDataPairParts[0]);
+            byte[] data = Base64.getDecoder().decode(routeIdDataPairParts[0]);
+
+            if (routeId < 0 || data == null)
+                return new Error("Route Id Data were incorrect during parsing process!", true);
+
+            routeIdDataHashMap.put(routeId, data);
+        }
 
         CipherCommandDataInitRoute cipherCommandDataInitRoute =
-                CipherCommandDataInitRoute.getInstance(routeId, data);
+                CipherCommandDataInitRoute.getInstance(routeIdDataHashMap);
 
         if (cipherCommandDataInitRoute == null)
             return new Error("Cipher Command Data Init Route parsing has been failed!", true);
 
         cipherCommandDataWrapper.setValue(cipherCommandDataInitRoute);
+
+        return null;
+    }
+
+    public static Error parseCipherCommandDataSessionSet(
+            final String[] serializedCipherCommandDataSections,
+            ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
+    {
+        if (serializedCipherCommandDataSections.length < C_SESSION_SET_SECTION_COUNT + C_SHARED_SECTION_COUNT)
+            return new Error("Incorrect Serialized Cipher Command Data Session Set has been provided", true);
+
+        CipherCommandDataSessionSet cipherCommandDataSessionSet =
+                CipherCommandDataSessionSet.getInstance();
+
+        if (cipherCommandDataSessionSet == null)
+            return new Error("Cipher Command Data Session Set parsing has been failed!", true);
+
+        cipherCommandDataWrapper.setValue(cipherCommandDataSessionSet);
 
         return null;
     }

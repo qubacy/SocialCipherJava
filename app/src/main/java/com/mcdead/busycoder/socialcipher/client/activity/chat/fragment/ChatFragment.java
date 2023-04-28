@@ -249,6 +249,33 @@ public class ChatFragment extends Fragment
     }
 
     @Override
+    public void onNewMessageSendingRequested(
+            long chatId,
+            String messageText)
+    {
+        if (chatId != m_peerId) return;
+
+        MessageSenderBase messageSender =
+                MessageSenderFactory.generateMessageSender(
+                    chatId,
+                    messageText,
+                    null,
+                    null,
+                    null);
+
+        if (messageSender == null) {
+            ErrorBroadcastReceiver
+                    .broadcastError(
+                            new Error("Message Sender hasn't been initialized!", true),
+                            getActivity().getApplicationContext());
+
+            return;
+        }
+
+        messageSender.execute();
+    }
+
+    @Override
     public void onErrorOccurred(final Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
@@ -384,8 +411,8 @@ public class ChatFragment extends Fragment
             return;
         }
 
-        MessageSenderBase messageSender
-                = MessageSenderFactory.generateMessageSender(
+        MessageSenderBase messageSender =
+                MessageSenderFactory.generateMessageSender(
                         m_peerId,
                         text,
                         attachmentDataList,

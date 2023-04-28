@@ -8,11 +8,15 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCom
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRequest;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRequestCompleted;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRoute;
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataSessionSet;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandContext;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class CipherCommandDataSerializer {
     public static Error serializeCipherCommandData(
@@ -55,6 +59,13 @@ public class CipherCommandDataSerializer {
                 serializingError =
                         serializeRouteCipherCommandData(
                                 (CipherCommandDataInitRoute) cipherCommandData,
+                                serializedCipherCommandData);
+                break;
+            }
+            case CIPHER_SESSION_SET: {
+                serializingError =
+                        serializeSessionSetCipherCommandData(
+                                (CipherCommandDataSessionSet) cipherCommandData,
                                 serializedCipherCommandData);
                 break;
             }
@@ -140,17 +151,37 @@ public class CipherCommandDataSerializer {
             final CipherCommandDataInitRoute cipherCommandData,
             StringBuilder serializedCipherCommandData)
     {
-        serializedCipherCommandData.append(String.valueOf(cipherCommandData.getRouteId()));
-        serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
+        HashMap<Integer, byte[]> routeIdDataHashMap =
+                cipherCommandData.getRouteIdDataHashMap();
 
-        String dataAsBase64String =
-                Base64.encodeToString(cipherCommandData.getData(), Base64.DEFAULT);
+        int routeIdDataHashMapSize = routeIdDataHashMap.size();
+        int index = 0;
 
-        if (dataAsBase64String == null)
-            return new Error("Routing Data encoding went wrong!", true);
+        for (final Map.Entry routeIdDataEntry : routeIdDataHashMap.entrySet()) {
+            serializedCipherCommandData.append(String.valueOf(routeIdDataEntry.getKey()));
+            serializedCipherCommandData.append(CommandContext.C_PAIR_DATA_DIVIDER_CHAR);
 
-        serializedCipherCommandData.append(dataAsBase64String);
+            String dataAsBase64String =
+                    Base64.encodeToString((byte[]) routeIdDataEntry.getValue(), Base64.DEFAULT);
 
+            if (dataAsBase64String == null)
+                return new Error("Routing Data encoding went wrong!", true);
+
+            serializedCipherCommandData.append(dataAsBase64String);
+            serializedCipherCommandData.append((index + 1 ==  routeIdDataHashMapSize ?
+                    "" :
+                    CommandContext.C_SAME_TYPE_DATA_PIECE_DIVIDER_CHAR));
+
+            ++index;
+        }
+
+        return null;
+    }
+
+    private static Error serializeSessionSetCipherCommandData(
+            final CipherCommandDataSessionSet cipherCommandData,
+            StringBuilder serializedCipherCommandData)
+    {
         return null;
     }
 }

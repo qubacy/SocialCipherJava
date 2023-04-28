@@ -94,7 +94,13 @@ public class CommandExecutorAsync
         while (!Thread.interrupted()) {
             SystemClock.sleep(C_TIMEOUT_MILLISECONDS);
 
-            m_cipherProcessor.execState();
+            Error execError = m_cipherProcessor.execState();
+
+            if (execError != null) {
+                ErrorBroadcastReceiver.broadcastError(execError, m_context);
+
+                continue;
+            }
 
             CommandMessage commandMessage = m_pendingCommandMessageQueueRef.peek();
 
@@ -114,7 +120,7 @@ public class CommandExecutorAsync
             }
 
             Error conveyingCommandError = conveyCommandToProcessor(
-                    commandDataWrapper.getValue());
+                    commandDataWrapper.getValue(), commandMessage.getInitializerPeerId());
 
             if (conveyingCommandError != null) {
                 ErrorBroadcastReceiver.broadcastError(conveyingCommandError, m_context);
@@ -125,10 +131,11 @@ public class CommandExecutorAsync
     }
 
     private Error conveyCommandToProcessor(
-            final CommandData commandData)
+            final CommandData commandData,
+            final long initializerPeerId)
     {
         switch (commandData.getCategory()) {
-            case CIPHER: return m_cipherProcessor.processCommand(commandData);
+            case CIPHER: return m_cipherProcessor.processCommand(commandData, initializerPeerId);
         }
 
         return new Error("Unknown command category!", true);
@@ -205,5 +212,10 @@ public class CommandExecutorAsync
         }
 
         return null;
+    }
+
+    @Override
+    public long getLocalPeerId() {
+        return m_localPeerId;
     }
 }
