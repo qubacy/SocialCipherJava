@@ -4,6 +4,7 @@ import android.util.Pair;
 
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
+import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.util.List;
 

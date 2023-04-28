@@ -3,8 +3,12 @@ package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
 public class CipherCommandDataInitAccept extends CipherCommandData {
-    public CipherCommandDataInitAccept() {
+    private CipherCommandDataInitAccept() {
 
+    }
+
+    public static CipherCommandDataInitAccept getInstance() {
+        return new CipherCommandDataInitAccept();
     }
 
     @Override

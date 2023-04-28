@@ -2,11 +2,11 @@ package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
-public class CipherCommandDataRoute extends CipherCommandData {
+public class CipherCommandDataInitRoute extends CipherCommandData {
     final private int m_routeId;
     final private byte[] m_data;
 
-    private CipherCommandDataRoute(
+    private CipherCommandDataInitRoute(
             final int routeId,
             final byte[] data)
     {
@@ -14,7 +14,7 @@ public class CipherCommandDataRoute extends CipherCommandData {
         m_data = data;
     }
 
-    public static CipherCommandDataRoute getInstance(
+    public static CipherCommandDataInitRoute getInstance(
             final int routeId,
             final byte[] data)
     {
@@ -22,7 +22,7 @@ public class CipherCommandDataRoute extends CipherCommandData {
         if (data == null) return null;
         if (data.length <= 0) return null;
 
-        return new CipherCommandDataRoute(routeId, data);
+        return new CipherCommandDataInitRoute(routeId, data);
     }
 
     public int getRouteId() {
