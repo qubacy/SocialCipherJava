@@ -1,20 +1,28 @@
 package com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.set;
 
-import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKey;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.CipherSessionState;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.CipherSessionStateOverall;
+import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.CiphererBase;
 
 public class CipherSessionStateSet implements CipherSessionState {
-    final private CipherKey m_cipherKey;
+    final private CiphererBase m_cipherer;
 
-    public CipherSessionStateSet(
-            final CipherKey cipherKey)
+    private CipherSessionStateSet(
+            final CiphererBase cipherer)
     {
-        m_cipherKey = cipherKey;
+        m_cipherer = cipherer;
     }
 
-    public CipherKey getCipherKey() {
-        return m_cipherKey;
+    public static CipherSessionStateSet getInstance(
+            final CiphererBase cipherer)
+    {
+        if (cipherer == null) return null;
+
+        return new CipherSessionStateSet(cipherer);
+    }
+
+    public CiphererBase getCipherer() {
+        return m_cipherer;
     }
 
     @Override

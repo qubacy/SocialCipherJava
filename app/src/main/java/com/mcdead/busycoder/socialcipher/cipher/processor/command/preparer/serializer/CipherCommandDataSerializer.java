@@ -91,6 +91,13 @@ public class CipherCommandDataSerializer {
         serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
         serializedCipherCommandData.append(
                 String.valueOf(cipherCommandData.getCipherPadding().getId()));
+        serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
+        serializedCipherCommandData.append(
+                String.valueOf(cipherCommandData.getCipherKeySize().getId()));
+        serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
+        serializedCipherCommandData.append(
+                String.valueOf(cipherCommandData.getStartTimeMilliseconds()));
+
 
         return null;
     }
@@ -106,23 +113,26 @@ public class CipherCommandDataSerializer {
             final CipherCommandDataInitRequestCompleted cipherCommandData,
             StringBuilder serializedCipherCommandData)
     {
-        List<Pair<Long,Integer>> peerIdSideIdPairList =
-                cipherCommandData.getPeerIdSideIdPairList();
-        int peerIdSideIdPairListSize = peerIdSideIdPairList.size();
+        HashMap<Long,Integer> peerIdSideIdHashMap =
+                cipherCommandData.getPeerIdSideIdHashMap();
+        int peerIdSideIdPairListSize = peerIdSideIdHashMap.size();
 
-        for (int i = 0; i < peerIdSideIdPairListSize; ++i) {
+        int index = 0;
+
+        for (final Map.Entry<Long, Integer> peerIdSideIdEntry : peerIdSideIdHashMap.entrySet()) {
             StringBuilder peerIdSideIdString = new StringBuilder();
-            Pair<Long, Integer> peerIdSideIdPair = peerIdSideIdPairList.get(i);
 
             peerIdSideIdString.
-                    append(String.valueOf(peerIdSideIdPair.first))
+                    append(String.valueOf(peerIdSideIdEntry.getKey()))
                     .append(CommandContext.C_PAIR_DATA_DIVIDER_CHAR)
-                    .append(String.valueOf(peerIdSideIdPair.second))
-                    .append((i + 1 == peerIdSideIdPairListSize ?
+                    .append(String.valueOf(peerIdSideIdEntry.getValue()))
+                    .append((index + 1 == peerIdSideIdPairListSize ?
                             "" :
                             CommandContext.C_SAME_TYPE_DATA_PIECE_DIVIDER_CHAR));
 
             serializedCipherCommandData.append(peerIdSideIdString.toString());
+
+            ++index;
         }
 
         serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
@@ -151,24 +161,29 @@ public class CipherCommandDataSerializer {
             final CipherCommandDataInitRoute cipherCommandData,
             StringBuilder serializedCipherCommandData)
     {
-        HashMap<Integer, byte[]> routeIdDataHashMap =
-                cipherCommandData.getRouteIdDataHashMap();
+        HashMap<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMap =
+                cipherCommandData.getSideIdRouteIdDataHashMap();
 
-        int routeIdDataHashMapSize = routeIdDataHashMap.size();
+        int sideIdRouteIdDataHashMapSize = sideIdRouteIdDataHashMap.size();
         int index = 0;
 
-        for (final Map.Entry routeIdDataEntry : routeIdDataHashMap.entrySet()) {
-            serializedCipherCommandData.append(String.valueOf(routeIdDataEntry.getKey()));
+        for (final Map.Entry<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataEntry :
+                sideIdRouteIdDataHashMap.entrySet())
+        {
+            serializedCipherCommandData.append(String.valueOf(sideIdRouteIdDataEntry.getKey()));
+            serializedCipherCommandData.append(CommandContext.C_PAIR_DATA_DIVIDER_CHAR);
+            serializedCipherCommandData.append(String.valueOf(sideIdRouteIdDataEntry.getValue().first));
             serializedCipherCommandData.append(CommandContext.C_PAIR_DATA_DIVIDER_CHAR);
 
             String dataAsBase64String =
-                    Base64.encodeToString((byte[]) routeIdDataEntry.getValue(), Base64.DEFAULT);
+                    Base64.encodeToString(
+                            (byte[]) sideIdRouteIdDataEntry.getValue().second, Base64.DEFAULT);
 
             if (dataAsBase64String == null)
                 return new Error("Routing Data encoding went wrong!", true);
 
             serializedCipherCommandData.append(dataAsBase64String);
-            serializedCipherCommandData.append((index + 1 ==  routeIdDataHashMapSize ?
+            serializedCipherCommandData.append((index + 1 ==  sideIdRouteIdDataHashMapSize ?
                     "" :
                     CommandContext.C_SAME_TYPE_DATA_PIECE_DIVIDER_CHAR));
 

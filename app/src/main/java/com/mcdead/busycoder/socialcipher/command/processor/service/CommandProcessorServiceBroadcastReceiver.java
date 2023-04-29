@@ -15,6 +15,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 */
 public class CommandProcessorServiceBroadcastReceiver extends BroadcastReceiver {
     public static final String C_PROVIDE_REQUEST_ANSWER = "com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver.PROVIDE_REQUEST_ANSWER";
+    public static final String C_INITIALIZE_NEW_CIPHERING_SESSION = "com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver.INITIALIZE_NEW_CIPHERING_SESSION";
 
     final private CommandProcessorServiceBroadcastReceiverCallback m_callback;
 
@@ -36,6 +37,8 @@ public class CommandProcessorServiceBroadcastReceiver extends BroadcastReceiver 
         switch (intent.getAction()) {
             case C_PROVIDE_REQUEST_ANSWER:
                 processingError = processProvideRequestAnswer(intent); break;
+            case C_INITIALIZE_NEW_CIPHERING_SESSION:
+                processingError = processInitializeNewCipheringSessionRequest(intent); break;
         }
 
         if (processingError != null)
@@ -43,6 +46,17 @@ public class CommandProcessorServiceBroadcastReceiver extends BroadcastReceiver 
     }
 
     private Error processProvideRequestAnswer(
+            final Intent data)
+    {
+        if (data == null)
+            return new Error(, true);
+
+        m_callback.onDataReceived(data);
+
+        return null;
+    }
+
+    private Error processInitializeNewCipheringSessionRequest(
             final Intent data)
     {
         if (data == null)

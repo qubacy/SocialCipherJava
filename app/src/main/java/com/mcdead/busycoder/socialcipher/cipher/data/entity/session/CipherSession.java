@@ -4,22 +4,23 @@ import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.Cipher
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.CipherSessionStateInit;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class CipherSession {
     private CipherSessionState m_state;
 
     final private int m_localSessionSideId;
-    final private HashMap<Integer, Long> m_sessionSideIdUserPeerIdHashMap;
+    final private HashMap<Long, Integer> m_userPeerIdSessionSideIdHashMap;
 
     protected CipherSession(
             final CipherSessionStateInit initState,
             final int localSessionSideId,
-            final HashMap<Integer, Long> sessionSideIdUserPeerIdHashMap)
+            final HashMap<Long, Integer> userPeerIdSessionSideIdHashMap)
     {
         m_state = initState;
 
         m_localSessionSideId = localSessionSideId;
-        m_sessionSideIdUserPeerIdHashMap = sessionSideIdUserPeerIdHashMap;
+        m_userPeerIdSessionSideIdHashMap = userPeerIdSessionSideIdHashMap;
     }
 
     public CipherSessionState getState() {
@@ -42,11 +43,32 @@ public class CipherSession {
         return m_localSessionSideId;
     }
 
-    public Long getUserPeerIdWithSideId(final int sideId) {
-        if (sideId < 0) return null;
-        if (m_sessionSideIdUserPeerIdHashMap.containsKey(sideId))
-            return null;
+    public int getSessionSideCount() {
+        return m_userPeerIdSessionSideIdHashMap.size();
+    }
 
-        return m_sessionSideIdUserPeerIdHashMap.get(sideId);
+//    public Long getUserPeerIdWithSideId(final int sideId) {
+//        if (sideId < 0) return null;
+//        if (m_sessionSideIdUserPeerIdHashMap.containsKey(sideId))
+//            return null;
+//
+//        return m_sessionSideIdUserPeerIdHashMap.get(sideId);
+//    }
+//
+//    public Integer getSideIdWithUserPeerId(final long userPeerId) {
+//        if (userPeerId == 0) return null;
+//
+//        for (final Map.Entry<Integer, Long> sideIdUserPeerIdEntry :
+//                m_sessionSideIdUserPeerIdHashMap.entrySet())
+//        {
+//            if (sideIdUserPeerIdEntry.getValue() == userPeerId)
+//                return sideIdUserPeerIdEntry.getKey();
+//        }
+//
+//        return null;
+//    }
+
+    public HashMap<Long, Integer> getUserPeerIdSessionSideIdHashMap() {
+        return m_userPeerIdSessionSideIdHashMap;
     }
 }

@@ -11,8 +11,10 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,6 +55,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
+import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorService;
 import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswerType;
@@ -84,6 +87,8 @@ public class ChatFragment extends Fragment
 
     private EditText m_sendingMessageText = null;
     private List<AttachmentData> m_uploadingAttachmentList = null;
+
+    private Button m_cipherButton = null;
 
     public ChatFragment(
             final long peerId,
@@ -145,6 +150,15 @@ public class ChatFragment extends Fragment
                 sendNewMessage();
 
                 return true;
+            }
+        });
+
+        m_cipherButton = view.findViewById(R.id.dialog_message_sending_ciphering_button);
+
+        m_cipherButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onCipherButtonClicked();
             }
         });
 
@@ -249,6 +263,17 @@ public class ChatFragment extends Fragment
     }
 
     @Override
+    public void onCipherSessionSet(
+            final long chatId)
+    {
+        if (chatId != m_peerId) return;
+
+        // todo: enabling some identification showing current chat ciphering state..
+
+        m_cipherButton.setEnabled(true);
+    }
+
+    @Override
     public void onNewMessageSendingRequested(
             long chatId,
             String messageText)
@@ -273,6 +298,15 @@ public class ChatFragment extends Fragment
         }
 
         messageSender.execute();
+    }
+
+    @Override
+    public void onNewChatNotificationShowingRequested(
+            final String chatNotificationText)
+    {
+        // todo: showing chat notification..
+
+        Toast.makeText(getContext(), chatNotificationText, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -369,6 +403,25 @@ public class ChatFragment extends Fragment
         }
 
         return null;
+    }
+
+    private void onCipherButtonClicked() {
+        m_cipherButton.setEnabled(false);
+
+        // todo: initializing a new ciphering session..
+
+        Intent intent =
+                new Intent(
+                        CommandProcessorServiceBroadcastReceiver.C_INITIALIZE_NEW_CIPHERING_SESSION);
+
+        intent.putExtra(CommandProcessorService.C_CHAT_ID_PROP_NAME, m_peerId);
+        intent.putExtra(
+                CommandProcessorService.C_OPERATION_ID_PROP_NAME,
+                CommandProcessorService.OperationType.PROCESS_NEW_SESSION_INITIALIZING_REQUEST);
+
+        LocalBroadcastManager.
+                getInstance(getContext().getApplicationContext()).
+                sendBroadcast(intent);
     }
 
     private void pickAttachmentFiles() {

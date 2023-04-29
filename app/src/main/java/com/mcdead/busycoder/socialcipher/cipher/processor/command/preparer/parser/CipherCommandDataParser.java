@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.pars
 import android.util.Pair;
 
 import com.mcdead.busycoder.socialcipher.cipher.CipherContext;
+import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKeySize;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherAlgorithm;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherMode;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherPadding;
@@ -28,7 +29,7 @@ public class CipherCommandDataParser {
     private static final int C_SHARED_SECTION_COUNT = 1;
     private static final int C_MIN_SECTION_COUNT = 2;
 
-    private static final int C_INIT_REQUEST_SECTION_COUNT = 3;
+    private static final int C_INIT_REQUEST_SECTION_COUNT = 5;
     private static final int C_INIT_ACCEPT_SECTION_COUNT = 0;
     private static final int C_INIT_COMPLETED_SECTION_COUNT = 3;
     private static final int C_INIT_ROUTE_SECTION_COUNT = 1;
@@ -127,8 +128,21 @@ public class CipherCommandDataParser {
         if (cipherPadding == null)
             return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided", true);
 
+        int cipherKeySizeId = Integer.parseInt(serializedCipherCommandDataSections[4]);
+        CipherKeySize cipherKeySize = CipherKeySize.getCipherKeySizeById(cipherKeySizeId);
+
+        if (cipherKeySize == null)
+            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided", true);
+
+        long startTimeMilliseconds = Long.parseLong(serializedCipherCommandDataSections[5]);
+
         CipherCommandDataInitRequest cipherCommandDataInitRequest =
-                CipherCommandDataInitRequest.getInstance(cipherAlgorithm, cipherMode, cipherPadding);
+                CipherCommandDataInitRequest.getInstance(
+                        cipherAlgorithm,
+                        cipherMode,
+                        cipherPadding,
+                        cipherKeySize,
+                        startTimeMilliseconds);
 
         if (cipherCommandDataInitRequest == null)
             return new Error("Cipher Command Data Init Request parsing has been failed!", true);
@@ -170,7 +184,7 @@ public class CipherCommandDataParser {
         if (serializedPeerIdSideIdPairList.length < C_MIN_PEER_ID_SIDE_ID_PAIR_COUNT)
             return new Error("Peer Id Side Id pairs count was incorrect during parsing process!", true);
 
-        List<Pair<Long,Integer>> peerIdSideIdPairList = new ArrayList<>();
+        HashMap<Long,Integer> peerIdSideIdHashMap = new HashMap<>();
 
         for (final String serializedPeerIdSideIdPair : serializedPeerIdSideIdPairList) {
             String[] serializedPeerIdSideIdPairParts =
@@ -186,7 +200,7 @@ public class CipherCommandDataParser {
             if (peerId == 0 || sideId < 0)
                 return new Error("Peer Id Side Id were incorrect during parsing process!", true);
 
-            peerIdSideIdPairList.add(new Pair<>(peerId, sideId));
+            peerIdSideIdHashMap.put(peerId, sideId);
         }
 
         byte[] publicKeyBytes =
@@ -211,7 +225,7 @@ public class CipherCommandDataParser {
 
         CipherCommandDataInitRequestCompleted cipherCommandDataInitRequestCompleted =
                 CipherCommandDataInitRequestCompleted.getInstance(
-                        peerIdSideIdPairList,
+                        peerIdSideIdHashMap,
                         publicKey,
                         sidePublicData);
 
@@ -237,26 +251,27 @@ public class CipherCommandDataParser {
         if (routeIdDataPairs.length <= 0)
             return new Error("Incorrect Serialized Cipher Command Data Init Route has been provided!", true);
 
-        HashMap<Integer, byte[]> routeIdDataHashMap = new HashMap<>();
+        HashMap<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMap = new HashMap<>();
 
         for (final String routeIdDataPair : routeIdDataPairs) {
             String[] routeIdDataPairParts =
                     routeIdDataPair.split(String.valueOf(CommandContext.C_PAIR_DATA_DIVIDER_CHAR));
 
-            if (routeIdDataPairParts.length < 2)
+            if (routeIdDataPairParts.length < 3)
                 return new Error("Route Id Data pair parts count was incorrect during parsing process!", true);
 
-            int routeId = Integer.parseInt(routeIdDataPairParts[0]);
-            byte[] data = Base64.getDecoder().decode(routeIdDataPairParts[0]);
+            int sideId = Integer.parseInt(routeIdDataPairParts[0]);
+            int routeId = Integer.parseInt(routeIdDataPairParts[1]);
+            byte[] data = Base64.getDecoder().decode(routeIdDataPairParts[2]);
 
-            if (routeId < 0 || data == null)
+            if (sideId < 0 || routeId < 0 || data == null)
                 return new Error("Route Id Data were incorrect during parsing process!", true);
 
-            routeIdDataHashMap.put(routeId, data);
+            sideIdRouteIdDataHashMap.put(sideId, new Pair<>(routeId, data));
         }
 
         CipherCommandDataInitRoute cipherCommandDataInitRoute =
-                CipherCommandDataInitRoute.getInstance(routeIdDataHashMap);
+                CipherCommandDataInitRoute.getInstance(sideIdRouteIdDataHashMap);
 
         if (cipherCommandDataInitRoute == null)
             return new Error("Cipher Command Data Init Route parsing has been failed!", true);

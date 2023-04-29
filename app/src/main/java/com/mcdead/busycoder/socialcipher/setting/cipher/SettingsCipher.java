@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.setting.cipher;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 
+import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKeySize;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherAlgorithm;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherLibrary;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherMode;
@@ -20,6 +21,7 @@ public class SettingsCipher extends SettingsBase {
     public static final String C_ALGO_ID_PROP_NAME = "algorithmId";
     public static final String C_MODE_ID_PROP_NAME = "modeId";
     public static final String C_PADDING_ID_PROP_NAME = "paddingId";
+    public static final String C_KEY_SIZE_ID_PROP_NAME = "keySizeId";
 
     private static SettingsCipher s_instance = null;
 
@@ -27,6 +29,7 @@ public class SettingsCipher extends SettingsBase {
     private CipherAlgorithm m_algorithm = null;
     private CipherMode m_mode = null;
     private CipherPadding m_padding = null;
+    private CipherKeySize m_keySize = null;
 
     private SettingsCipher() {
 
@@ -53,6 +56,10 @@ public class SettingsCipher extends SettingsBase {
 
     public CipherPadding getPadding() {
         return m_padding;
+    }
+
+    public CipherKeySize getKeySize() {
+        return m_keySize;
     }
 
     public boolean setLibrary(final CipherLibrary library) {
@@ -83,6 +90,14 @@ public class SettingsCipher extends SettingsBase {
         if (padding == null) return false;
 
         m_padding = padding;
+
+        return true;
+    }
+
+    public boolean setKeySize(final CipherKeySize keySize) {
+        if (keySize == null) return false;
+
+        m_keySize = keySize;
 
         return true;
     }
@@ -150,6 +165,16 @@ public class SettingsCipher extends SettingsBase {
 
                         break;
                     }
+                    case C_KEY_SIZE_ID_PROP_NAME: {
+                        CipherKeySize keySize =
+                                CipherKeySize.getCipherKeySizeById(reader.nextInt());
+
+                        if (keySize == null) return false;
+
+                        m_keySize = keySize;
+
+                        break;
+                    }
                     default:
                         return false;
                 }
@@ -182,6 +207,8 @@ public class SettingsCipher extends SettingsBase {
                     .value(m_mode.getId())
                     .name(C_PADDING_ID_PROP_NAME)
                     .value(m_padding.getId())
+                    .name(C_KEY_SIZE_ID_PROP_NAME)
+                    .value(m_keySize.getId())
                     .endObject();
 
         }
@@ -199,7 +226,8 @@ public class SettingsCipher extends SettingsBase {
         return (m_library != null &&
                 m_algorithm != null &&
                 m_mode != null &&
-                m_padding != null);
+                m_padding != null &&
+                m_keySize != null);
     }
 
     @Override
@@ -208,5 +236,6 @@ public class SettingsCipher extends SettingsBase {
         m_algorithm = CipherAlgorithm.AES;
         m_mode = CipherMode.CTR;
         m_padding = CipherPadding.NO_PADDING;
+        m_keySize = CipherKeySize.KEY_256;
     }
 }

@@ -24,74 +24,68 @@ public class CipherSessionGenerator {
         if (userPeerIdList.isEmpty())
             return null;
 
-        HashMap<Integer, Long> sessionSideIdUserPeerIdHashMap =
-                generateSessionSideIdUserPeerIdHashMap(userPeerIdList);
+        HashMap<Long, Integer> userPeerIdSessionSideIdHashMap =
+                generateSessionSideIdUserPeerIdHashMap(localPeerId, userPeerIdList);
 
-        return generateCipherSessionBasis(localPeerId, keyPair, keyAgreement, sessionSideIdUserPeerIdHashMap);
+        return generateCipherSessionBasis(localPeerId, keyPair, keyAgreement, userPeerIdSessionSideIdHashMap);
     }
 
     public static CipherSession generateCipherSessionWithSessionSideIdUserPeerIdPairList(
             final long localPeerId,
             final KeyPair keyPair,
             final KeyAgreement keyAgreement,
-            final List<Pair<Long, Integer>> sessionUserPeerIdSideIdPairList)
+            final HashMap<Long, Integer> sessionUserPeerIdSideIdHashMap)
     {
-        if (sessionUserPeerIdSideIdPairList == null || localPeerId == 0)
+        if (sessionUserPeerIdSideIdHashMap == null || localPeerId == 0)
             return null;
-        if (sessionUserPeerIdSideIdPairList.isEmpty())
+        if (sessionUserPeerIdSideIdHashMap.isEmpty())
             return null;
 
-        HashMap<Integer, Long> sessionSideIdUserPeerIdHashMap =
-                new HashMap<>();
-
-        for (final Pair<Long, Integer> sessionUserPeerIdSideIdPair :
-                sessionUserPeerIdSideIdPairList)
-        {
-            sessionSideIdUserPeerIdHashMap.put(
-                    sessionUserPeerIdSideIdPair.second,
-                    sessionUserPeerIdSideIdPair.first);
-        }
-
-        return generateCipherSessionBasis(localPeerId, keyPair, keyAgreement, sessionSideIdUserPeerIdHashMap);
+        return generateCipherSessionBasis(localPeerId, keyPair, keyAgreement, sessionUserPeerIdSideIdHashMap);
     }
 
     private static CipherSession generateCipherSessionBasis(
             final long localPeerId,
             final KeyPair keyPair,
             final KeyAgreement keyAgreement,
-            final HashMap<Integer, Long> sessionSideIdUserPeerIdHashMap)
+            final HashMap<Long, Integer> userPeerIdSessionSideIdHashMap)
     {
-        // todo: generating CipherSessionStateInit..
-
         CipherSessionStateInit initState =
                 CipherSessionStateInitGenerator.
                         generateCipherSessionStateInit(
                                 keyPair.getPrivate(),
                                 keyPair.getPublic(),
                                 keyAgreement,
-                                sessionSideIdUserPeerIdHashMap);
+                                userPeerIdSessionSideIdHashMap);
 
         if (initState == null) return null;
 
-        // todo: getting local side it by localPeerId..
+        int sideId = userPeerIdSessionSideIdHashMap.get(localPeerId);
 
-        int sideId =
-                CipherSessionUtility.getSideIdByLocalPeerIdFromHashMap(
-                        localPeerId, sessionSideIdUserPeerIdHashMap);
+//        int sideId =
+//                CipherSessionUtility.getSideIdByLocalPeerIdFromHashMap(
+//                        localPeerId, userPeerIdSessionSideIdHashMap);
 
         if (sideId < 0) return null;
-
-        // todo: generating CipherSession..
 
         return new CipherSession(
                 initState,
                 sideId,
-                sessionSideIdUserPeerIdHashMap);
+                userPeerIdSessionSideIdHashMap);
     }
 
-    private static HashMap<Integer, Long> generateSessionSideIdUserPeerIdHashMap(
+    private static HashMap<Long, Integer> generateSessionSideIdUserPeerIdHashMap(
+            final long localPeerId,
             final List<Long> userPeerIdList)
     {
+        HashMap<Long, Integer> userPeerIdSessionSideIdHashMap =
+                new HashMap<>();
 
+        userPeerIdSessionSideIdHashMap.put(localPeerId, 0);
+
+        for (int i = 0; i < userPeerIdList.size(); ++i)
+            userPeerIdSessionSideIdHashMap.put(userPeerIdList.get(i), i);
+
+        return userPeerIdSessionSideIdHashMap;
     }
 }

@@ -1,50 +1,47 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 
-import android.util.Pair;
-
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
-import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.util.List;
+import java.util.HashMap;
 
 public class CipherCommandDataInitRequestCompleted extends CipherCommandData {
-    final List<Pair<Long, Integer>> m_peerIdSideIdPairList;
+    final HashMap<Long, Integer> m_peerIdSideIdHashMap;
     final PublicKey m_publicKey;
     final byte[] m_sidePublicData;
 
     private CipherCommandDataInitRequestCompleted(
-            final List<Pair<Long, Integer>> peerIdSideIdPairList,
+            final HashMap<Long, Integer> peerIdSideIdHashMap,
             final PublicKey publicKey,
             final byte[] sidePublicData)
     {
-        m_peerIdSideIdPairList = peerIdSideIdPairList;
+        m_peerIdSideIdHashMap = peerIdSideIdHashMap;
         m_publicKey = publicKey;
         m_sidePublicData = sidePublicData;
     }
 
     public static CipherCommandDataInitRequestCompleted getInstance(
-            final List<Pair<Long, Integer>> peerIdSideIdPairList,
+            final HashMap<Long, Integer> peerIdSideIdHashMap,
             final PublicKey publicKey,
             final byte[] sidePublicData)
     {
-        if (peerIdSideIdPairList == null
+        if (peerIdSideIdHashMap == null
          || publicKey == null
          || sidePublicData == null)
         {
             return null;
         }
-        if (peerIdSideIdPairList.isEmpty() || sidePublicData.length <= 0)
+        if (peerIdSideIdHashMap.isEmpty() || sidePublicData.length <= 0)
             return null;
 
         return new CipherCommandDataInitRequestCompleted(
-                peerIdSideIdPairList,
+                peerIdSideIdHashMap,
                 publicKey,
                 sidePublicData);
     }
 
-    public List<Pair<Long, Integer>> getPeerIdSideIdPairList() {
-        return m_peerIdSideIdPairList;
+    public HashMap<Long, Integer> getPeerIdSideIdHashMap() {
+        return m_peerIdSideIdHashMap;
     }
 
     public PublicKey getPublicKey() {

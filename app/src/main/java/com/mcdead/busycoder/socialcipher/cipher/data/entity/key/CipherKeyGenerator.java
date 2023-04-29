@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.cipher.data.entity.key;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherConfiguration;
 import com.mcdead.busycoder.socialcipher.cipher.utility.hasher.Hasher;
 import com.mcdead.busycoder.socialcipher.cipher.utility.hasher.HasherGenerator;
 
@@ -36,5 +37,30 @@ public class CipherKeyGenerator {
             return null;
 
         return new CipherKey(size, bytes);
+    }
+
+    public static CipherKey generateCipherKeyWithConfiguration(
+            final CipherConfiguration cipherConfiguration,
+            final byte[] bytes)
+    {
+        if (cipherConfiguration == null || bytes == null)
+            return null;
+
+        byte[] preparedBytes = null;
+
+        if (bytes.length != cipherConfiguration.getKeySize().getIntSize()) {
+            Hasher hasher =
+                    HasherGenerator.generateHasherWithDataSize(
+                            cipherConfiguration.getKeySize().getIntSize());
+
+            if (hasher == null) return null;
+
+            preparedBytes = hasher.hashBytes(bytes);
+
+        }
+        else
+            preparedBytes = bytes;
+
+        return new CipherKey(cipherConfiguration.getKeySize(), preparedBytes);
     }
 }

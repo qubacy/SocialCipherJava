@@ -87,6 +87,14 @@ public class CommandExecutorAsync
             m_currentRequestAnswer = requestAnswer;
     }
 
+    public synchronized void initializeNewCipherSession(
+            final long chatId)
+    {
+        // todo: initializing a new cipher session..
+
+        m_cipherProcessor.
+    }
+
     @Override
     public void run() {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
@@ -106,7 +114,10 @@ public class CommandExecutorAsync
 
             if (commandMessage == null) continue;
 
-            m_currentCommandMessage = commandMessage;
+            if (commandMessage.getInitializerPeerId() == m_localPeerId)
+                continue;
+
+            // todo: parsing incoming command..
 
             ObjectWrapper<CommandData> commandDataWrapper =
                     new ObjectWrapper<>();
@@ -118,6 +129,20 @@ public class CommandExecutorAsync
 
                 continue;
             }
+
+            // todo: checking for a receiver..
+
+            List<Long> receiverPeerIdList = commandDataWrapper.getValue().getReceiverPeerIdList();
+            boolean isForLocalUser = false;
+
+            for (final long receiverPeerId : receiverPeerIdList)
+                if (receiverPeerId == m_localPeerId) isForLocalUser = true;
+
+            if (!isForLocalUser) continue;
+
+            // todo: conveying a command to processors..
+
+            m_currentCommandMessage = commandMessage;
 
             Error conveyingCommandError = conveyCommandToProcessor(
                     commandDataWrapper.getValue(), commandMessage.getInitializerPeerId());
@@ -212,6 +237,17 @@ public class CommandExecutorAsync
         }
 
         return null;
+    }
+
+    @Override
+    public void onCipherSessionSet() {
+        Intent intent = new Intent(ChatBroadcastReceiver.C_CIPHER_SESSION_SET);
+
+        intent.putExtra(
+                ChatBroadcastReceiver.C_CHAT_ID_PROP_NAME,
+                m_currentCommandMessage.getPeerId());
+
+        LocalBroadcastManager.getInstance(m_context).sendBroadcast(intent);
     }
 
     @Override

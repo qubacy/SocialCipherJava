@@ -8,7 +8,11 @@ public interface ChatBroadcastReceiverCallback {
     public void onSettingCipherSessionAnswerRequested(
             final long chatId,
             final long initializePeerId);
+    public void onCipherSessionSet(
+            final long chatId);
     public void onNewMessageSendingRequested(
             final long chatId,
             final String messageText);
+    public void onNewChatNotificationShowingRequested(
+            final String chatNotificationText);
 }

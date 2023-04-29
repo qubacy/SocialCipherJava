@@ -1,29 +1,39 @@
 package com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.data;
 
+import java.util.List;
+
 public class CipherSessionInitRoute {
-    final private int m_sideIdSender;
-    final private int m_sideIdReceiver;
-    final private int m_sideIdNextReceiver;
+    public static final int C_NO_NEXT_SIDE_ID = -0b01;
+    public static final int C_INCORRECT_SIDE_ID_PROVIDED = -0b10;
 
-    public CipherSessionInitRoute(
-            final int sideIdSender,
-            final int sideIdReceiver,
-            final int sideIdNextReceiver)
+    final private List<Integer> m_sideIdList;
+
+    private CipherSessionInitRoute(
+            final List<Integer> sideIdList)
     {
-        m_sideIdSender = sideIdSender;
-        m_sideIdReceiver = sideIdReceiver;
-        m_sideIdNextReceiver = sideIdNextReceiver;
+        m_sideIdList = sideIdList;
     }
 
-    public int getSideIdSender() {
-        return m_sideIdSender;
+    public static CipherSessionInitRoute getInstance(
+            final List<Integer> sideIdList)
+    {
+        if (sideIdList == null) return null;
+        if (sideIdList.isEmpty()) return null;
+
+        return new CipherSessionInitRoute(sideIdList);
     }
 
-    public int getSideIdReceiver() {
-        return m_sideIdReceiver;
-    }
+    public int getNextSideId(final int sideId) {
+        if (!m_sideIdList.contains(sideId))
+            return C_INCORRECT_SIDE_ID_PROVIDED;
 
-    public int getSideIdNextReceiver() {
-        return m_sideIdNextReceiver;
+        for (int i = 0; i < m_sideIdList.size() - 1; ++i) {
+            int curSideId = m_sideIdList.get(i);
+
+            if (curSideId == sideId)
+                return curSideId;
+        }
+
+        return C_NO_NEXT_SIDE_ID;
     }
 }

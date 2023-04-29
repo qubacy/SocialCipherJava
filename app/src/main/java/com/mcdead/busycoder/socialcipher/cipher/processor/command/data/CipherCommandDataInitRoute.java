@@ -1,29 +1,31 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.data;
 
+import android.util.Pair;
+
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
 import java.util.HashMap;
 
 public class CipherCommandDataInitRoute extends CipherCommandData {
-    final private HashMap<Integer, byte[]> m_routeIdDataHashMap;
+    final private HashMap<Integer, Pair<Integer, byte[]>> m_sideIdRouteIdDataHashMap;
 
     private CipherCommandDataInitRoute(
-            final HashMap<Integer, byte[]> routeIdDataHashMap)
+            final HashMap<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMap)
     {
-        m_routeIdDataHashMap = routeIdDataHashMap;
+        m_sideIdRouteIdDataHashMap = sideIdRouteIdDataHashMap;
     }
 
     public static CipherCommandDataInitRoute getInstance(
-            final HashMap<Integer, byte[]> routeIdDataHashMap)
+            final HashMap<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMap)
     {
-        if (routeIdDataHashMap == null) return null;
-        if (routeIdDataHashMap.isEmpty()) return null;
+        if (sideIdRouteIdDataHashMap == null) return null;
+        if (sideIdRouteIdDataHashMap.isEmpty()) return null;
 
-        return new CipherCommandDataInitRoute(routeIdDataHashMap);
+        return new CipherCommandDataInitRoute(sideIdRouteIdDataHashMap);
     }
 
-    public HashMap<Integer, byte[]> getRouteIdDataHashMap() {
-        return m_routeIdDataHashMap;
+    public HashMap<Integer, Pair<Integer, byte[]>> getSideIdRouteIdDataHashMap() {
+        return m_sideIdRouteIdDataHashMap;
     }
 
     @Override

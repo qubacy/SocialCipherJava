@@ -27,6 +27,8 @@ public class CommandProcessorService extends Service
 
     public static final String C_REQUEST_ANSWER_PROP_NAME = "requestAnswer";
 
+    public static final String C_CHAT_ID_PROP_NAME = "chatId";
+
     private CommandExecutorAsync m_commandExecutorRef = null;
     private Thread m_commandExecutorThread = null;
 
@@ -167,6 +169,8 @@ public class CommandProcessorService extends Service
                 operationError = processCommandMessage(data); break;
             case PROCESS_REQUEST_ANSWERED:
                 operationError = processRequestAnswered(data); break;
+            case PROCESS_NEW_SESSION_INITIALIZING_REQUEST:
+                operationError = processInitializeNewCipheringSessionRequest(data); break;
         }
 
         if (operationError != null)
@@ -182,11 +186,28 @@ public class CommandProcessorService extends Service
         ErrorBroadcastReceiver.broadcastError(error, this);
     }
 
+    private Error processInitializeNewCipheringSessionRequest(
+            final Intent data)
+    {
+        if (m_commandExecutorThread == null || m_commandExecutorRef == null)
+            return new Error("Command Processor hasn't been started yet!", true);
+
+        long chatId = data.getLongExtra(C_CHAT_ID_PROP_NAME, 0);
+
+        if (chatId == 0)
+            return new Error("Bad New Cipher Session init. request data has been provided!", true);
+
+        m_commandExecutorRef.initializeNewCipherSession(chatId);
+
+        return null;
+    }
+
     public enum OperationType {
         INIT_SERVICE(1),
 
         PROCESS_COMMAND_MESSAGE(2),
-        PROCESS_REQUEST_ANSWERED(3);
+        PROCESS_REQUEST_ANSWERED(3),
+        PROCESS_NEW_SESSION_INITIALIZING_REQUEST(4);
 
         private int m_id = 0;
 

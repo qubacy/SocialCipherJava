@@ -1,9 +1,14 @@
 package com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init;
 
+import com.mcdead.busycoder.socialcipher.cipher.CipherContext;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.CipherSessionStateOverall;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.CipherSessionState;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.data.CipherSessionInitRoute;
+import com.mcdead.busycoder.socialcipher.cipher.utility.CipherKeyUtility;
 
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
@@ -31,28 +36,50 @@ public class CipherSessionStateInit implements CipherSessionState {
         m_routeList = routeList;
     }
 
-    public boolean removeRoute(
-            final int sideIdSender,
-            final int sideIdReceiver)
+    public PublicKey getPublicKey() {
+        return m_publicKey;
+    }
+
+    public CipherSessionInitRoute getRouteById(final int routeId) {
+        if (routeId < 0 || routeId > m_routeList.size())
+            return null;
+
+        return m_routeList.get(routeId);
+    }
+
+    public byte[] processKeyData(
+            final byte[] publicSideKeyBytes,
+            final boolean isLastStage)
     {
-        if (sideIdSender <= 0 || sideIdReceiver <= 0)
-            return false;
+        PublicKey publicKey =
+                CipherKeyUtility.generatePublicKeyWithBytes(
+                        CipherContext.C_ALGORITHM,
+                        publicSideKeyBytes);
 
-        for (final CipherSessionInitRoute route : m_routeList)
-            if (route.getSideIdSender() == sideIdSender
-             && route.getSideIdReceiver() == sideIdReceiver)
-            {
-                return m_routeList.remove(route);
-            }
+        if (publicKey == null) return null;
 
-        return true;
+        Key sideProcessedData = null;
+
+        try {
+            sideProcessedData = m_keyAgreement.doPhase(publicKey, isLastStage);
+
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+
+            return null;
+        }
+
+        if (isLastStage)
+            m_keyAgreement.generateSecret();
+        else
+            sideProcessedData.getEncoded();
+
+        return null;
     }
 
     public boolean isInitCompleted() {
         return m_routeList.isEmpty();
     }
-
-
 
     @Override
     public CipherSessionStateOverall getOverallState() {
