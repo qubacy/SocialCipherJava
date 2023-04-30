@@ -70,10 +70,13 @@ public class ChatListFragment extends Fragment
         IntentFilter intentFilter =  new IntentFilter(ChatListBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
         intentFilter.addAction(ChatListBroadcastReceiver.C_UPDATES_RECEIVED);
+        intentFilter.addAction(ChatListBroadcastReceiver.C_SEND_COMMAND_MESSAGE);
 
-        LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).registerReceiver(
-                m_dialogChangeBroadcastReceiver,
-                intentFilter);
+        LocalBroadcastManager.
+                getInstance(getActivity().getApplicationContext()).
+                registerReceiver(
+                    m_dialogChangeBroadcastReceiver,
+                    intentFilter);
     }
 
     @Override

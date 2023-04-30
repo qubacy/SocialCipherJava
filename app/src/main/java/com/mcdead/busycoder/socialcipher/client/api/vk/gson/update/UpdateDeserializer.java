@@ -10,8 +10,8 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.VKAt
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.ResponseAttachmentBase;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.ResponseAttachmentStored;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatType;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerVK;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

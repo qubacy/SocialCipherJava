@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype;
+package com.mcdead.busycoder.socialcipher.client.data.entity.chat.type;
 
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 

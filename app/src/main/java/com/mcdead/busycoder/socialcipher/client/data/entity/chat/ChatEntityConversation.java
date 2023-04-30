@@ -1,6 +1,6 @@
 package com.mcdead.busycoder.socialcipher.client.data.entity.chat;
 
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatType;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 
 import java.util.ArrayList;
 import java.util.List;

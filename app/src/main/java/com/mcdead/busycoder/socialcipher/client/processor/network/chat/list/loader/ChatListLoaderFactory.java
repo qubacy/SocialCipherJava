@@ -1,8 +1,8 @@
 package com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader;
 
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatTypeDefinerFactory;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatTypeDefinerInterface;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerFactory;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerInterface;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class ChatListLoaderFactory {

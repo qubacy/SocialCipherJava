@@ -1,7 +1,7 @@
 package com.mcdead.busycoder.socialcipher.command.processor.service.data;
 
 public enum RequestAnswerType {
-    SETTING_CIPHER_SESSION(1, "Would you like to accept setting ciphering session? Initializer is %1!");
+    SETTING_CIPHER_SESSION(1, "Would you like to accept setting ciphering session? Initializer is %s!");
 
     final private int m_id;
     final private String m_text;

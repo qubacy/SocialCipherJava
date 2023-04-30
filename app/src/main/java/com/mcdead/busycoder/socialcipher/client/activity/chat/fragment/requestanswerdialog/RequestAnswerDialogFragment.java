@@ -22,16 +22,19 @@ public class RequestAnswerDialogFragment extends DialogFragment {
     public static final String C_FRAGMENT_TAG = "requestAnswerDialog";
 
     final private RequestAnswerType m_requestAnswerType;
+    final private long m_messageId;
     final private String m_requestText;
 
     final private RequestAnswerDialogFragmentCallback m_callback;
 
     private RequestAnswerDialogFragment(
             final RequestAnswerType requestAnswerType,
+            final long messageId,
             final String requestText,
             final RequestAnswerDialogFragmentCallback callback)
     {
         m_requestAnswerType = requestAnswerType;
+        m_messageId = messageId;
         m_requestText = requestText;
 
         m_callback = callback;
@@ -39,14 +42,16 @@ public class RequestAnswerDialogFragment extends DialogFragment {
 
     public static RequestAnswerDialogFragment getInstance(
             final RequestAnswerType requestAnswerType,
+            final long messageId,
             final String requestText,
             final RequestAnswerDialogFragmentCallback callback)
     {
-        if (callback == null || requestAnswerType == null)
+        if (callback == null || requestAnswerType == null || messageId <= 0)
             return null;
 
         RequestAnswerDialogFragment requestAnswerDialogFragment =
-                new RequestAnswerDialogFragment(requestAnswerType, requestText, callback);
+                new RequestAnswerDialogFragment(
+                        requestAnswerType, messageId, requestText, callback);
 
         return requestAnswerDialogFragment;
     }
@@ -107,7 +112,7 @@ public class RequestAnswerDialogFragment extends DialogFragment {
             @Override
             public void onClick(View view) {
                 CipherRequestAnswerSettingSession requestAnswer =
-                        new CipherRequestAnswerSettingSession(true);
+                        new CipherRequestAnswerSettingSession(m_messageId, true);
 
                 processRequestAnswerResult(requestAnswer);
             }
@@ -116,7 +121,7 @@ public class RequestAnswerDialogFragment extends DialogFragment {
             @Override
             public void onClick(View view) {
                 CipherRequestAnswerSettingSession requestAnswer =
-                        new CipherRequestAnswerSettingSession(false);
+                        new CipherRequestAnswerSettingSession(m_messageId, false);
 
                 processRequestAnswerResult(requestAnswer);
             }
@@ -129,5 +134,7 @@ public class RequestAnswerDialogFragment extends DialogFragment {
             final RequestAnswer requestAnswer)
     {
         m_callback.onRequestAnswerDialogResultGotten(requestAnswer);
+
+        dismiss();
     }
 }

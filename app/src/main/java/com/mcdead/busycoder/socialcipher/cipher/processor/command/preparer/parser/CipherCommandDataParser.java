@@ -5,6 +5,7 @@ import android.util.Pair;
 import com.mcdead.busycoder.socialcipher.cipher.CipherContext;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKeySize;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherAlgorithm;
+import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherConfiguration;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherMode;
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherPadding;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
@@ -108,40 +109,47 @@ public class CipherCommandDataParser {
             ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
     {
         if (serializedCipherCommandDataSections.length < C_INIT_REQUEST_SECTION_COUNT + C_SHARED_SECTION_COUNT)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided", true);
+            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
 
         int cipherAlgorithmId = Integer.parseInt(serializedCipherCommandDataSections[1]);
         CipherAlgorithm cipherAlgorithm = CipherAlgorithm.getAlgorithmById(cipherAlgorithmId);
 
         if (cipherAlgorithm == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided", true);
+            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
 
         int cipherModeId = Integer.parseInt(serializedCipherCommandDataSections[2]);
         CipherMode cipherMode = CipherMode.getModeById(cipherModeId);
 
         if (cipherMode == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided", true);
+            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
 
         int cipherPaddingId = Integer.parseInt(serializedCipherCommandDataSections[3]);
         CipherPadding cipherPadding = CipherPadding.getPaddingById(cipherPaddingId);
 
         if (cipherPadding == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided", true);
+            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
 
         int cipherKeySizeId = Integer.parseInt(serializedCipherCommandDataSections[4]);
         CipherKeySize cipherKeySize = CipherKeySize.getCipherKeySizeById(cipherKeySizeId);
 
         if (cipherKeySize == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided", true);
+            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
+
+        CipherConfiguration cipherConfiguration =
+                CipherConfiguration.getInstance(
+                        cipherAlgorithm,
+                        cipherMode,
+                        cipherPadding,
+                        cipherKeySize);
+
+        if (cipherConfiguration == null)
+            return new Error("Incorrect Cipher Configuration has been provided!", true);
 
         long startTimeMilliseconds = Long.parseLong(serializedCipherCommandDataSections[5]);
 
         CipherCommandDataInitRequest cipherCommandDataInitRequest =
                 CipherCommandDataInitRequest.getInstance(
-                        cipherAlgorithm,
-                        cipherMode,
-                        cipherPadding,
-                        cipherKeySize,
+                        cipherConfiguration,
                         startTimeMilliseconds);
 
         if (cipherCommandDataInitRequest == null)

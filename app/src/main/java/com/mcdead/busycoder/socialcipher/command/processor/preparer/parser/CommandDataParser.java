@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CommandDataParser {
     private static final int C_COMMAND_PART_COUNT = 2;
-    private static final int C_COMMAND_HEADER_PART_COUNT = 4;
+    private static final int C_COMMAND_HEADER_PART_COUNT = 3;
 
     public static Error parseCommandMessage(
             final CommandMessage commandMessage,
@@ -23,8 +23,7 @@ public class CommandDataParser {
 
         String commandText = commandMessage.getCommandString().substring(
                 CommandContext.C_COMMAND_BEGINNING_SYMBOLS.length());
-        String[] commandParts =
-                commandText.split(String.valueOf(CommandContext.C_PART_DIVIDER_CHAR));
+        String[] commandParts = commandText.split(CommandContext.C_PART_DIVIDER_CHAR);
 
         if (commandParts.length != C_COMMAND_PART_COUNT)
             return new Error("Incorrect command has been provided!", true);
@@ -111,7 +110,7 @@ public class CommandDataParser {
 
         if (receiverPeerIdListParts.length <= 0)
             return new Error("Incorrect command has been provided!", true);
-        if (receiverPeerIdListParts[0].isEmpty()) // case: broadcast;
+        if (receiverPeerIdListParts[0].compareTo(CommandContext.C_BROADCAST_SYMBOLS) == 0)
             return null;
 
         List<Long> receiverPeerIdList = new ArrayList<>();

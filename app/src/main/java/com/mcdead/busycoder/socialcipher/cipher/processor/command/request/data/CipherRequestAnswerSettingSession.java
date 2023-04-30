@@ -10,8 +10,11 @@ public class CipherRequestAnswerSettingSession extends CipherRequestAnswer
     final private boolean m_answer;
 
     public CipherRequestAnswerSettingSession(
+            final long messageId,
             final boolean answer)
     {
+        super(messageId);
+
         m_answer = answer;
     }
 

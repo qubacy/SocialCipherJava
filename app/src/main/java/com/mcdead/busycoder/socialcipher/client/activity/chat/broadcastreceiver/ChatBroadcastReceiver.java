@@ -8,14 +8,15 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 
 public class ChatBroadcastReceiver extends BroadcastReceiver {
     public static final String C_NEW_MESSAGE_ADDED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.NEW_MESSAGE_ADDED";
-    public static final String C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SETTING_CIPHER_SESSION_ANSWER_REQUESTED";
     public static final String C_SEND_NEW_MESSAGE = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SEND_NEW_MESSAGE";
     public static final String C_SHOW_NEW_CHAT_NOTIFICATION = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SHOW_NEW_CHAT_NOTIFICATION";
+
+    public static final String C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SETTING_CIPHER_SESSION_ANSWER_REQUESTED";
     public static final String C_CIPHER_SESSION_SET = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.CIPHER_SESSION_SET";
 
-
     public static final String C_CHAT_ID_PROP_NAME = "chatId";
-    public static final String C_INITIALIZER_PEER_ID_PROP_NAME = "initializerPeerId";
+    public static final String C_MESSAGE_ID_PROP_NAME = "messageId";
+    public static final String C_CIPHER_SESSION_INITIALIZER_PEER_ID_PROP_NAME = "initializerPeerId";
     public static final String C_MESSAGE_TEXT_PROP_NAME = "messageText";
     public static final String C_CHAT_NOTIFICATION_TEXT_PROP_NAME = "chatNotificationText";
 
@@ -62,15 +63,15 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
         if (data == null)
             return new Error("Intent data was null!", true);
 
-        long chatId =
-                data.getLongExtra(C_CHAT_ID_PROP_NAME, 0);
+        long chatId = data.getLongExtra(C_CHAT_ID_PROP_NAME, 0);
         long initializerPeerId =
-                data.getLongExtra(C_INITIALIZER_PEER_ID_PROP_NAME, 0);
+                data.getLongExtra(C_CIPHER_SESSION_INITIALIZER_PEER_ID_PROP_NAME, 0);
+        long messageId = data.getLongExtra(C_MESSAGE_ID_PROP_NAME, 0);
 
-        if (chatId == 0 || initializerPeerId == 0)
+        if (chatId == 0 || initializerPeerId == 0 || messageId == 0)
             return new Error("Setting Cipher Session Answer Request data was incorrect!", true);
 
-        m_callback.onSettingCipherSessionAnswerRequested(chatId, initializerPeerId);
+        m_callback.onSettingCipherSessionAnswerRequested(chatId, initializerPeerId, messageId);
 
         return null;
     }

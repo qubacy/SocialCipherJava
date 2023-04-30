@@ -7,7 +7,8 @@ public interface ChatBroadcastReceiverCallback {
     public void onChatBroadcastReceiverErrorOccurred(final Error error);
     public void onSettingCipherSessionAnswerRequested(
             final long chatId,
-            final long initializePeerId);
+            final long initializePeerId,
+            final long messageId);
     public void onCipherSessionSet(
             final long chatId);
     public void onNewMessageSendingRequested(

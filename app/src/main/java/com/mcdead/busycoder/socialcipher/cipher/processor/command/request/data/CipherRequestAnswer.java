@@ -5,9 +5,13 @@ import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestA
 
 import java.io.Serializable;
 
-public abstract class CipherRequestAnswer
-        implements RequestAnswer, Serializable
+public abstract class CipherRequestAnswer extends RequestAnswer
+        implements Serializable
 {
+
+    public CipherRequestAnswer(final long messageId) {
+        super(messageId);
+    }
 
     public abstract RequestAnswerType getRequestType();
 }

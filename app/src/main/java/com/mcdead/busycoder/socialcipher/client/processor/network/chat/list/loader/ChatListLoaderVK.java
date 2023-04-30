@@ -17,8 +17,8 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.list.ResponseCh
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.list.ResponseChatListWrapper;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatType;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;

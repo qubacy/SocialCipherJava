@@ -7,13 +7,15 @@ import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandProcessor;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;
 import com.mcdead.busycoder.socialcipher.command.processor.executor.CommandExecutorAsync;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapperSynchronized;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -23,20 +25,23 @@ public class CommandProcessorService extends Service
     public static final String C_LOCAL_USER_ID_PROP_NAME = "localPeerId";
 
     public static final String C_OPERATION_ID_PROP_NAME = "operationID";
-    public static final String C_COMMAND_MESSAGE_PROP_NAME = "commandMessage";
-
-    public static final String C_REQUEST_ANSWER_PROP_NAME = "requestAnswer";
-
-    public static final String C_CHAT_ID_PROP_NAME = "chatId";
 
     private CommandExecutorAsync m_commandExecutorRef = null;
     private Thread m_commandExecutorThread = null;
 
     private long m_localPeerId = 0;
 
-    private volatile LinkedBlockingQueue<CommandMessage> m_pendingCommandMessageQueue;
+    final private ObjectWrapperSynchronized<RequestAnswer> m_currentRequestAnswerShared;
+    final private ObjectWrapperSynchronized<Long> m_currentNewSessionChatIdShared;
+    final private LinkedBlockingQueue<CommandMessage> m_pendingCommandMessageQueueShared;
 
     private CommandProcessorServiceBroadcastReceiver m_broadcastReceiver = null;
+
+    public CommandProcessorService() {
+        m_currentRequestAnswerShared = new ObjectWrapperSynchronized<>();
+        m_currentNewSessionChatIdShared = new ObjectWrapperSynchronized<>();
+        m_pendingCommandMessageQueueShared = new LinkedBlockingQueue<>();
+    }
 
     @Override
     public int onStartCommand(Intent intent,
@@ -73,9 +78,14 @@ public class CommandProcessorService extends Service
         IntentFilter intentFilter =
                 new IntentFilter(CommandProcessorServiceBroadcastReceiver.C_PROVIDE_REQUEST_ANSWER);
 
+        intentFilter.addAction(CommandProcessorServiceBroadcastReceiver.C_PROCESS_COMMAND_MESSAGE);
+        intentFilter.addAction(CommandProcessorServiceBroadcastReceiver.C_INITIALIZE_NEW_CIPHERING_SESSION);
+
         m_broadcastReceiver = new CommandProcessorServiceBroadcastReceiver(this);
 
-        registerReceiver(m_broadcastReceiver, intentFilter);
+        LocalBroadcastManager.
+                getInstance(getApplicationContext()).
+                registerReceiver(m_broadcastReceiver, intentFilter);
     }
 
     @Override
@@ -85,7 +95,9 @@ public class CommandProcessorService extends Service
                 m_commandExecutorThread.interrupt();
         }
 
-        unregisterReceiver(m_broadcastReceiver);
+        LocalBroadcastManager.
+                getInstance(getApplicationContext()).
+                unregisterReceiver(m_broadcastReceiver);
 
         Log.d(getClass().getName(), "onDestroy() is on operating!");
 
@@ -111,70 +123,58 @@ public class CommandProcessorService extends Service
         return null;
     }
 
-    private Error processCommandMessage(
-            final Intent intent)
-    {
-        if (m_commandExecutorThread == null) {
-            m_commandExecutorRef =
-                    CommandExecutorAsync.getInstance(
+    private void launchCommandExecutors() {
+        if (m_commandExecutorThread != null)
+            if (!m_commandExecutorThread.isInterrupted())
+                return;
+
+        // todo: m_commandExecutorRef will get nullified!
+
+        m_commandExecutorRef =
+                CommandExecutorAsync.getInstance(
                         m_localPeerId,
                         getApplicationContext(),
-                        m_pendingCommandMessageQueue);
-            m_commandExecutorThread = new Thread(m_commandExecutorRef);
+                        m_pendingCommandMessageQueueShared,
+                        m_currentRequestAnswerShared,
+                        m_currentNewSessionChatIdShared);
+        m_commandExecutorThread = new Thread(m_commandExecutorRef);
 
-            m_commandExecutorThread.start();
-        }
-
-        CommandMessage commandMessage =
-                (CommandMessage) intent.getSerializableExtra(C_COMMAND_MESSAGE_PROP_NAME);
-
-        if (commandMessage == null)
-            return new Error("Provided Command Message was null!", true);
-
-        m_pendingCommandMessageQueue.offer(commandMessage);
-
-        return null;
-    }
-
-    private Error processRequestAnswered(
-            final Intent intent)
-    {
-        if (m_commandExecutorThread == null || m_commandExecutorRef == null)
-            return new Error("Command Processor hasn't been started yet!", true);
-
-        RequestAnswer requestAnswer =
-                (RequestAnswer) intent.getSerializableExtra(C_REQUEST_ANSWER_PROP_NAME);
-
-        if (requestAnswer == null)
-            return new Error("Bad Request Answer has been provided!", true);
-
-        m_commandExecutorRef.processRequestAnswer(requestAnswer);
-
-        return null;
+        m_commandExecutorThread.start();
     }
 
     @Override
-    public void onDataReceived(
-            final Intent data)
+    public void onCommandMessageReceived(
+            final CommandMessage commandMessage)
     {
-        int operationID = data.getIntExtra(C_OPERATION_ID_PROP_NAME, -1);
-        OperationType operationType = OperationType.getOperationTypeById(operationID);
+        launchCommandExecutors();
 
-        if (operationType == null) return;
+        m_pendingCommandMessageQueueShared.offer(commandMessage);
+    }
 
-        Error operationError = null;
+    @Override
+    public void onRequestAnswered(
+            final RequestAnswer requestAnswer)
+    {
+        if (m_commandExecutorThread == null || m_commandExecutorRef == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Command Processor hasn't been started yet!", true),
+                    getApplicationContext());
 
-        switch (operationType) {
-            case PROCESS_COMMAND_MESSAGE:
-                operationError = processCommandMessage(data); break;
-            case PROCESS_REQUEST_ANSWERED:
-                operationError = processRequestAnswered(data); break;
-            case PROCESS_NEW_SESSION_INITIALIZING_REQUEST:
-                operationError = processInitializeNewCipheringSessionRequest(data); break;
+            return;
         }
 
-        if (operationError != null)
-            ErrorBroadcastReceiver.broadcastError(operationError, this);
+        //m_commandExecutorRef.processRequestAnswer(requestAnswer);
+        m_currentRequestAnswerShared.setValue(requestAnswer);
+    }
+
+    @Override
+    public void onNewSessionInitializingRequested(
+            final long chatId)
+    {
+        launchCommandExecutors();
+
+        //m_commandExecutorRef.initializeNewCipherSession(chatId);
+        m_currentNewSessionChatIdShared.setValue(chatId);
     }
 
     @Override
@@ -186,28 +186,8 @@ public class CommandProcessorService extends Service
         ErrorBroadcastReceiver.broadcastError(error, this);
     }
 
-    private Error processInitializeNewCipheringSessionRequest(
-            final Intent data)
-    {
-        if (m_commandExecutorThread == null || m_commandExecutorRef == null)
-            return new Error("Command Processor hasn't been started yet!", true);
-
-        long chatId = data.getLongExtra(C_CHAT_ID_PROP_NAME, 0);
-
-        if (chatId == 0)
-            return new Error("Bad New Cipher Session init. request data has been provided!", true);
-
-        m_commandExecutorRef.initializeNewCipherSession(chatId);
-
-        return null;
-    }
-
     public enum OperationType {
-        INIT_SERVICE(1),
-
-        PROCESS_COMMAND_MESSAGE(2),
-        PROCESS_REQUEST_ANSWERED(3),
-        PROCESS_NEW_SESSION_INITIALIZING_REQUEST(4);
+        INIT_SERVICE(1);
 
         private int m_id = 0;
 

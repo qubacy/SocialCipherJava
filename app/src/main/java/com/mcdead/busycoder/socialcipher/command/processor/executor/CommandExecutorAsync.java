@@ -22,15 +22,11 @@ import com.mcdead.busycoder.socialcipher.command.processor.preparer.parser.Comma
 import com.mcdead.busycoder.socialcipher.command.processor.preparer.serializer.CommandDataSerializer;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapperSynchronized;
 
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/*
-
-    Should be launched from the beginning;
-
-*/
 public class CommandExecutorAsync
         implements
         Runnable,
@@ -44,30 +40,41 @@ public class CommandExecutorAsync
 
     final private long m_localPeerId;
     final private Context m_context;
-    final private LinkedBlockingQueue<CommandMessage> m_pendingCommandMessageQueueRef;
+
+    final private LinkedBlockingQueue<CommandMessage> m_pendingCommandMessageQueueShared;
+    final private ObjectWrapperSynchronized<RequestAnswer> m_currentRequestAnswerShared;
+    final private ObjectWrapperSynchronized<Long> m_currentNewSessionChatIdShared;
 
     private CommandMessage m_currentCommandMessage = null;
-    private volatile RequestAnswer m_currentRequestAnswer = null;
 
     private CommandExecutorAsync(
             final long localPeerId,
             final Context context,
-            final LinkedBlockingQueue<CommandMessage> pendingCommandMessageQueueRef)
+            final LinkedBlockingQueue<CommandMessage> pendingCommandMessageQueueShared,
+            final ObjectWrapperSynchronized<RequestAnswer> currentRequestAnswerShared,
+            final ObjectWrapperSynchronized<Long> currentNewSessionChatIdShared)
     {
         m_cipherProcessor = new CipherCommandProcessor(this);
 
         m_localPeerId = localPeerId;
         m_context = context;
-        m_pendingCommandMessageQueueRef = pendingCommandMessageQueueRef;
+
+        m_pendingCommandMessageQueueShared = pendingCommandMessageQueueShared;
+        m_currentRequestAnswerShared = currentRequestAnswerShared;
+        m_currentNewSessionChatIdShared = currentNewSessionChatIdShared;
     }
 
     public static CommandExecutorAsync getInstance(
             final long localPeerId,
             final Context context,
-            final LinkedBlockingQueue<CommandMessage> pendingCommandMessageQueueRef)
+            final LinkedBlockingQueue<CommandMessage> pendingCommandMessageQueueShared,
+            final ObjectWrapperSynchronized<RequestAnswer> currentRequestAnswerShared,
+            final ObjectWrapperSynchronized<Long> currentNewSessionChatIdShared)
     {
         if (context == null || localPeerId == 0
-         || pendingCommandMessageQueueRef == null)
+         || pendingCommandMessageQueueShared == null
+         || currentRequestAnswerShared == null
+         || currentNewSessionChatIdShared == null)
         {
             return null;
         }
@@ -75,24 +82,24 @@ public class CommandExecutorAsync
         return new CommandExecutorAsync(
                 localPeerId,
                 context,
-                pendingCommandMessageQueueRef);
+                pendingCommandMessageQueueShared,
+                currentRequestAnswerShared,
+                currentNewSessionChatIdShared);
     }
 
-    public synchronized void processRequestAnswer(
-            final RequestAnswer requestAnswer)
-    {
-        // todo: processing the request answer..
-
-        if (m_currentRequestAnswer == null)
-            m_currentRequestAnswer = requestAnswer;
-    }
-
-    public synchronized void initializeNewCipherSession(
+    private void initializeNewCipherSession(
             final long chatId)
     {
         // todo: initializing a new cipher session..
 
-        m_cipherProcessor.
+        Error initializingError =
+                m_cipherProcessor.initializeNewSession(chatId);
+
+        if (initializingError != null) {
+            ErrorBroadcastReceiver.broadcastError(initializingError, m_context);
+
+            return;
+        }
     }
 
     @Override
@@ -110,7 +117,19 @@ public class CommandExecutorAsync
                 continue;
             }
 
-            CommandMessage commandMessage = m_pendingCommandMessageQueueRef.peek();
+            // todo: new session creating request..
+
+            Long newSessionChatId = m_currentNewSessionChatIdShared.getValue();
+
+            if (newSessionChatId != null) {
+                m_currentNewSessionChatIdShared.setValue(null);
+
+                initializeNewCipherSession(newSessionChatId);
+            }
+
+            // todo: processing incoming command..
+
+            CommandMessage commandMessage = m_pendingCommandMessageQueueShared.poll();
 
             if (commandMessage == null) continue;
 
@@ -132,13 +151,15 @@ public class CommandExecutorAsync
 
             // todo: checking for a receiver..
 
-            List<Long> receiverPeerIdList = commandDataWrapper.getValue().getReceiverPeerIdList();
-            boolean isForLocalUser = false;
+            if (commandDataWrapper.getValue().getReceiverPeerIdList() != null) {
+                List<Long> receiverPeerIdList = commandDataWrapper.getValue().getReceiverPeerIdList();
+                boolean isForLocalUser = false;
 
-            for (final long receiverPeerId : receiverPeerIdList)
-                if (receiverPeerId == m_localPeerId) isForLocalUser = true;
+                for (final long receiverPeerId : receiverPeerIdList)
+                    if (receiverPeerId == m_localPeerId) isForLocalUser = true;
 
-            if (!isForLocalUser) continue;
+                if (!isForLocalUser) continue;
+            }
 
             // todo: conveying a command to processors..
 
@@ -202,7 +223,7 @@ public class CommandExecutorAsync
                 serializedCommandDataWrapper.getValue());
 
         LocalBroadcastManager.
-                getInstance(m_context).
+                getInstance(m_context.getApplicationContext()).
                 sendBroadcast(intent);
     }
 
@@ -214,8 +235,11 @@ public class CommandExecutorAsync
                 ChatBroadcastReceiver.C_CHAT_ID_PROP_NAME,
                 m_currentCommandMessage.getPeerId());
         intent.putExtra(
-                ChatBroadcastReceiver.C_INITIALIZER_PEER_ID_PROP_NAME,
+                ChatBroadcastReceiver.C_CIPHER_SESSION_INITIALIZER_PEER_ID_PROP_NAME,
                 m_currentCommandMessage.getInitializerPeerId());
+        intent.putExtra(
+                ChatBroadcastReceiver.C_MESSAGE_ID_PROP_NAME,
+                m_currentCommandMessage.getMessageId());
 
         LocalBroadcastManager.
                 getInstance(m_context).
@@ -226,17 +250,26 @@ public class CommandExecutorAsync
         while (endTime > System.currentTimeMillis()) {
             SystemClock.sleep(C_TIMEOUT_MILLISECONDS);
 
-            if (m_currentRequestAnswer == null) continue;
+            RequestAnswer currentRequestAnswer = m_currentRequestAnswerShared.getValue();
+
+            if (currentRequestAnswer == null) continue;
+
+            if (currentRequestAnswer.getMessageId() != m_currentCommandMessage.getMessageId()) {
+                m_currentRequestAnswerShared.setValue(null);
+
+                continue;
+            }
+
+            m_currentRequestAnswerShared.setValue(null);
 
             CipherRequestAnswerSettingSession settingCipherSessionRequestAnswer =
-                    (CipherRequestAnswerSettingSession) m_currentRequestAnswer;
-
-            m_currentRequestAnswer = null;
+                    (CipherRequestAnswerSettingSession) currentRequestAnswer;
 
             return settingCipherSessionRequestAnswer;
         }
 
-        return null;
+        return new CipherRequestAnswerSettingSession(
+                m_currentCommandMessage.getMessageId(), false);
     }
 
     @Override

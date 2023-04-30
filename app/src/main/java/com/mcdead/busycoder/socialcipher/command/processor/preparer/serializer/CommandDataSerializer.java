@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.command.processor.preparer.serializer;
 
+import static com.mcdead.busycoder.socialcipher.command.CommandContext.C_BROADCAST_SYMBOLS;
+
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandContext;
 import com.mcdead.busycoder.socialcipher.command.data.entity.CommandData;
@@ -31,6 +33,7 @@ public class CommandDataSerializer {
 
         if (error != null) return error;
 
+        serializedCommandData.append(serializedPeerIdListWrapper.getValue());
         serializedCommandData.append(CommandContext.C_PART_DIVIDER_CHAR);
         serializedCommandData.append(commandData.getSpecificCommandTypeData());
 
@@ -44,7 +47,7 @@ public class CommandDataSerializer {
             ObjectWrapper<String> serializedPeerIdListWrapper)
     {
         if (peerIdList == null) {
-            serializedPeerIdListWrapper.setValue("");
+            serializedPeerIdListWrapper.setValue(C_BROADCAST_SYMBOLS);
 
             return null;
         }

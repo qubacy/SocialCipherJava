@@ -1,7 +1,6 @@
 package com.mcdead.busycoder.socialcipher.client.activity.chat.fragment;
 
 import static com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragment.C_FRAGMENT_TAG;
-import static com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorService.C_REQUEST_ANSWER_PROP_NAME;
 
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -18,9 +17,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,6 +36,9 @@ import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestan
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.AttachmentShowerActivity;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSide;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSideDefiner;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSideDefinerFactory;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
@@ -55,7 +57,6 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
-import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorService;
 import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswerType;
@@ -88,7 +89,7 @@ public class ChatFragment extends Fragment
     private EditText m_sendingMessageText = null;
     private List<AttachmentData> m_uploadingAttachmentList = null;
 
-    private Button m_cipherButton = null;
+    private AppCompatImageButton m_cipherButton = null;
 
     public ChatFragment(
             final long peerId,
@@ -113,10 +114,16 @@ public class ChatFragment extends Fragment
                 this,
                 m_localPeerId);
 
+        IntentFilter intentFilter = new IntentFilter(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);
+
+        intentFilter.addAction(ChatBroadcastReceiver.C_CIPHER_SESSION_SET);
+        intentFilter.addAction(ChatBroadcastReceiver.C_SEND_NEW_MESSAGE);
+        intentFilter.addAction(ChatBroadcastReceiver.C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED);
+        intentFilter.addAction(ChatBroadcastReceiver.C_SHOW_NEW_CHAT_NOTIFICATION);
+
         LocalBroadcastManager
                 .getInstance(getContext().getApplicationContext())
-                .registerReceiver(m_broadcastReceiver,
-                        new IntentFilter(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED));
+                .registerReceiver(m_broadcastReceiver, intentFilter);
     }
 
     @Nullable
@@ -224,10 +231,11 @@ public class ChatFragment extends Fragment
     @Override
     public void onSettingCipherSessionAnswerRequested(
             final long chatId,
-            final long initializerPeerId)
+            final long initializerPeerId,
+            final long messageId)
     {
         if (chatId != m_peerId) {
-            onRequestAnswerDialogResultGotten(new CipherRequestAnswerSettingSession(false));
+            onRequestAnswerDialogResultGotten(new CipherRequestAnswerSettingSession(messageId,false));
 
             return;
         }
@@ -255,6 +263,7 @@ public class ChatFragment extends Fragment
         RequestAnswerDialogFragment dialogFragment =
                 RequestAnswerDialogFragment.getInstance(
                         RequestAnswerType.SETTING_CIPHER_SESSION,
+                        messageId,
                         requestText,
                         this);
         FragmentManager fragmentManager = getParentFragmentManager();
@@ -406,6 +415,23 @@ public class ChatFragment extends Fragment
     }
 
     private void onCipherButtonClicked() {
+        // todo: checking chatId..
+
+        ChatSideDefiner chatSideDefiner = ChatSideDefinerFactory.generateChatSideDefiner();
+
+        if (chatSideDefiner == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Chat Side Definer creating process has been failed!", true),
+                    getActivity().getApplicationContext());
+
+            return;
+        }
+
+        ChatSide chatSide = chatSideDefiner.defineChatSide(m_peerId);
+
+        if (chatSide == ChatSide.LOCAL)
+            return;
+
         m_cipherButton.setEnabled(false);
 
         // todo: initializing a new ciphering session..
@@ -414,10 +440,7 @@ public class ChatFragment extends Fragment
                 new Intent(
                         CommandProcessorServiceBroadcastReceiver.C_INITIALIZE_NEW_CIPHERING_SESSION);
 
-        intent.putExtra(CommandProcessorService.C_CHAT_ID_PROP_NAME, m_peerId);
-        intent.putExtra(
-                CommandProcessorService.C_OPERATION_ID_PROP_NAME,
-                CommandProcessorService.OperationType.PROCESS_NEW_SESSION_INITIALIZING_REQUEST);
+        intent.putExtra(CommandProcessorServiceBroadcastReceiver.C_CHAT_ID_PROP_NAME, m_peerId);
 
         LocalBroadcastManager.
                 getInstance(getContext().getApplicationContext()).
@@ -531,7 +554,7 @@ public class ChatFragment extends Fragment
     {
         Intent intent = new Intent(CommandProcessorServiceBroadcastReceiver.C_PROVIDE_REQUEST_ANSWER);
 
-        intent.putExtra(C_REQUEST_ANSWER_PROP_NAME, requestAnswer);
+        intent.putExtra(CommandProcessorServiceBroadcastReceiver.C_REQUEST_ANSWER_PROP_NAME, requestAnswer);
 
         LocalBroadcastManager.
                 getInstance(getActivity().getApplicationContext()).

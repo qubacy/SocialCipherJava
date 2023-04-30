@@ -25,16 +25,19 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.update.ResponseUpdateItemInterface;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatType;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatTypeDefinerFactory;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.chattype.ChatTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerFactory;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.commandchecker.CommandMessageRetriever;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
+import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;
+import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
@@ -135,6 +138,22 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
                 return newChatProcessingError;
         }
 
+        ObjectWrapper<Boolean> successFlagWrapper = new ObjectWrapper<>(false);
+        Error retrievingCommandError =
+                checkMessageForCommand(
+                        updateItem.chatId,
+                        newMessageWrapper.getValue(),
+                        successFlagWrapper);
+
+        if (retrievingCommandError != null)
+            return retrievingCommandError;
+
+        if (successFlagWrapper.getValue()) {
+            // todo: is there something to do here??
+
+            return null;
+        }
+
         if (!ChatsStore.getInstance().addNewMessage(newMessageWrapper.getValue(), updateItem.chatId))
             return new Error("New message addition error!", true);
 
@@ -150,6 +169,47 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         intent.putExtra(C_NEW_MESSAGE_CHAT_ID_PROP_NAME, updateItem.chatId);
 
         LocalBroadcastManager.getInstance(m_context).sendBroadcast(intent);
+
+        return null;
+    }
+
+    private Error checkMessageForCommand(
+            final long chatId,
+            final MessageEntity messageEntity,
+            ObjectWrapper<Boolean> successFlagWrapper)
+    {
+        CommandMessageRetriever commandMessageRetriever =
+                CommandMessageRetriever.getInstance(
+                        chatId,
+                        messageEntity.getFromPeerId(),
+                        messageEntity.getId());
+
+        if (commandMessageRetriever == null)
+            return new Error("Command Retriever generation error!", true);
+
+        CommandMessage commandMessage =
+                commandMessageRetriever.retrieveCommandMessage(messageEntity.getMessage());
+
+        if (commandMessage == null) {
+            successFlagWrapper.setValue(false);
+
+            return null;
+        }
+
+        // todo: conveying the new command to the processor...
+
+        Intent intent = new Intent(
+                CommandProcessorServiceBroadcastReceiver.C_PROCESS_COMMAND_MESSAGE);
+
+        intent.putExtra(
+                CommandProcessorServiceBroadcastReceiver.C_COMMAND_MESSAGE_PROP_NAME,
+                commandMessage);
+
+        LocalBroadcastManager.
+                getInstance(m_context.getApplicationContext()).
+                sendBroadcast(intent);
+
+        successFlagWrapper.setValue(true);
 
         return null;
     }

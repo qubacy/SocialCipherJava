@@ -13,7 +13,7 @@ import javax.crypto.KeyAgreement;
 
 public class CipherSessionStateInitGenerator {
     public static CipherSessionStateInit generateCipherSessionStateInit(
-            final PrivateKey localPrivateKey,
+            //final PrivateKey localPrivateKey,
             final PublicKey publicKey,
             final KeyAgreement keyAgreement,
             final HashMap<Long, Integer> userPeerIdSessionSideIdHashMap)
@@ -30,7 +30,7 @@ public class CipherSessionStateInitGenerator {
             return null;
 
         return new CipherSessionStateInit(
-                localPrivateKey,
+                //localPrivateKey,
                 publicKey,
                 keyAgreement,
                 initRouteList);

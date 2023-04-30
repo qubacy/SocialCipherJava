@@ -16,7 +16,7 @@ import java.util.List;
 import javax.crypto.KeyAgreement;
 
 public class CipherSessionStateInit implements CipherSessionState {
-    final private PrivateKey m_privateKey;
+    //final private PrivateKey m_privateKey;
     final private PublicKey m_publicKey;
 
     final private KeyAgreement m_keyAgreement;
@@ -24,12 +24,12 @@ public class CipherSessionStateInit implements CipherSessionState {
     final private List<CipherSessionInitRoute> m_routeList;
 
     protected CipherSessionStateInit(
-            final PrivateKey privateKey,
+            //final PrivateKey privateKey,
             final PublicKey publicKey,
             final KeyAgreement keyAgreement,
             final List<CipherSessionInitRoute> routeList)
     {
-        m_privateKey = privateKey;
+        //m_privateKey = privateKey;
         m_publicKey = publicKey;
 
         m_keyAgreement = keyAgreement;
