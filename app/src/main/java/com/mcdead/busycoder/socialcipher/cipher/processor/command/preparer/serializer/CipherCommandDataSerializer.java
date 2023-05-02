@@ -138,7 +138,7 @@ public class CipherCommandDataSerializer {
         serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
 
         byte[] publicKeyBytes = cipherCommandData.getPublicKey().getEncoded();
-        String publicKeyAsBase64String = Base64.encodeToString(publicKeyBytes, Base64.DEFAULT);
+        String publicKeyAsBase64String = Base64.encodeToString(publicKeyBytes, Base64.NO_WRAP);
 
         if (publicKeyAsBase64String == null)
             return new Error("Public Key encoding went wrong!", true);
@@ -147,7 +147,7 @@ public class CipherCommandDataSerializer {
         serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
 
         String sidePublicDataAsBase64String =
-                Base64.encodeToString(cipherCommandData.getSidePublicData(), Base64.DEFAULT);
+                Base64.encodeToString(cipherCommandData.getSidePublicData(), Base64.NO_WRAP);
 
         if (sidePublicDataAsBase64String == null)
             return new Error("Side Public Data encoding went wrong!", true);

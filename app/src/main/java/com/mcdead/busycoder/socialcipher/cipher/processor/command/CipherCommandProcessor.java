@@ -117,41 +117,49 @@ public class CipherCommandProcessor implements CommandProcessor {
     @Override
     public Error execState() {
         List<Long> dataToRemoveKeyList = new ArrayList<>();
+        Error cycleError = null;
 
         for (final Map.Entry<Long, CipherSessionPreInitData> chatIdPreInitDataEntry :
                 m_chatIdPreInitDataHashMap.entrySet())
         {
             long curStartTime = chatIdPreInitDataEntry.getValue().getStartTime();
 
-            if (curStartTime + C_SESSION_SETTING_PRE_INIT_PHASE_TIMESPAN_MILLISECONDS < System.currentTimeMillis())
+            if (curStartTime + C_SESSION_SETTING_PRE_INIT_PHASE_TIMESPAN_MILLISECONDS > System.currentTimeMillis())
                 continue;
 
             // todo: if it's a client side then we will just toss it off:
 
-            if (m_callback.getLocalPeerId() != chatIdPreInitDataEntry.getKey()) {
+            if (m_callback.getLocalPeerId() != chatIdPreInitDataEntry.getValue().getInitializerPeerId()) {
                 dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
 
-                return null;
+                break;
             }
 
             // todo: initializer-side processing:
+
+            dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
 
             ObjectWrapper<Boolean> successFlagWrapper = new ObjectWrapper<>();
             Error execNewSessionError =
                     execNewSessionInitializer(chatIdPreInitDataEntry.getKey(), successFlagWrapper);
 
-            if (execNewSessionError != null)
-                return execNewSessionError;
+            if (execNewSessionError != null) {
+                //dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
 
-            if (!successFlagWrapper.getValue())
-                dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
+                cycleError = execNewSessionError;
+
+                break;
+            }
+
+            //if (!successFlagWrapper.getValue())
+            //dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
         }
 
         for (final Long dataToRemoveKey : dataToRemoveKeyList) {
             m_chatIdPreInitDataHashMap.remove(dataToRemoveKey);
         }
 
-        return null;
+        return cycleError;
     }
 
     private Error execNewSessionInitializer(
@@ -163,7 +171,7 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         List<Long> userPeerIdList = chatIdPreInitData.getUserPeerIdList();
 
-        if (userPeerIdList.isEmpty()) {
+        if (userPeerIdList.size() <= 1) {
             successFlagWrapper.setValue(false);
 
             return null;
@@ -183,12 +191,17 @@ public class CipherCommandProcessor implements CommandProcessor {
                 (CipherSessionStateInit) cipherSession.getState();
 
         PublicKey publicKey = cipherSessionStateInit.getPublicKey();
+        byte[] publicSideData =
+                cipherSessionStateInit.processKeyData(publicKey.getEncoded(), false);
 
         CipherCommandDataInitRequestCompleted cipherCommandDataInitRequestCompleted =
                 CipherCommandDataInitRequestCompleted.getInstance(
                         cipherSession.getUserPeerIdSessionSideIdHashMap(),
                         cipherSessionStateInit.getPublicKey(),
-                        cipherSessionStateInit.processKeyData(publicKey.getEncoded(), false));
+                        publicSideData);
+
+        if (cipherCommandDataInitRequestCompleted == null)
+            return new Error("Cipher Command Data Init Request Completed object creating has been failed!", true);
 
         ObjectWrapper<String> serializedCommandWrapper = new ObjectWrapper<>();
         Error serializationError =
@@ -199,12 +212,10 @@ public class CipherCommandProcessor implements CommandProcessor {
         if (serializationError != null)
             return serializationError;
 
-        List<Long> receiverPeerId = new ArrayList<>();
-
         m_callback.sendCommand(
                 CommandCategory.CIPHER,
                 chatId,
-                receiverPeerId,
+                null,
                 serializedCommandWrapper.getValue());
 
         successFlagWrapper.setValue(true);
@@ -245,23 +256,21 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         CipherSessionInitBuffer cipherSessionInitBuffer =
                 new CipherSessionInitBuffer(
-                        settingsCipher.getConfiguration(),
-                        m_callback.getLocalPeerId());
+                        settingsCipher.getConfiguration());
         CipherSessionPreInitDataInitializer cipherSessionPreInitDataInitializer =
                 new CipherSessionPreInitDataInitializer(
                         curTimeMilliseconds,
+                        m_callback.getLocalPeerId(),
                         cipherSessionInitBuffer);
 
         m_chatIdPreInitDataHashMap.put(chatId, cipherSessionPreInitDataInitializer);
 
         // todo: calling sendCommand(..); to exec it..
 
-        List<Long> receiverUserPeerIdList = new ArrayList<>();
-
         m_callback.sendCommand(
                 CommandCategory.CIPHER,
                 chatId,
-                receiverUserPeerIdList,
+                null,
                 serializedCommand.getValue());
 
         return null;
@@ -357,18 +366,33 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         receiverPeerIdList.add(initializerPeerId);
 
-        m_callback.sendCommand(CommandCategory.CIPHER, chatId, receiverPeerIdList, "");
+        CipherCommandDataInitAccept cipherCommandDataInitAccept =
+                CipherCommandDataInitAccept.getInstance();
+
+        ObjectWrapper<String> serializedCommand = new ObjectWrapper<>();
+        Error serializingError =
+                CipherCommandDataSerializer.serializeCipherCommandData(
+                    cipherCommandDataInitAccept, serializedCommand);
+
+        if (serializingError != null)
+            return serializingError;
+
+        m_callback.sendCommand(
+                CommandCategory.CIPHER,
+                chatId,
+                receiverPeerIdList,
+                serializedCommand.getValue());
 
         // todo: adding new buffer obj.
 
         CipherSessionInitBuffer buffer =
                 new CipherSessionInitBuffer(
-                        initRequestCommand.getCipherConfiguration(),
-                        initializerPeerId);
+                        initRequestCommand.getCipherConfiguration());
 
         CipherSessionPreInitData cipherSessionPreInitData =
                 new CipherSessionPreInitData(
                         initRequestCommand.getStartTimeMilliseconds(),
+                        initializerPeerId,
                         buffer);
 
         m_chatIdPreInitDataHashMap.put(chatId, cipherSessionPreInitData);
@@ -464,8 +488,6 @@ public class CipherCommandProcessor implements CommandProcessor {
         if (commandDataInitRoute == null)
             return new Error("Cipher Command Data Init Route creating during Init Completed Command Processing has been failed!", true);
 
-        List<Long> receiverPeerIdList = new ArrayList<>();
-
         ObjectWrapper<String> serializedCommandWrapper = new ObjectWrapper<>();
         Error serializedCommandError =
                 CipherCommandDataSerializer.serializeCipherCommandData(
@@ -478,7 +500,7 @@ public class CipherCommandProcessor implements CommandProcessor {
         m_callback.sendCommand(
                 CommandCategory.CIPHER,
                 chatId,
-                receiverPeerIdList,
+                null,
                 serializedCommandWrapper.getValue());
 
         return null;
@@ -509,7 +531,7 @@ public class CipherCommandProcessor implements CommandProcessor {
                 sideIdRouteIdDataHashMap.get(cipherSession.getLocalSessionSideId());
 
         long chatInitializerPeerId =
-                m_chatIdPreInitDataHashMap.get(chatId).getBuffer().getInitializerPeerId();
+                m_chatIdPreInitDataHashMap.get(chatId).getInitializerPeerId();
 
         if (localRouteIdDataPair != null) {
             Error processingRouteError =
@@ -544,8 +566,6 @@ public class CipherCommandProcessor implements CommandProcessor {
 
             // todo: sending SESSION_SET command..
 
-            List<Long> receiverUserPeerIdList = new ArrayList<>();
-
             CipherCommandDataSessionSet commandDataSessionSet =
                     CipherCommandDataSessionSet.getInstance();
 
@@ -562,7 +582,7 @@ public class CipherCommandProcessor implements CommandProcessor {
             m_callback.sendCommand(
                     CommandCategory.CIPHER,
                     chatId,
-                    receiverUserPeerIdList,
+                    null,
                     serializedCommandDataSessionSet.getValue());
         }
 
@@ -610,8 +630,6 @@ public class CipherCommandProcessor implements CommandProcessor {
         if (nextCipherCommandRoute == null)
             return new Error("Cipher Command Data Init Route creating during Route Processing has been failed!", true);
 
-        List<Long> receiverPeerIdList = new ArrayList<>();
-
         ObjectWrapper<String> nextCipherCommandRouteString = new ObjectWrapper<>();
         Error commandSerializingError =
                 CipherCommandDataSerializer.serializeCipherCommandData(
@@ -624,7 +642,7 @@ public class CipherCommandProcessor implements CommandProcessor {
         m_callback.sendCommand(
                 CommandCategory.CIPHER,
                 chatId,
-                receiverPeerIdList,
+                null,
                 nextCipherCommandRouteString.getValue());
 
         return null;

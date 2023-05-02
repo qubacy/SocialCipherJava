@@ -70,11 +70,9 @@ public class CipherSessionStateInit implements CipherSessionState {
         }
 
         if (isLastStage)
-            m_keyAgreement.generateSecret();
-        else
-            sideProcessedData.getEncoded();
+            return m_keyAgreement.generateSecret();
 
-        return null;
+        return sideProcessedData.getEncoded();
     }
 
     public boolean isInitCompleted() {

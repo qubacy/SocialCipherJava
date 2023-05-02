@@ -49,12 +49,15 @@ public class CipherSessionStateInitGenerator {
 
         // todo: creating default routes..
 
-        for (int routeIndex = 0; routeIndex < sideCount; ++routeIndex) {
+        for (int routeIndex = 0; routeIndex < sideCount - 1; ++routeIndex) {
             List<Integer> sideIdRouteList = new ArrayList<>();
 
-            for (int sideIndex = 0; sideIndex < sideCount; ++sideIndex) {
-                sideIdRouteList.add(0);
-                sideIdRouteList.add(sideIdShiftArray[(sideIndex + routeIndex) % (sideIdShiftArraySize - 1)]);
+            sideIdRouteList.add(0);
+
+            for (int sideIndex = 0; sideIndex < sideCount - 1; ++sideIndex) {
+                int shiftMod = (sideIdShiftArraySize > 1 ? sideIdShiftArraySize - 1 : 1);
+
+                sideIdRouteList.add(sideIdShiftArray[(sideIndex + routeIndex) % shiftMod]);
             }
 
             CipherSessionInitRoute cipherSessionInitRoute =
@@ -68,8 +71,18 @@ public class CipherSessionStateInitGenerator {
 
         // todo: creating the last route..
 
+        List<Integer> sideIdRouteList = new ArrayList<>();
+
         for (int i = 0; i < sideCount; ++i)
-            sideIdShiftArray[i] = sideCount - 1 - i;
+            sideIdRouteList.add(sideCount - 1 - i);
+
+        CipherSessionInitRoute lastCipherSessionInitRoute =
+                CipherSessionInitRoute.getInstance(sideIdRouteList);
+
+        if (lastCipherSessionInitRoute == null)
+            return null;
+
+        initRouteList.add(lastCipherSessionInitRoute);
 
         return initRouteList;
     }

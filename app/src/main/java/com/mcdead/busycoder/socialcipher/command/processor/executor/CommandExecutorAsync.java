@@ -128,6 +128,7 @@ public class CommandExecutorAsync
             }
 
             // todo: processing incoming command..
+            // todo: mb i should process pending commands in inline CYCLE here?
 
             CommandMessage commandMessage = m_pendingCommandMessageQueueShared.poll();
 

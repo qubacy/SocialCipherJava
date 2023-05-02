@@ -20,6 +20,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandContext;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -28,7 +29,7 @@ import java.util.List;
 
 public class CipherCommandDataParser {
     private static final int C_SHARED_SECTION_COUNT = 1;
-    private static final int C_MIN_SECTION_COUNT = 2;
+    private static final int C_MIN_SECTION_COUNT = 1;
 
     private static final int C_INIT_REQUEST_SECTION_COUNT = 5;
     private static final int C_INIT_ACCEPT_SECTION_COUNT = 0;
@@ -93,6 +94,15 @@ public class CipherCommandDataParser {
                         parseCipherCommandDataInitRoute(
                                 cipherCommandSections,
                                 cipherCommandDataWrapper);
+
+                break;
+            }
+            case CIPHER_SESSION_SET: {
+                parsingError =
+                        parseCipherCommandDataSessionSet(
+                                cipherCommandSections,
+                                cipherCommandDataWrapper
+                        );
 
                 break;
             }
@@ -197,7 +207,7 @@ public class CipherCommandDataParser {
         for (final String serializedPeerIdSideIdPair : serializedPeerIdSideIdPairList) {
             String[] serializedPeerIdSideIdPairParts =
                     serializedPeerIdSideIdPair.split(
-                            String.valueOf(CommandContext.C_SAME_TYPE_DATA_PIECE_DIVIDER_CHAR));
+                            String.valueOf(CommandContext.C_PAIR_DATA_DIVIDER_CHAR));
 
             if (serializedPeerIdSideIdPairParts.length < 2)
                 return new Error("Peer Id Side Id pair parts count was incorrect during parsing process!", true);
@@ -212,7 +222,7 @@ public class CipherCommandDataParser {
         }
 
         byte[] publicKeyBytes =
-                Base64.getDecoder().decode(serializedCipherCommandDataSections[2]);
+                Base64.getDecoder().decode(serializedCipherCommandDataSections[2].getBytes(StandardCharsets.UTF_8));
 
         if (publicKeyBytes == null)
             return new Error("Public Key Bytes were null during parsing process!", true);
@@ -226,7 +236,7 @@ public class CipherCommandDataParser {
             return new Error("Public Key creation failed during parsing process!", true);
 
         byte[] sidePublicData =
-                Base64.getDecoder().decode(serializedCipherCommandDataSections[3]);
+                Base64.getDecoder().decode(serializedCipherCommandDataSections[3].getBytes(StandardCharsets.UTF_8));
 
         if (sidePublicData == null)
             return new Error("Side Public Data was null during parsing process!", true);

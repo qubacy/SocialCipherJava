@@ -11,12 +11,15 @@ public class CipherSessionPreInitDataInitializer extends CipherSessionPreInitDat
 
     public CipherSessionPreInitDataInitializer(
             final long startTimeMillisecond,
+            final long initializerPeerId,
             final CipherSessionInitBuffer buffer)
     {
-        super(startTimeMillisecond, buffer);
+        super(startTimeMillisecond, initializerPeerId, buffer);
 
         m_userPeerIdList = new ArrayList<>();
         m_routeCounterList = new ArrayList<>();
+
+        m_userPeerIdList.add(initializerPeerId); //todo: initializer is added by default;
     }
 
     public boolean addUser(

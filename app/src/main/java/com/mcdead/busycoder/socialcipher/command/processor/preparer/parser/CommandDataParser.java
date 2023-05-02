@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommandDataParser {
-    private static final int C_COMMAND_PART_COUNT = 2;
+    private static final int C_COMMAND_MAIN_PART_COUNT = 1;
     private static final int C_COMMAND_HEADER_PART_COUNT = 3;
 
     public static Error parseCommandMessage(
@@ -25,7 +25,7 @@ public class CommandDataParser {
                 CommandContext.C_COMMAND_BEGINNING_SYMBOLS.length());
         String[] commandParts = commandText.split(CommandContext.C_PART_DIVIDER_CHAR);
 
-        if (commandParts.length != C_COMMAND_PART_COUNT)
+        if (commandParts.length < C_COMMAND_MAIN_PART_COUNT)
             return new Error("Incorrect command has been provided!", true);
 
         String[] commandHeaderParts =
@@ -61,12 +61,16 @@ public class CommandDataParser {
         if (retrievingReceiversError != null)
             return retrievingReceiversError;
 
+        String commandBody =
+                (commandParts.length > C_COMMAND_MAIN_PART_COUNT ?
+                    commandParts[1] : "");
+
         CommandData commandData =
                 new CommandData(
                         commandCategoryWrapper.getValue(),
                         chatIdWrapper.getValue(),
                         receiverPeerIdListWrapper.getValue(),
-                        commandParts[1]);
+                        commandBody);
 
         commandDataWrapper.setValue(commandData);
 

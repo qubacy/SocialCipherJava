@@ -5,22 +5,13 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration
 public class CipherSessionInitBuffer {
     final private CipherConfiguration m_cipherConfiguration;
 
-    final private long m_initializerPeerId;
-
     public CipherSessionInitBuffer(
-            final CipherConfiguration cipherConfiguration,
-            final long initializerPeerId)
+            final CipherConfiguration cipherConfiguration)
     {
         m_cipherConfiguration = cipherConfiguration;
-
-        m_initializerPeerId = initializerPeerId;
     }
 
     public CipherConfiguration getCipherConfiguration() {
         return m_cipherConfiguration;
-    }
-
-    public long getInitializerPeerId() {
-        return m_initializerPeerId;
     }
 }

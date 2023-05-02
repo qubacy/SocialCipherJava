@@ -81,7 +81,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 messageVK.id,
                 messageVK.fromId,
-                messageVK.text,
+                messageVK.text.replace("<br>", "\n"),
                 messageVK.timestamp,
                 attachmentsToLoadList);
 
@@ -115,7 +115,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 updateVK.messageId,
                 updateVK.fromPeerId,
-                updateVK.text,
+                updateVK.text.replace("<br>", "\n"),
                 updateVK.timestamp,
                 attachmentsToLoadList);
 
