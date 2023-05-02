@@ -72,8 +72,8 @@ public class SignInWebViewActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction();
 
         switch (m_curLoginMode) {
-            case TOKEN: fragmentTransaction.add(R.id.signin_login_frame, new SignInTokenFragment(this));
-            case LOGIN_DATA: fragmentTransaction.add(R.id.signin_login_frame, new SignInWebViewFragment());
+            case TOKEN: fragmentTransaction.add(R.id.signin_login_frame, new SignInTokenFragment(this)); break;
+            case LOGIN_DATA: fragmentTransaction.add(R.id.signin_login_frame, new SignInWebViewFragment()); break;
         }
 
         fragmentTransaction.commit();
