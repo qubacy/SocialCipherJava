@@ -14,4 +14,9 @@
 
     <string name="request_answer_accept_button_caption">Accept</string>
     <string name="request_answer_cancel_button_caption">Cancel</string>
+
+    <string name="signin_switch_login_type_button_caption">Switch Login Mode</string>
+    <string name="fragment_signin_token_text_hint">Type your token...</string>
+    <string name="fragment_signin_token_accept_button_caption">Accept</string>
+
 </resources>

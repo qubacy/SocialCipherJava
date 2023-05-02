@@ -1,21 +1,28 @@
 package com.mcdead.busycoder.socialcipher.client.activity.signin;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
+import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.main.MainActivity;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.activity.signin.data.SignInData;
+import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.SignInTokenFragment;
 import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.SignInWebViewFragment;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class SignInWebViewActivity extends AppCompatActivity
     implements SignInCallback
 {
+    private LoginMode m_curLoginMode = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,13 +30,31 @@ public class SignInWebViewActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_login_web_view);
 
+        m_curLoginMode = LoginMode.LOGIN_DATA;
+
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
 
-        if (getSupportFragmentManager().findFragmentById(R.id.signin_web_view_frame) == null) {
+        Button switchButton = findViewById(R.id.signin_switch_login_type_button);
+
+        switchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LoginMode loginMode = null;
+
+                if (m_curLoginMode == LoginMode.LOGIN_DATA)
+                    loginMode = LoginMode.TOKEN;
+                else
+                    loginMode = LoginMode.LOGIN_DATA;
+
+                onSwitchLoginModeClicked(loginMode);
+            }
+        });
+
+        if (getSupportFragmentManager().findFragmentById(R.id.signin_login_frame) == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.signin_web_view_frame, new SignInWebViewFragment())
+                    .add(R.id.signin_login_frame, new SignInWebViewFragment())
                     .commit();
         }
     }
@@ -40,13 +65,27 @@ public class SignInWebViewActivity extends AppCompatActivity
 
     }
 
-    @Override
-    public void processError(Error error) {
+    private void onSwitchLoginModeClicked(final LoginMode loginMode) {
+        m_curLoginMode = loginMode;
 
+        FragmentTransaction fragmentTransaction =
+                getSupportFragmentManager().beginTransaction();
+
+        switch (m_curLoginMode) {
+            case TOKEN: fragmentTransaction.add(R.id.signin_login_frame, new SignInTokenFragment(this));
+            case LOGIN_DATA: fragmentTransaction.add(R.id.signin_login_frame, new SignInWebViewFragment());
+        }
+
+        fragmentTransaction.commit();
     }
 
     @Override
-    public void processData(SignInData data) {
+    public void processError(final Error error) {
+        ErrorBroadcastReceiver.broadcastError(error, getApplicationContext());
+    }
+
+    @Override
+    public void processData(final SignInData data) {
         Log.d(getClass().getName(), "Got SignInResult: " + data.getToken());
 
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
@@ -75,5 +114,10 @@ public class SignInWebViewActivity extends AppCompatActivity
 
             m_settings.store();
         }
+    }
+
+    private static enum LoginMode {
+        LOGIN_DATA,
+        TOKEN;
     }
 }
