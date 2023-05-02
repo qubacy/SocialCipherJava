@@ -1,6 +1,7 @@
 package com.mcdead.busycoder.socialcipher.client.activity.signin;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
@@ -68,15 +69,17 @@ public class SignInWebViewActivity extends AppCompatActivity
     private void onSwitchLoginModeClicked(final LoginMode loginMode) {
         m_curLoginMode = loginMode;
 
-        FragmentTransaction fragmentTransaction =
-                getSupportFragmentManager().beginTransaction();
+        Fragment fragmentToSet = null;
 
         switch (m_curLoginMode) {
-            case TOKEN: fragmentTransaction.add(R.id.signin_login_frame, new SignInTokenFragment(this)); break;
-            case LOGIN_DATA: fragmentTransaction.add(R.id.signin_login_frame, new SignInWebViewFragment()); break;
+            case TOKEN: fragmentToSet = new SignInTokenFragment(this); break;
+            case LOGIN_DATA: fragmentToSet = new SignInWebViewFragment(); break;
         }
 
-        fragmentTransaction.commit();
+        getSupportFragmentManager().
+                beginTransaction().
+                replace(R.id.signin_login_frame, fragmentToSet).
+                commit();
     }
 
     @Override
