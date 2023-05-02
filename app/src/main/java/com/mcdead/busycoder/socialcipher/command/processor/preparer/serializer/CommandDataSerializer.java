@@ -23,9 +23,6 @@ public class CommandDataSerializer {
         serializedCommandData.append(String.valueOf(commandData.getCategory().getId()));
         serializedCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
 
-        serializedCommandData.append(String.valueOf(commandData.getChatId()));
-        serializedCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
-
         ObjectWrapper<String> serializedPeerIdListWrapper = new ObjectWrapper<>();
         Error error = serializeCommandPeerIdList(
                 commandData.getReceiverPeerIdList(),

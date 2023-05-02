@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CommandDataParser {
     private static final int C_COMMAND_MAIN_PART_COUNT = 1;
-    private static final int C_COMMAND_HEADER_PART_COUNT = 3;
+    private static final int C_COMMAND_HEADER_PART_COUNT = 2;
 
     public static Error parseCommandMessage(
             final CommandMessage commandMessage,
@@ -43,19 +43,10 @@ public class CommandDataParser {
         if (retrievingCategoryError != null)
             return retrievingCategoryError;
 
-        ObjectWrapper<Long> chatIdWrapper =
-                new ObjectWrapper<>();
-        Error retrievingChatIdError = retrieveChatId(
-                commandHeaderParts[1],
-                chatIdWrapper);
-
-        if (retrievingChatIdError != null)
-            return retrievingChatIdError;
-
         ObjectWrapper<List<Long>> receiverPeerIdListWrapper =
                 new ObjectWrapper<>();
         Error retrievingReceiversError = retrieveReceiverPeerIdList(
-                commandHeaderParts[2],
+                commandHeaderParts[1],
                 receiverPeerIdListWrapper);
 
         if (retrievingReceiversError != null)
@@ -68,7 +59,7 @@ public class CommandDataParser {
         CommandData commandData =
                 new CommandData(
                         commandCategoryWrapper.getValue(),
-                        chatIdWrapper.getValue(),
+                        commandMessage.getPeerId(),
                         receiverPeerIdListWrapper.getValue(),
                         commandBody);
 
