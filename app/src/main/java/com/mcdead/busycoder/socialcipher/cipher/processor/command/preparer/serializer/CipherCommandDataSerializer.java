@@ -177,7 +177,7 @@ public class CipherCommandDataSerializer {
 
             String dataAsBase64String =
                     Base64.encodeToString(
-                            (byte[]) sideIdRouteIdDataEntry.getValue().second, Base64.DEFAULT);
+                            (byte[]) sideIdRouteIdDataEntry.getValue().second, Base64.NO_WRAP);
 
             if (dataAsBase64String == null)
                 return new Error("Routing Data encoding went wrong!", true);

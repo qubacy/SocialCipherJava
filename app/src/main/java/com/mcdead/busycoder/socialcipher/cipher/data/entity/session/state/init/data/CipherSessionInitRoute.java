@@ -31,7 +31,7 @@ public class CipherSessionInitRoute {
             int curSideId = m_sideIdList.get(i);
 
             if (curSideId == sideId)
-                return curSideId;
+                return m_sideIdList.get(i + 1);
         }
 
         return C_NO_NEXT_SIDE_ID;

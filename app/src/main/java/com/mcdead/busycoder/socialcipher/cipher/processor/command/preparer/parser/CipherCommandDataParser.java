@@ -280,7 +280,7 @@ public class CipherCommandDataParser {
 
             int sideId = Integer.parseInt(routeIdDataPairParts[0]);
             int routeId = Integer.parseInt(routeIdDataPairParts[1]);
-            byte[] data = Base64.getDecoder().decode(routeIdDataPairParts[2]);
+            byte[] data = Base64.getDecoder().decode(routeIdDataPairParts[2].getBytes(StandardCharsets.UTF_8));
 
             if (sideId < 0 || routeId < 0 || data == null)
                 return new Error("Route Id Data were incorrect during parsing process!", true);

@@ -5,11 +5,11 @@ import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CipherSessionPreInitDataInitializer extends CipherSessionPreInitData {
+public class CipherSessionInitDataInitializer extends CipherSessionInitData {
     final private List<Long> m_userPeerIdList;
     final private List<ObjectWrapper<Integer>> m_routeCounterList;
 
-    public CipherSessionPreInitDataInitializer(
+    public CipherSessionInitDataInitializer(
             final long startTimeMillisecond,
             final long initializerPeerId,
             final CipherSessionInitBuffer buffer)

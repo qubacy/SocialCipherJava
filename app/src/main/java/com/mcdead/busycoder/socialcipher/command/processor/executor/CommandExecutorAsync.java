@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Process;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -133,6 +134,8 @@ public class CommandExecutorAsync
             CommandMessage commandMessage = m_pendingCommandMessageQueueShared.poll();
 
             if (commandMessage == null) continue;
+
+            Log.d(getClass().getName(), "New message received: chat_id: " + commandMessage.getPeerId() + "; init_peer_id: " + commandMessage.getInitializerPeerId() + "; command_string: " + commandMessage.getCommandString());
 
             if (commandMessage.getInitializerPeerId() == m_localPeerId)
                 continue;
