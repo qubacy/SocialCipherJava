@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command;
 
+import android.util.Log;
 import android.util.Pair;
 
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKey;
@@ -36,6 +37,7 @@ import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,30 +131,24 @@ public class CipherCommandProcessor implements CommandProcessor {
             if (curStartTime + C_SESSION_SETTING_PRE_INIT_PHASE_TIMESPAN_MILLISECONDS > curTime)
                 continue;
 
-            // todo: if it's a client side then we will just toss it off:
+            if (m_callback.getLocalPeerId() == chatIdPreInitDataEntry.getValue().getInitializerPeerId()) {
+                // todo: initializer-side processing:
 
-            if (m_callback.getLocalPeerId() != chatIdPreInitDataEntry.getValue().getInitializerPeerId()) {
-                dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
+                if (!chatIdPreInitDataEntry.getValue().isPreInitPassed()) {
+                    ObjectWrapper<Boolean> successFlagWrapper = new ObjectWrapper<>();
+                    Error execNewSessionError =
+                            execNewSessionInitializer(chatIdPreInitDataEntry.getKey(), successFlagWrapper);
 
-                break;
-            }
+                    if (execNewSessionError != null) {
+                        dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
 
-            // todo: initializer-side processing:
+                        cycleError = execNewSessionError;
 
-            if (!chatIdPreInitDataEntry.getValue().isPreInitPassed()) {
-                ObjectWrapper<Boolean> successFlagWrapper = new ObjectWrapper<>();
-                Error execNewSessionError =
-                        execNewSessionInitializer(chatIdPreInitDataEntry.getKey(), successFlagWrapper);
+                        break;
+                    }
 
-                if (execNewSessionError != null) {
-                    dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
-
-                    cycleError = execNewSessionError;
-
-                    break;
+                    chatIdPreInitDataEntry.getValue().setPreInitPassed();
                 }
-
-                chatIdPreInitDataEntry.getValue().setPreInitPassed();
             }
 
             if (curStartTime + C_SESSION_SETTING_INIT_PHASE_TIMESPAN_MILLISECONDS <= curTime)
@@ -195,14 +191,15 @@ public class CipherCommandProcessor implements CommandProcessor {
                 (CipherSessionStateInit) cipherSession.getState();
 
         PublicKey publicKey = cipherSessionStateInit.getPublicKey();
-        byte[] publicSideData =
-                cipherSessionStateInit.processKeyData(publicKey.getEncoded(), false);
+//        byte[] publicSideData =
+//                cipherSessionStateInit.processKeyData(publicKey.getEncoded(), false);
 
         CipherCommandDataInitRequestCompleted cipherCommandDataInitRequestCompleted =
                 CipherCommandDataInitRequestCompleted.getInstance(
                         cipherSession.getUserPeerIdSessionSideIdHashMap(),
-                        cipherSessionStateInit.getPublicKey(),
-                        publicSideData);
+                        cipherSessionStateInit.getPublicKey());
+//                        publicSideData);
+//                        publicKey.getEncoded());
 
         if (cipherCommandDataInitRequestCompleted == null)
             return new Error("Cipher Command Data Init Request Completed object creating has been failed!", true);
@@ -457,7 +454,7 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         Error processingRouteError = processRoute(
                 cipherSession.getLocalSessionSideId() - 1,
-                initRequestCompletedCommand.getSidePublicData(),
+                initRequestCompletedCommand.getPublicKey().getEncoded(),
                 chatId,
                 cipherSession);
 
@@ -469,10 +466,15 @@ public class CipherCommandProcessor implements CommandProcessor {
         if (cipherSession.getLocalSessionSideId() != cipherSession.getSessionSideCount() - 1)
             return null;
 
-        byte[] publicSideData =
-                cipherSessionStateInit.processKeyData(
-                    cipherSessionStateInit.getPublicKey().getEncoded(),
-                    false);
+        Log.d(getClass().getName(), "last side id route sending...");
+
+//        byte[] publicSideData =
+//                cipherSessionStateInit.processKeyData(
+//                    cipherSessionStateInit.getPublicKey().getEncoded(),
+//                    false);
+
+        Log.d(getClass().getName(), "publicSideData has been encoded!");
+
         int routeId = cipherSession.getSessionSideCount() - 1;
         CipherSessionInitRoute route =
                 cipherSessionStateInit.getRouteById(routeId);
@@ -484,7 +486,8 @@ public class CipherCommandProcessor implements CommandProcessor {
         HashMap<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMap =
                 new HashMap<>();
 
-        sideIdRouteIdDataHashMap.put(nextSideId, new Pair<>(routeId, publicSideData));
+//        sideIdRouteIdDataHashMap.put(nextSideId, new Pair<>(routeId, publicSideData));
+        sideIdRouteIdDataHashMap.put(nextSideId, new Pair<>(routeId, cipherSessionStateInit.getPublicKey().getEncoded()));
 
         CipherCommandDataInitRoute commandDataInitRoute =
                 CipherCommandDataInitRoute.getInstance(sideIdRouteIdDataHashMap);
@@ -556,7 +559,7 @@ public class CipherCommandProcessor implements CommandProcessor {
                     (CipherSessionInitDataInitializer) m_chatIdInitDataHashMap.get(chatId);
 
             if (cipherSessionPreInitDataInitializer == null)
-                return new Error("Cipher Session PreInit Data Initializer creating during Init Route Command Processing has been failed!", true);
+                return new Error("Cipher Session PreInit Data Initializer retrieving during Init Route Command Processing has been failed!", true);
 
             for (final Map.Entry<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMapEntry :
                     sideIdRouteIdDataHashMap.entrySet())
@@ -588,6 +591,8 @@ public class CipherCommandProcessor implements CommandProcessor {
                     chatId,
                     null,
                     serializedCommandDataSessionSet.getValue());
+
+            m_callback.onCipherSessionSet();
         }
 
         return null;
@@ -658,6 +663,8 @@ public class CipherCommandProcessor implements CommandProcessor {
             final CipherSession cipherSession,
             final byte[] sharedSecret)
     {
+        Log.d(getClass().getName(), "Gen. shared secret: " + Base64.getEncoder().encodeToString(sharedSecret));
+
         CipherSessionInitData preInitData = m_chatIdInitDataHashMap.get(chatId);
 
         if (preInitData == null)
@@ -675,6 +682,8 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         if (cipherKey == null)
             return new Error("Cipher Key creating during Setting State procedure has been failed!", true);
+
+        Log.d(getClass().getName(), "Gen. shared key: " + Base64.getEncoder().encodeToString(cipherKey.getBytes()));
 
         CiphererBase cipherer =
                 CiphererGenerator.generateCiphererWithConfiguration(cipherConfiguration, cipherKey);

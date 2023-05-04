@@ -43,9 +43,10 @@ public class CipherSessionInitDataInitializer extends CipherSessionInitData {
     }
 
     public void addRouteCounterValue(final int routeId) {
-        int prevValue = m_routeCounterList.get(routeId).getValue();
+        int routeCounterIndex = routeId - 1;
+        int prevValue = m_routeCounterList.get(routeCounterIndex).getValue();
 
-        m_routeCounterList.get(routeId).setValue(prevValue + 1);
+        m_routeCounterList.get(routeCounterIndex).setValue(prevValue + 1);
     }
 
     public boolean isRouteCounterListFull() {

@@ -144,15 +144,15 @@ public class CipherCommandDataSerializer {
             return new Error("Public Key encoding went wrong!", true);
 
         serializedCipherCommandData.append(publicKeyAsBase64String);
-        serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
-
-        String sidePublicDataAsBase64String =
-                Base64.encodeToString(cipherCommandData.getSidePublicData(), Base64.NO_WRAP);
-
-        if (sidePublicDataAsBase64String == null)
-            return new Error("Side Public Data encoding went wrong!", true);
-
-        serializedCipherCommandData.append(sidePublicDataAsBase64String);
+//        serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
+//
+//        String sidePublicDataAsBase64String =
+//                Base64.encodeToString(cipherCommandData.getSidePublicData(), Base64.NO_WRAP);
+//
+//        if (sidePublicDataAsBase64String == null)
+//            return new Error("Side Public Data encoding went wrong!", true);
+//
+//        serializedCipherCommandData.append(sidePublicDataAsBase64String);
 
         return null;
     }

@@ -1,7 +1,6 @@
 package com.mcdead.busycoder.socialcipher.cipher.utility.hasher;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class Hasher {
     final private HashAlgorithm m_hashAlgorithm;
@@ -12,12 +11,13 @@ public class Hasher {
         m_hashAlgorithm = hashAlgorithm;
     }
 
-    public byte[] hashBytes(
+    public byte[] hashOneBlockBytes(
             final byte[] sourceBytes)
     {
         if (sourceBytes == null) return null;
-        if (sourceBytes.length != m_hashAlgorithm.m_dataSize)
-            return null;
+
+//        if (sourceBytes.length != m_hashAlgorithm.m_dataSize)
+//            return null;
 
         byte[] outputBytes = null;
 
@@ -27,13 +27,13 @@ public class Hasher {
 
             outputBytes = messageDigest.digest(sourceBytes);
 
-        } catch (NoSuchAlgorithmException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
 
             return null;
         }
 
-        if (outputBytes.length != m_hashAlgorithm.m_dataSize)
+        if ((outputBytes.length * 8) != m_hashAlgorithm.m_dataSize)
             return null;
 
         return outputBytes;

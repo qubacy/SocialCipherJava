@@ -20,7 +20,7 @@ public class CipherKeyGenerator {
 
         byte[] seedBytes =
                 ByteBuffer.allocate(Long.BYTES).putLong(seed).array();
-        byte[] keyBytes = hasher.hashBytes(seedBytes);
+        byte[] keyBytes = hasher.hashOneBlockBytes(seedBytes);
 
         if (keyBytes == null) return null;
 
@@ -48,14 +48,16 @@ public class CipherKeyGenerator {
 
         byte[] preparedBytes = null;
 
-        if (bytes.length != cipherConfiguration.getKeySize().getIntSize()) {
+        if ((bytes.length * 8) != cipherConfiguration.getKeySize().getIntSize()) {
             Hasher hasher =
                     HasherGenerator.generateHasherWithDataSize(
                             cipherConfiguration.getKeySize().getIntSize());
 
             if (hasher == null) return null;
 
-            preparedBytes = hasher.hashBytes(bytes);
+            preparedBytes = hasher.hashOneBlockBytes(bytes);
+
+            if (preparedBytes == null) return null;
 
         }
         else

@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.commandchecker;
+package com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.commandchecker;
 
 import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;
 

@@ -33,7 +33,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
-import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.commandchecker.CommandMessageRetriever;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.commandchecker.CommandMessageRetriever;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
 import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;

@@ -57,9 +57,11 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.cipher.MessageCipherProcessor;
 import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswerType;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -279,6 +281,8 @@ public class ChatFragment extends Fragment
 
         // todo: enabling some identification showing current chat ciphering state..
 
+        onNewChatNotificationShowingRequested("Session set!");
+
         m_cipherButton.setEnabled(true);
     }
 
@@ -471,6 +475,44 @@ public class ChatFragment extends Fragment
             // todo: may be it needs to show something..
 
             return;
+        }
+
+        MessageCipherProcessor messageCipherProcessor =
+                MessageCipherProcessor.getInstance(m_peerId);
+
+        if (messageCipherProcessor != null) {
+            Error cipheringError;
+
+            if (!text.isEmpty()) {
+                ObjectWrapper<String> processedText = new ObjectWrapper<>();
+                cipheringError = messageCipherProcessor.processText(
+                        text, true, processedText);
+
+                if (cipheringError != null) {
+                    ErrorBroadcastReceiver.broadcastError(cipheringError,
+                            getActivity().getApplicationContext());
+
+                    return;
+                }
+
+                text = processedText.getValue();
+            }
+
+            if (!attachmentDataList.isEmpty()) {
+                ObjectWrapper<List<AttachmentData>> processedAttachmentData = new ObjectWrapper<>();
+                cipheringError =
+                        messageCipherProcessor.processAttachmentData(
+                                attachmentDataList, true, processedAttachmentData);
+
+                if (cipheringError != null) {
+                    ErrorBroadcastReceiver.broadcastError(cipheringError,
+                            getActivity().getApplicationContext());
+
+                    return;
+                }
+
+                attachmentDataList = processedAttachmentData.getValue();
+            }
         }
 
         AttachmentUploaderSyncBase attachmentUploader =

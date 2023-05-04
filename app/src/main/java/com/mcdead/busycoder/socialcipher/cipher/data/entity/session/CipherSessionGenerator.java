@@ -1,9 +1,12 @@
 package com.mcdead.busycoder.socialcipher.cipher.data.entity.session;
 
+import android.util.Log;
+
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.CipherSessionStateInitGenerator;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.CipherSessionStateInit;
 
 import java.security.KeyPair;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,6 +50,8 @@ public class CipherSessionGenerator {
             final KeyAgreement keyAgreement,
             final HashMap<Long, Integer> userPeerIdSessionSideIdHashMap)
     {
+        Log.d("CipherCommandProcessor", "Pub. key: " + Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
+
         CipherSessionStateInit initState =
                 CipherSessionStateInitGenerator.
                         generateCipherSessionStateInit(

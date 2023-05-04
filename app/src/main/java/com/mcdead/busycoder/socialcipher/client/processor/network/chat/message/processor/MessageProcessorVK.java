@@ -2,6 +2,7 @@ package com.mcdead.busycoder.socialcipher.client.processor.chat.message.processo
 
 import android.webkit.URLUtil;
 
+import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseMessageInterface;
@@ -34,6 +35,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.Atta
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.cipher.MessageCipherProcessor;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
@@ -112,10 +114,29 @@ public class MessageProcessorVK extends MessageProcessorBase {
                         ? null
                         : new ArrayList<ResponseAttachmentInterface>(updateVK.attachments));
 
+        MessageCipherProcessor messageCipherProcessor =
+                MessageCipherProcessor.getInstance(peerId);
+        String processedMessageText = updateVK.text;
+
+        if (messageCipherProcessor != null) {
+            Error cipheringError;
+
+            if (!updateVK.text.isEmpty()) {
+                ObjectWrapper<String> processedText = new ObjectWrapper<>();
+                cipheringError = messageCipherProcessor.processText(
+                        updateVK.text, false, processedText);
+
+                if (cipheringError != null)
+                    return cipheringError;
+
+                processedMessageText = processedText.getValue();
+            }
+        }
+
         MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 updateVK.messageId,
                 updateVK.fromPeerId,
-                updateVK.text.replace("<br>", "\n"),
+                processedMessageText.replace("<br>", "\n"),
                 updateVK.timestamp,
                 attachmentsToLoadList);
 

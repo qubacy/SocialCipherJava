@@ -33,7 +33,7 @@ public class CipherCommandDataParser {
 
     private static final int C_INIT_REQUEST_SECTION_COUNT = 5;
     private static final int C_INIT_ACCEPT_SECTION_COUNT = 0;
-    private static final int C_INIT_COMPLETED_SECTION_COUNT = 3;
+    private static final int C_INIT_COMPLETED_SECTION_COUNT = 2;
     private static final int C_INIT_ROUTE_SECTION_COUNT = 1;
     private static final int C_SESSION_SET_SECTION_COUNT = 0;
 
@@ -235,17 +235,17 @@ public class CipherCommandDataParser {
         if (publicKey == null)
             return new Error("Public Key creation failed during parsing process!", true);
 
-        byte[] sidePublicData =
-                Base64.getDecoder().decode(serializedCipherCommandDataSections[3].getBytes(StandardCharsets.UTF_8));
-
-        if (sidePublicData == null)
-            return new Error("Side Public Data was null during parsing process!", true);
+//        byte[] sidePublicData =
+//                Base64.getDecoder().decode(serializedCipherCommandDataSections[3].getBytes(StandardCharsets.UTF_8));
+//
+//        if (sidePublicData == null)
+//            return new Error("Side Public Data was null during parsing process!", true);
 
         CipherCommandDataInitRequestCompleted cipherCommandDataInitRequestCompleted =
                 CipherCommandDataInitRequestCompleted.getInstance(
                         peerIdSideIdHashMap,
-                        publicKey,
-                        sidePublicData);
+                        publicKey);
+//                        sidePublicData);
 
         if (cipherCommandDataInitRequestCompleted == null)
             return new Error("Cipher Command Data Init Request Completed parsing has been failed!", true);

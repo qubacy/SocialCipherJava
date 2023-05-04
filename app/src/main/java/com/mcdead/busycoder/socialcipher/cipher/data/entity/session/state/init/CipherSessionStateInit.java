@@ -51,17 +51,17 @@ public class CipherSessionStateInit implements CipherSessionState {
             final byte[] publicSideKeyBytes,
             final boolean isLastStage)
     {
-        PublicKey publicKey =
+        PublicKey sidePublicKey =
                 CipherKeyUtility.generatePublicKeyWithBytes(
                         CipherContext.C_ALGORITHM,
                         publicSideKeyBytes);
 
-        if (publicKey == null) return null;
+        if (sidePublicKey == null) return null;
 
         Key sideProcessedData = null;
 
         try {
-            sideProcessedData = m_keyAgreement.doPhase(publicKey, isLastStage);
+            sideProcessedData = m_keyAgreement.doPhase(sidePublicKey, isLastStage);
 
         } catch (InvalidKeyException e) {
             e.printStackTrace();
