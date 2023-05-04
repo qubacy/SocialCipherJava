@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor;
 
+import android.util.Pair;
 import android.webkit.URLUtil;
 
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
@@ -85,6 +86,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 messageVK.fromId,
                 messageVK.text.replace("<br>", "\n"),
                 messageVK.timestamp,
+                false,
                 attachmentsToLoadList);
 
         if (messageEntity == null)
@@ -117,19 +119,22 @@ public class MessageProcessorVK extends MessageProcessorBase {
         MessageCipherProcessor messageCipherProcessor =
                 MessageCipherProcessor.getInstance(peerId);
         String processedMessageText = updateVK.text;
+        boolean isCiphered = messageCipherProcessor != null;
 
         if (messageCipherProcessor != null) {
             Error cipheringError;
 
             if (!updateVK.text.isEmpty()) {
-                ObjectWrapper<String> processedText = new ObjectWrapper<>();
+                ObjectWrapper<Pair<Boolean, String>> processedSuccessFlagText = new ObjectWrapper<>();
                 cipheringError = messageCipherProcessor.processText(
-                        updateVK.text, false, processedText);
+                        updateVK.text, false, processedSuccessFlagText);
 
                 if (cipheringError != null)
                     return cipheringError;
+                if (!processedSuccessFlagText.getValue().first)
+                    isCiphered = false;
 
-                processedMessageText = processedText.getValue();
+                processedMessageText = processedSuccessFlagText.getValue().second;
             }
         }
 
@@ -138,6 +143,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 updateVK.fromPeerId,
                 processedMessageText.replace("<br>", "\n"),
                 updateVK.timestamp,
+                isCiphered,
                 attachmentsToLoadList);
 
         if (messageEntity == null)

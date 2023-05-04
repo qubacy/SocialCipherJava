@@ -31,6 +31,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     private TextView m_text = null;
     private View m_attachmentPreview = null;
     private TextView m_timestamp = null;
+    private ImageView m_cipherIndicator = null;
     //private RecyclerView m_attachments = null;
 
     private MessageListItemCallback m_callback = null;
@@ -45,6 +46,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         m_text = itemView.findViewById(R.id.message_view_holder_message_text);
         m_attachmentPreview = itemView.findViewById(R.id.message_view_holder_attachment_preview);
         m_timestamp = itemView.findViewById(R.id.message_view_holder_timestamp);
+        m_cipherIndicator = itemView.findViewById(R.id.message_view_holder_cipher_indicator);
 
         m_callback = callback;
     }
@@ -61,8 +63,12 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         m_timestamp.setText(String.valueOf(
                 LocalDateTime.ofEpochSecond(message.getTimestamp(), 0, ZoneOffset.ofTotalSeconds(offsetInSec)).toLocalTime()));
 
-        ConstraintLayout.LayoutParams wrapperLayoutParams = (ConstraintLayout.LayoutParams) m_itemWrapper.getLayoutParams();
-        ConstraintLayout.LayoutParams timestampLayoutParams = (ConstraintLayout.LayoutParams) m_timestamp.getLayoutParams();
+        ConstraintLayout.LayoutParams wrapperLayoutParams =
+                (ConstraintLayout.LayoutParams) m_itemWrapper.getLayoutParams();
+        ConstraintLayout.LayoutParams timestampLayoutParams =
+                (ConstraintLayout.LayoutParams) m_timestamp.getLayoutParams();
+        ConstraintLayout.LayoutParams cipherIndicatorLayoutParams =
+                (ConstraintLayout.LayoutParams) m_cipherIndicator.getLayoutParams();
 
         if (message.getFromPeerId() == localPeerId) {
             wrapperLayoutParams.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
@@ -71,17 +77,30 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
             timestampLayoutParams.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
             timestampLayoutParams.rightToRight = ConstraintLayout.LayoutParams.UNSET;
 
+            cipherIndicatorLayoutParams.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
+            cipherIndicatorLayoutParams.leftToLeft = ConstraintLayout.LayoutParams.UNSET;
+
         } else {
             wrapperLayoutParams.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
             wrapperLayoutParams.rightToRight = ConstraintLayout.LayoutParams.UNSET;
 
             timestampLayoutParams.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
             timestampLayoutParams.leftToLeft = ConstraintLayout.LayoutParams.UNSET;
+
+            cipherIndicatorLayoutParams.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
+            cipherIndicatorLayoutParams.rightToRight = ConstraintLayout.LayoutParams.UNSET;
         }
 
         if (!setMessageAttachmentsData(message)) return false;
 
         m_itemWrapper.setLayoutParams(wrapperLayoutParams);
+        m_timestamp.setLayoutParams(timestampLayoutParams);
+        m_cipherIndicator.setLayoutParams(cipherIndicatorLayoutParams);
+
+        if (message.isCiphered())
+            m_cipherIndicator.setImageResource(R.drawable.ic_lock_green_24);
+        else
+            m_cipherIndicator.setImageResource(R.drawable.ic_lock_red_24);
 
         return true;
     }

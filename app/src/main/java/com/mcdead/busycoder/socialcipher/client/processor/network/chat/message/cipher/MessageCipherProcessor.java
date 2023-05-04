@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.cipher;
 
+import android.util.Pair;
+
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.CipherSession;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.set.CipherSessionStateSet;
 import com.mcdead.busycoder.socialcipher.cipher.data.storage.CipherSessionStore;
@@ -14,6 +16,7 @@ import java.util.List;
 
 public class MessageCipherProcessor {
     public static final String C_CIPHERED_TEXT_PREFIX = "[[SCCT]]";
+    public static final String C_DECIPHERED_TEXT_PREFIX = "[[SSDT]]";
 
     final private CiphererBase m_cipherer;
 
@@ -47,7 +50,7 @@ public class MessageCipherProcessor {
     public Error processText(
             final String sourceText,
             final boolean isEncrypting,
-            ObjectWrapper<String> resultTextWrapper)
+            ObjectWrapper<Pair<Boolean, String>> resultSuccessFlagTextWrapper)
     {
         if (sourceText == null)
             return new Error("Provided Source Text was null!", true);
@@ -55,7 +58,12 @@ public class MessageCipherProcessor {
         StringBuilder processedTextBuilder = new StringBuilder();
 
         if (isEncrypting) {
-            byte[] processedBytes = m_cipherer.encryptBytes(sourceText.getBytes(StandardCharsets.UTF_8));
+            StringBuilder prefixedText = new StringBuilder(C_DECIPHERED_TEXT_PREFIX);
+
+            prefixedText.append(sourceText);
+
+            byte[] processedBytes =
+                    m_cipherer.encryptBytes(prefixedText.toString().getBytes(StandardCharsets.UTF_8));
 
             if (processedBytes == null)
                 return new Error("Processed bytes were equal to null!", true);
@@ -67,7 +75,7 @@ public class MessageCipherProcessor {
             int prefixIndex = sourceText.indexOf(C_CIPHERED_TEXT_PREFIX);
 
             if (prefixIndex != 0) {
-                resultTextWrapper.setValue(sourceText);
+                resultSuccessFlagTextWrapper.setValue(new Pair<>(false, sourceText));
 
                 return null;
             }
@@ -83,7 +91,18 @@ public class MessageCipherProcessor {
             if (decipheredBytes == null)
                 return new Error("Deciphered bytes were equal to null!", true);
 
-            processedTextBuilder.append(new String(decipheredBytes, StandardCharsets.UTF_8));
+            String decipheredText = new String(decipheredBytes, StandardCharsets.UTF_8);
+
+            prefixIndex = decipheredText.indexOf(C_DECIPHERED_TEXT_PREFIX);
+
+            if (prefixIndex != 0) {
+                resultSuccessFlagTextWrapper.setValue(new Pair<>(false, sourceText));
+
+                return null;
+            }
+
+            processedTextBuilder.append(
+                    decipheredText.substring(C_DECIPHERED_TEXT_PREFIX.length()));
         }
 
         String processedText = processedTextBuilder.toString();
@@ -91,7 +110,7 @@ public class MessageCipherProcessor {
         if (processedText.isEmpty())
             return new Error("Processed Text was empty!", true);
 
-        resultTextWrapper.setValue(processedText);
+        resultSuccessFlagTextWrapper.setValue(new Pair<>(true, processedText));
 
         return null;
     }

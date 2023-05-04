@@ -12,6 +12,7 @@ public class MessageEntity {
     private long m_fromPeerId = 0;
     private String m_message = null;
     private long m_timestamp = 0;
+    private boolean m_isCiphered = false;
 
     private List<ResponseAttachmentInterface> m_attachmentToLoadList = null;
     private volatile List<AttachmentEntityBase> m_attachmentsList = null;
@@ -21,12 +22,14 @@ public class MessageEntity {
             final long fromPeerId,
             final String message,
             final long timestamp,
+            final boolean isCiphered,
             final List<ResponseAttachmentInterface> attachmentsToLoadList)
     {
         m_id = id;
         m_fromPeerId = fromPeerId;
         m_message = message;
         m_timestamp = timestamp;
+        m_isCiphered = isCiphered;
 
         m_attachmentToLoadList = attachmentsToLoadList;
         m_attachmentsList = new ArrayList<>();
@@ -46,6 +49,10 @@ public class MessageEntity {
 
     public long getTimestamp() {
         return m_timestamp;
+    }
+
+    public boolean isCiphered() {
+        return m_isCiphered;
     }
 
     public List<AttachmentEntityBase> getAttachments() {

@@ -54,6 +54,15 @@
             app:layout_constraintTop_toBottomOf="@id/message_view_holder_attachment_preview"
             app:layout_constraintBottom_toBottomOf="parent" />
 
+        <ImageView
+            android:id="@+id/message_view_holder_cipher_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/message_view_holder_attachment_preview"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/ic_lock_red_24"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

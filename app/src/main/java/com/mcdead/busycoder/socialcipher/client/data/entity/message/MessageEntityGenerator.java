@@ -11,6 +11,7 @@ public class MessageEntityGenerator {
             final long fromPeerId,
             final String message,
             final long timestamp,
+            final boolean isCiphered,
             final List<ResponseAttachmentInterface> attachmentsToLoadList)
     {
         if (id == 0 || fromPeerId == 0 || timestamp == 0)
@@ -36,6 +37,7 @@ public class MessageEntityGenerator {
                 fromPeerId,
                 message,
                 timestamp,
+                isCiphered,
                 (attachmentToLoadListChecked.isEmpty() ?
                         null :
                         attachmentToLoadListChecked)

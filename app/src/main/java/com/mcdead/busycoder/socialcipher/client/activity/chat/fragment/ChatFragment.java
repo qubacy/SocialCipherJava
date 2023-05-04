@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -283,7 +284,7 @@ public class ChatFragment extends Fragment
 
         onNewChatNotificationShowingRequested((isCipherSessionSet ? "Session set!" : "Session hasn't been set!"));
 
-        m_cipherButton.setEnabled(true);
+        onCipherButtonEnabledChange(true);
     }
 
     @Override
@@ -436,7 +437,7 @@ public class ChatFragment extends Fragment
         if (chatSide == ChatSide.LOCAL)
             return;
 
-        m_cipherButton.setEnabled(false);
+        onCipherButtonEnabledChange(false);
 
         // todo: initializing a new ciphering session..
 
@@ -484,9 +485,9 @@ public class ChatFragment extends Fragment
             Error cipheringError;
 
             if (!text.isEmpty()) {
-                ObjectWrapper<String> processedText = new ObjectWrapper<>();
+                ObjectWrapper<Pair<Boolean, String>> processedSuccessFlagText = new ObjectWrapper<>();
                 cipheringError = messageCipherProcessor.processText(
-                        text, true, processedText);
+                        text, true, processedSuccessFlagText);
 
                 if (cipheringError != null) {
                     ErrorBroadcastReceiver.broadcastError(cipheringError,
@@ -495,7 +496,7 @@ public class ChatFragment extends Fragment
                     return;
                 }
 
-                text = processedText.getValue();
+                text = processedSuccessFlagText.getValue().second;
             }
 
             if (!attachmentDataList.isEmpty()) {
@@ -608,5 +609,14 @@ public class ChatFragment extends Fragment
             final Error error)
     {
         onErrorOccurred(error);
+    }
+
+    private void onCipherButtonEnabledChange(final boolean isEnabled) {
+        m_cipherButton.setEnabled(isEnabled);
+
+        if (isEnabled)
+            m_cipherButton.setBackgroundResource(R.drawable.message_sending_button_shape);
+        else
+            m_cipherButton.setBackgroundResource(R.drawable.message_sending_button_shape_pressed);
     }
 }
