@@ -5,6 +5,8 @@ import com.mcdead.busycoder.socialcipher.command.processor.CommandProcessorCallb
 
 public interface CipherCommandProcessorCallback extends CommandProcessorCallback {
     public CipherRequestAnswerSettingSession onCipherSessionSettingRequestReceived();
-    public void onCipherSessionSet();
+    public void onCipherSessionSettingEnded(
+            final boolean isCipherSessionSet,
+            final long chatId);
     public long getLocalPeerId();
 }

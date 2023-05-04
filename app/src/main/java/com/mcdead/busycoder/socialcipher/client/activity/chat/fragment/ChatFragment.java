@@ -10,7 +10,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -118,7 +117,7 @@ public class ChatFragment extends Fragment
 
         IntentFilter intentFilter = new IntentFilter(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
-        intentFilter.addAction(ChatBroadcastReceiver.C_CIPHER_SESSION_SET);
+        intentFilter.addAction(ChatBroadcastReceiver.C_CIPHER_SESSION_SETTING_ENDED);
         intentFilter.addAction(ChatBroadcastReceiver.C_SEND_NEW_MESSAGE);
         intentFilter.addAction(ChatBroadcastReceiver.C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED);
         intentFilter.addAction(ChatBroadcastReceiver.C_SHOW_NEW_CHAT_NOTIFICATION);
@@ -274,14 +273,15 @@ public class ChatFragment extends Fragment
     }
 
     @Override
-    public void onCipherSessionSet(
-            final long chatId)
+    public void onCipherSessionSettingEnded(
+            final long chatId,
+            final boolean isCipherSessionSet)
     {
         if (chatId != m_peerId) return;
 
         // todo: enabling some identification showing current chat ciphering state..
 
-        onNewChatNotificationShowingRequested("Session set!");
+        onNewChatNotificationShowingRequested((isCipherSessionSet ? "Session set!" : "Session hasn't been set!"));
 
         m_cipherButton.setEnabled(true);
     }

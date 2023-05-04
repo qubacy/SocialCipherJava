@@ -277,12 +277,18 @@ public class CommandExecutorAsync
     }
 
     @Override
-    public void onCipherSessionSet() {
-        Intent intent = new Intent(ChatBroadcastReceiver.C_CIPHER_SESSION_SET);
+    public void onCipherSessionSettingEnded(
+            final boolean isCipherSessionSet,
+            final long chatId)
+    {
+        Intent intent = new Intent(ChatBroadcastReceiver.C_CIPHER_SESSION_SETTING_ENDED);
 
         intent.putExtra(
                 ChatBroadcastReceiver.C_CHAT_ID_PROP_NAME,
-                m_currentCommandMessage.getPeerId());
+                chatId);
+        intent.putExtra(
+                ChatBroadcastReceiver.C_IS_CIPHER_SESSION_SET,
+                isCipherSessionSet);
 
         LocalBroadcastManager.getInstance(m_context).sendBroadcast(intent);
     }

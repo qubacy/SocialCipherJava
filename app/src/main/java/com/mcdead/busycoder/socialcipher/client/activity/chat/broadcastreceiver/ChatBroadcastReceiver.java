@@ -12,13 +12,14 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
     public static final String C_SHOW_NEW_CHAT_NOTIFICATION = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SHOW_NEW_CHAT_NOTIFICATION";
 
     public static final String C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SETTING_CIPHER_SESSION_ANSWER_REQUESTED";
-    public static final String C_CIPHER_SESSION_SET = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.CIPHER_SESSION_SET";
+    public static final String C_CIPHER_SESSION_SETTING_ENDED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.CIPHER_SESSION_SETTING_ENDED";
 
     public static final String C_CHAT_ID_PROP_NAME = "chatId";
     public static final String C_MESSAGE_ID_PROP_NAME = "messageId";
     public static final String C_CIPHER_SESSION_INITIALIZER_PEER_ID_PROP_NAME = "initializerPeerId";
     public static final String C_MESSAGE_TEXT_PROP_NAME = "messageText";
     public static final String C_CHAT_NOTIFICATION_TEXT_PROP_NAME = "chatNotificationText";
+    public static final String C_IS_CIPHER_SESSION_SET = "isCipherSessionSet";
 
     private ChatBroadcastReceiverCallback m_callback = null;
 
@@ -39,8 +40,8 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
                 processingError = processNewMessageAddedAction(); break;
             case C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED:
                 processingError = processSettingCipherSessionAnswerRequest(intent); break;
-            case C_CIPHER_SESSION_SET:
-                processingError = processCipherSessionSet(intent); break;
+            case C_CIPHER_SESSION_SETTING_ENDED:
+                processingError = processCipherSessionSettingEnded(intent); break;
             case C_SEND_NEW_MESSAGE:
                 processingError = processSendNewMessage(intent); break;
             case C_SHOW_NEW_CHAT_NOTIFICATION:
@@ -76,18 +77,19 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
         return null;
     }
 
-    private Error processCipherSessionSet(
+    private Error processCipherSessionSettingEnded(
             final Intent data)
     {
         if (data == null)
             return new Error("Intent data was null!", true);
 
         long chatId = data.getLongExtra(C_CHAT_ID_PROP_NAME, 0);
+        boolean isCipherSessionSet = data.getBooleanExtra(C_IS_CIPHER_SESSION_SET, false);
 
-        if  (chatId == 0)
+        if (chatId == 0)
             return new Error("Cipher Set Data was incorrect!", true);
 
-        m_callback.onCipherSessionSet(chatId);
+        m_callback.onCipherSessionSettingEnded(chatId, isCipherSessionSet);
 
         return null;
     }

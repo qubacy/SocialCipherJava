@@ -5,6 +5,8 @@ public class CipherSessionInitData {
     final private long m_initializerPeerId;
     private boolean m_isPreInitPassed;
 
+    private boolean m_isInitialized;
+
     final private CipherSessionInitBuffer m_buffer;
 
     public CipherSessionInitData(
@@ -15,6 +17,7 @@ public class CipherSessionInitData {
         m_startTimeMillisecond = startTimeMillisecond;
         m_initializerPeerId = initializerPeerId;
         m_isPreInitPassed = false;
+        m_isInitialized = false;
 
         m_buffer = buffer;
     }
@@ -31,11 +34,19 @@ public class CipherSessionInitData {
         return m_isPreInitPassed;
     }
 
+    public boolean isInitialized() {
+        return m_isInitialized;
+    }
+
     public CipherSessionInitBuffer getBuffer() {
         return m_buffer;
     }
 
     public void setPreInitPassed() {
         m_isPreInitPassed = true;
+    }
+
+    public void setInitialized() {
+        m_isInitialized = true;
     }
 }

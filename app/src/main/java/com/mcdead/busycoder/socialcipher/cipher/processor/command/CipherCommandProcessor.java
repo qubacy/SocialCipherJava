@@ -110,8 +110,8 @@ public class CipherCommandProcessor implements CommandProcessor {
                         commandData.getChatId());
             case CIPHER_SESSION_SET:
                 return processSessionSetCommand(
-                        (CipherCommandDataSessionSet) cipherCommandData
-                );
+                        (CipherCommandDataSessionSet) cipherCommandData,
+                        commandData.getChatId());
         }
 
         return new Error("Unknown type of Cipher Command Data has been provided!", true);
@@ -151,8 +151,15 @@ public class CipherCommandProcessor implements CommandProcessor {
                 }
             }
 
-            if (curStartTime + C_SESSION_SETTING_INIT_PHASE_TIMESPAN_MILLISECONDS <= curTime)
+            if (curStartTime + C_SESSION_SETTING_INIT_PHASE_TIMESPAN_MILLISECONDS <= curTime) {
+                if (!chatIdPreInitDataEntry.getValue().isInitialized()) {
+                    m_callback.onCipherSessionSettingEnded(
+                            false,
+                            chatIdPreInitDataEntry.getKey());
+                }
+
                 dataToRemoveKeyList.add(chatIdPreInitDataEntry.getKey());
+            }
         }
 
         for (final Long dataToRemoveKey : dataToRemoveKeyList) {
@@ -197,7 +204,7 @@ public class CipherCommandProcessor implements CommandProcessor {
         CipherCommandDataInitRequestCompleted cipherCommandDataInitRequestCompleted =
                 CipherCommandDataInitRequestCompleted.getInstance(
                         cipherSession.getUserPeerIdSessionSideIdHashMap(),
-                        cipherSessionStateInit.getPublicKey());
+                        publicKey);
 //                        publicSideData);
 //                        publicKey.getEncoded());
 
@@ -424,7 +431,9 @@ public class CipherCommandProcessor implements CommandProcessor {
             final CipherCommandDataInitRequestCompleted initRequestCompletedCommand,
             final long chatId)
     {
-        if (!m_chatIdInitDataHashMap.containsKey(chatId))
+        CipherSessionInitData cipherSessionInitData = m_chatIdInitDataHashMap.get(chatId);
+
+        if (cipherSessionInitData == null)
             return null;
 
         // todo: creating new session obj. using provided data..
@@ -503,6 +512,8 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         if (serializedCommandError != null)
             return serializedCommandError;
+
+        cipherSessionInitData.setPreInitPassed();
 
         m_callback.sendCommand(
                 CommandCategory.CIPHER,
@@ -592,7 +603,9 @@ public class CipherCommandProcessor implements CommandProcessor {
                     null,
                     serializedCommandDataSessionSet.getValue());
 
-            m_callback.onCipherSessionSet();
+            cipherSessionPreInitDataInitializer.setInitialized();
+
+            m_callback.onCipherSessionSettingEnded(true, chatId);
         }
 
         return null;
@@ -606,7 +619,6 @@ public class CipherCommandProcessor implements CommandProcessor {
     {
         CipherSessionStateInit cipherSessionStateInit =
                 (CipherSessionStateInit) cipherSession.getState();
-
         CipherSessionInitRoute route =
                 cipherSessionStateInit.getRouteById(routeId);
 
@@ -701,11 +713,18 @@ public class CipherCommandProcessor implements CommandProcessor {
     }
 
     private Error processSessionSetCommand(
-            final CipherCommandDataSessionSet sessionSetCommand)
+            final CipherCommandDataSessionSet sessionSetCommand,
+            final long chatId)
     {
         // todo: notifying a local user about successful session setting..
 
-        m_callback.onCipherSessionSet();
+        CipherSessionInitData cipherSessionInitData = m_chatIdInitDataHashMap.get(chatId);
+
+        if (cipherSessionInitData == null) return null;
+
+        cipherSessionInitData.setInitialized();
+
+        m_callback.onCipherSessionSettingEnded(true, chatId);
 
         return null;
     }
