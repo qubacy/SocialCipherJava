@@ -234,6 +234,19 @@ public class CipherCommandProcessor implements CommandProcessor {
     public Error initializeNewSession(
             final long chatId)
     {
+        // todo: discarding of the prev. session:
+
+        CipherSessionStore cipherSessionStore = CipherSessionStore.getInstance();
+
+        if (cipherSessionStore == null)
+            return new Error("Cipher Session Store hasn't been initialized!", true);
+        if (cipherSessionStore.getSessionByChatId(chatId) != null) {
+            if (!cipherSessionStore.removeSessionByChatId(chatId))
+                return new Error("Prev. Cipher Session removing error has been occurred!", true);
+        }
+
+        // todo: this may cause some problems!!:
+
         long curTimeMilliseconds = System.currentTimeMillis();
 
         // todo: creating an INIT_REQUEST command..
@@ -246,7 +259,7 @@ public class CipherCommandProcessor implements CommandProcessor {
         CipherCommandDataInitRequest initRequestCommand =
                 CipherCommandDataInitRequest.getInstance(
                         settingsCipher.getConfiguration(),
-                        curTimeMilliseconds);    // todo: this may cause some problems!!
+                        curTimeMilliseconds);
 
         if (initRequestCommand == null)
             return new Error("Cipher Command Data Init Request creating during New Session Initializing has been failed!", true);
