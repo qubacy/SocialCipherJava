@@ -23,6 +23,8 @@ public class CipherSessionStateInit implements CipherSessionState {
 
     final private List<CipherSessionInitRoute> m_routeList;
 
+    private byte[] m_sharedSecret = null;
+
     protected CipherSessionStateInit(
             //final PrivateKey privateKey,
             final PublicKey publicKey,
@@ -69,14 +71,21 @@ public class CipherSessionStateInit implements CipherSessionState {
             return null;
         }
 
-        if (isLastStage)
-            return m_keyAgreement.generateSecret();
+        if (isLastStage) {
+            m_sharedSecret = m_keyAgreement.generateSecret();
+
+            return m_sharedSecret;
+        }
 
         return sideProcessedData.getEncoded();
     }
 
     public boolean isInitCompleted() {
         return m_routeList.isEmpty();
+    }
+
+    public byte[] getSharedSecret() {
+        return m_sharedSecret;
     }
 
     @Override

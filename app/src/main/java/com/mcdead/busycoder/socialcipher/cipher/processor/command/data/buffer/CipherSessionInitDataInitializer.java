@@ -20,6 +20,7 @@ public class CipherSessionInitDataInitializer extends CipherSessionInitData {
         m_routeCounterList = new ArrayList<>();
 
         m_userPeerIdList.add(initializerPeerId); //todo: initializer is added by default;
+        m_routeCounterList.add(new ObjectWrapper<>(0));
     }
 
     public boolean addUser(
@@ -38,22 +39,30 @@ public class CipherSessionInitDataInitializer extends CipherSessionInitData {
         return true;
     }
 
+    public void initCounters() {
+        int routeCount = m_routeCounterList.size();
+
+        for (int i = 0; i < routeCount - 1; ++i) {
+            m_routeCounterList.get(i).setValue(1);
+        }
+    }
+
     public List<Long> getUserPeerIdList() {
         return m_userPeerIdList;
     }
 
     public void addRouteCounterValue(final int routeId) {
-        int routeCounterIndex = routeId - 1;
-        int prevValue = m_routeCounterList.get(routeCounterIndex).getValue();
+        //int routeCounterIndex = routeId - 1;
+        int prevValue = m_routeCounterList.get(routeId).getValue(); // todo: exception index = -1 in case of having 3+ users;
 
-        m_routeCounterList.get(routeCounterIndex).setValue(prevValue + 1);
+        m_routeCounterList.get(routeId).setValue(prevValue + 1);
     }
 
     public boolean isRouteCounterListFull() {
         int routeCount = m_routeCounterList.size();
 
         for (final ObjectWrapper<Integer> routeCounterItem : m_routeCounterList) {
-            if (routeCounterItem.getValue() != routeCount)
+            if (routeCounterItem.getValue() != (routeCount - 1))
                 return false;
         }
 

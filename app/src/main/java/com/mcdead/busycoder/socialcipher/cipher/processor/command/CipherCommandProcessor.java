@@ -176,6 +176,8 @@ public class CipherCommandProcessor implements CommandProcessor {
         CipherSessionInitDataInitializer chatIdPreInitData =
                 (CipherSessionInitDataInitializer) m_chatIdInitDataHashMap.get(chatId);
 
+        chatIdPreInitData.initCounters();
+
         List<Long> userPeerIdList = chatIdPreInitData.getUserPeerIdList();
 
         if (userPeerIdList.size() <= 1) {
@@ -462,6 +464,10 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         // todo: process received 0-side-public data (HOW??)..
 
+        // 0 - 1 - 2;
+        // 0 - 2 - 1;
+        // 2 - 1 - 0;
+
         CipherSessionStore cipherSessionStore = CipherSessionStore.getInstance();
 
         if (cipherSessionStore == null)
@@ -595,6 +601,14 @@ public class CipherCommandProcessor implements CommandProcessor {
             if (!cipherSessionPreInitDataInitializer.isRouteCounterListFull())
                 return null;
 
+            CipherSessionStateInit cipherSessionStateInit =
+                    (CipherSessionStateInit) cipherSession.getState();
+            Error settingError =
+                    processSetState(chatId, cipherSession, cipherSessionStateInit.getSharedSecret());
+
+            if (settingError != null)
+                return settingError;
+
             // todo: sending SESSION_SET command..
 
             CipherCommandDataSessionSet commandDataSessionSet =
@@ -630,6 +644,8 @@ public class CipherCommandProcessor implements CommandProcessor {
             final long chatId,
             final CipherSession cipherSession)
     {
+        // format: side_id : route_id : data;
+
         CipherSessionStateInit cipherSessionStateInit =
                 (CipherSessionStateInit) cipherSession.getState();
         CipherSessionInitRoute route =
@@ -643,6 +659,8 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         if (nextSideId == CipherSessionInitRoute.C_NO_NEXT_SIDE_ID)
             isLastStage = true;
+        else if (nextSideId == CipherSessionInitRoute.C_INCORRECT_SIDE_ID_PROVIDED)
+            return new Error("Incorrect Side Id has been provided!", true);
 
         byte[] processedData =
                 cipherSessionStateInit.processKeyData(
@@ -650,14 +668,16 @@ public class CipherCommandProcessor implements CommandProcessor {
                         isLastStage);
 
         if (isLastStage) {
-            return processSetState(chatId, cipherSession, processedData);
+            //return processSetState(chatId, cipherSession, processedData);
+
+            return null;
         }
 
         HashMap<Integer, Pair<Integer, byte[]>> nextSideIdRouteIdDataHashMap = new HashMap<>();
 
         nextSideIdRouteIdDataHashMap.put(
                 nextSideId,
-                new Pair<>(route.getNextSideId(cipherSession.getLocalSessionSideId()), processedData));
+                new Pair<>(routeId, processedData));
 
         CipherCommandDataInitRoute nextCipherCommandRoute =
                 CipherCommandDataInitRoute.getInstance(nextSideIdRouteIdDataHashMap);
@@ -688,6 +708,9 @@ public class CipherCommandProcessor implements CommandProcessor {
             final CipherSession cipherSession,
             final byte[] sharedSecret)
     {
+        if (sharedSecret == null)
+            return new Error("Shared Secret was null!", true);
+
         Log.d(getClass().getName(), "Gen. shared secret: " + Base64.getEncoder().encodeToString(sharedSecret));
 
         CipherSessionInitData preInitData = m_chatIdInitDataHashMap.get(chatId);
@@ -729,6 +752,25 @@ public class CipherCommandProcessor implements CommandProcessor {
             final CipherCommandDataSessionSet sessionSetCommand,
             final long chatId)
     {
+        CipherSessionStore cipherSessionStore = CipherSessionStore.getInstance();
+
+        if (cipherSessionStore == null)
+            return new Error("Cipher Session Store hasn't been initialized!", true);
+
+        CipherSession cipherSession = cipherSessionStore.getSessionByChatId(chatId);
+
+        if (cipherSession == null)
+            return null;
+
+        CipherSessionStateInit cipherSessionStateInit =
+                (CipherSessionStateInit) cipherSession.getState();
+
+        Error settingError =
+                processSetState(chatId, cipherSession, cipherSessionStateInit.getSharedSecret());
+
+        if (settingError != null)
+            return settingError;
+
         // todo: notifying a local user about successful session setting..
 
         CipherSessionInitData cipherSessionInitData = m_chatIdInitDataHashMap.get(chatId);

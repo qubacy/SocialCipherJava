@@ -44,8 +44,8 @@ public class CipherSessionStateInitGenerator {
         int sideIdShiftArraySize = sideCount - 1;
         int[] sideIdShiftArray = new int[sideIdShiftArraySize];
 
-        for (int i = 1; i < sideCount; ++i)
-            sideIdShiftArray[i - 1] = i;
+        for (int i = 0; i < sideCount - 1; ++i)
+            sideIdShiftArray[i] = i;
 
         // todo: creating default routes..
 
@@ -54,10 +54,20 @@ public class CipherSessionStateInitGenerator {
 
             sideIdRouteList.add(0);
 
-            for (int sideIndex = 0; sideIndex < sideCount - 1; ++sideIndex) {
-                int shiftMod = (sideIdShiftArraySize > 1 ? sideIdShiftArraySize - 1 : 1);
+            // todo: gotten 0 - 1 - 2; wanted: 0 - 1 - 2;
+            // todo: gotten 0 - 3 - 4; wanted: 0 - 2 - 1;
 
-                sideIdRouteList.add(sideIdShiftArray[(sideIndex + routeIndex) % shiftMod]);
+            boolean isModuled = false;
+
+            for (int sideIndex = 1; sideIndex < sideCount; ++sideIndex) {
+                int curSide = ((sideIndex + sideIdShiftArray[routeIndex]) % sideCount) + (isModuled ? 1 : 0);
+
+                if (curSide == 0) {
+                    isModuled = true;
+                    ++curSide;
+                }
+
+                sideIdRouteList.add(curSide);
             }
 
             CipherSessionInitRoute cipherSessionInitRoute =
@@ -69,7 +79,7 @@ public class CipherSessionStateInitGenerator {
             initRouteList.add(cipherSessionInitRoute);
         }
 
-        // todo: creating the last route..
+        // todo: creating the last route.. its OK;
 
         List<Integer> sideIdRouteList = new ArrayList<>();
 

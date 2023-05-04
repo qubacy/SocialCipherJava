@@ -1,10 +1,14 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.data.buffer;
 
+import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.data.CipherSessionInitRoute;
+
+import java.util.List;
+
 public class CipherSessionInitData {
     final private long m_startTimeMillisecond;
     final private long m_initializerPeerId;
-    private boolean m_isPreInitPassed;
 
+    private boolean m_isPreInitPassed;
     private boolean m_isInitialized;
 
     final private CipherSessionInitBuffer m_buffer;
@@ -16,6 +20,7 @@ public class CipherSessionInitData {
     {
         m_startTimeMillisecond = startTimeMillisecond;
         m_initializerPeerId = initializerPeerId;
+
         m_isPreInitPassed = false;
         m_isInitialized = false;
 
