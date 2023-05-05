@@ -17,16 +17,16 @@ public class AttachmentContext {
     }
 
     public static String getExtensionByFileName(final String filename) {
-        return getPartOfFileName(filename, 1);
+        return getPartOfFileName(filename, true);
     }
 
     public static String getAttachmentIdByFileName(final String filename) {
-        return getPartOfFileName(filename, 0);
+        return getPartOfFileName(filename, false);
     }
 
     private static String getPartOfFileName(
             final String filename,
-            final int partIndex)
+            final boolean isLast)
     {
         if (filename == null) return null;
         if (filename.isEmpty()) return null;
@@ -35,10 +35,10 @@ public class AttachmentContext {
 
         String[] attachmentFileNameParts = filename.split("\\.");
 
-        if (attachmentFileNameParts.length <= partIndex)
-            return null;
+        if (isLast)
+            return attachmentFileNameParts[attachmentFileNameParts.length - 1];
 
-        return attachmentFileNameParts[partIndex];
+        return attachmentFileNameParts[0];
     }
 
     public static URI getURIByFilePath(final String filePath) {
