@@ -194,7 +194,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
     private Error processAttachment(
             ResponseAttachmentInterface attachmentToLoad,
-            final long charId,
+            final long chatId,
             ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         ResponseAttachmentBase attachmentVK = (ResponseAttachmentBase) attachmentToLoad;
@@ -202,7 +202,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (attachmentVK == null)
             return new Error("Raw attachment had a wrong type!", true);
 
-        AttachmentTypeDefinerVK attachmentTypeDefiner = (AttachmentTypeDefinerVK) AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
+        AttachmentTypeDefinerVK attachmentTypeDefiner =
+                (AttachmentTypeDefinerVK) AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
 
         if (attachmentTypeDefiner == null)
             return new Error("AttachmentTypeDefiner hasn't been initialized!", true);
@@ -217,14 +218,14 @@ public class MessageProcessorVK extends MessageProcessorBase {
         ObjectWrapper<ResponseAttachmentBase> preparedToDownloadAttachmentWrapper =
                 new ObjectWrapper<>();
         Error prepareToDownloadError = prepareAttachmentToDownload(
-                attachmentVK, charId, preparedToDownloadAttachmentWrapper);
+                attachmentVK, chatId, preparedToDownloadAttachmentWrapper);
 
         if (prepareToDownloadError != null)
             return prepareToDownloadError;
 
         attachmentVK = preparedToDownloadAttachmentWrapper.getValue();
 
-        Error downloadAttachmentError = downloadAttachment(attachmentVK, attachmentEntityWrapper);
+        Error downloadAttachmentError = downloadAttachment(attachmentVK, chatId, attachmentEntityWrapper);
 
         if (downloadAttachmentError != null)
             return downloadAttachmentError;
@@ -274,7 +275,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
     private Error prepareStoredAttachmentToDownload(
             final ResponseAttachmentStored attachmentToPrepare,
-            final long charId,
+            final long chatId,
             final AttachmentType attachmentType,
             ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
     {
@@ -291,7 +292,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             case DOC: return prepareStoredAttachmentDefaultToDownload(
                     vkAPIChat,
                     attachmentToPrepare,
-                    charId,
+                    chatId,
                     preparedAttachmentWrapper);
 //            case AUDIO:
 //            case VIDEO: return null;
@@ -304,7 +305,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
     private Error prepareLinkedAttachmentToDownload(
             ResponseAttachmentLinked attachmentToPrepare,
-            final long charId,
+            final long chatId,
             final AttachmentType attachmentType,
             ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
     {
@@ -318,14 +319,14 @@ public class MessageProcessorVK extends MessageProcessorBase {
     private Error prepareStoredAttachmentDefaultToDownload(
             final VKAPIChat vkAPIChat,
             final ResponseAttachmentStored attachmentToPrepare,
-            final long charId,
+            final long chatId,
             ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
     {
         List<ResponseChatAttachmentListItem> attachmentItemList = null;
 
         try {
             retrofit2.Response<ResponseChatAttachmentListWrapper> response =
-                    vkAPIChat.getChatAttachmentList(charId, attachmentToPrepare.getAttachmentType(), m_token)
+                    vkAPIChat.getChatAttachmentList(chatId, attachmentToPrepare.getAttachmentType(), m_token)
                             .execute();
 
             if (!response.isSuccessful())
@@ -378,6 +379,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
     private Error downloadAttachment(
             final ResponseAttachmentBase attachmentToDownload,
+            final long chatId,
             ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         AttachmentType attachmentType = m_attachmentTypeDefiner.defineAttachmentTypeByString(
@@ -385,7 +387,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         switch (attachmentToDownload.getResponseAttachmentType()) {
             case STORED: return downloadStoredAttachment((ResponseAttachmentStored) attachmentToDownload, attachmentType, attachmentEntityWrapper);
-            case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, attachmentEntityWrapper);
+            case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, chatId, attachmentEntityWrapper);
         }
 
         return new Error("Downloading Attachment operation cannot be executed on a provided attachment!", true);
@@ -540,8 +542,32 @@ public class MessageProcessorVK extends MessageProcessorBase {
     private Error downloadLinkedAttachment(
             final ResponseAttachmentLinked attachmentLink,
             final AttachmentType attachmentType,
+            final long chatId,
             ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
+        MessageCipherProcessor messageCipherProcessor =
+                MessageCipherProcessor.getInstance(chatId);
+
+        if (messageCipherProcessor != null && attachmentType == AttachmentType.DOC) {
+            ResponseAttachmentDoc attachmentDoc = (ResponseAttachmentDoc) attachmentLink;
+            ObjectWrapper<Boolean> successFlagWrapper = new ObjectWrapper<>();
+
+            if (attachmentDoc.getExtension().compareTo(MessageCipherProcessor.C_CIPHERED_ATTACHMENT_EXT) == 0) {
+                Error downloadingCipheredError =
+                        downloadCipheredAttachment(
+                            messageCipherProcessor,
+                            attachmentDoc,
+                            successFlagWrapper,
+                            attachmentEntityWrapper);
+
+                if (downloadingCipheredError != null)
+                    return downloadingCipheredError;
+
+                if (successFlagWrapper.getValue())
+                    return null;
+            }
+        }
+
         switch (attachmentType) {
             case IMAGE:
             case DOC: return downloadLinkedAttachmentDefault(attachmentLink, attachmentType, attachmentEntityWrapper);
@@ -554,6 +580,54 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 true);
     }
 
+    private Error downloadCipheredAttachment(
+            final MessageCipherProcessor cipherProcessor,
+            final ResponseAttachmentDoc attachmentDoc,
+            ObjectWrapper<Boolean> successFlagWrapper,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+    {
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .build();
+
+        ObjectWrapper<byte[]> downloadedBytesWrapper = new ObjectWrapper<>();
+        Error downloadingError =
+                downloadFile(
+                        okHttpClient,
+                        attachmentDoc.getUrlBySize(AttachmentSize.STANDARD),
+                        downloadedBytesWrapper);
+
+        if (downloadingError != null)
+            return downloadingError;
+
+        // todo: deciphering bytes...
+
+        ObjectWrapper<MessageCipherProcessor.AttachmentDecipheringResult> attachmentDecipheringResultWrapper =
+                new ObjectWrapper<>();
+        Error decipheringError =
+                decipherAttachment(
+                        cipherProcessor,
+                        downloadedBytesWrapper.getValue(),
+                        attachmentDecipheringResultWrapper);
+
+        if (decipheringError != null)
+            return decipheringError;
+
+        if (!attachmentDecipheringResultWrapper.getValue().isSuccessful()) {
+            successFlagWrapper.setValue(false);
+
+            return null;
+        }
+
+        successFlagWrapper.setValue(true);
+
+         return generateDecipheredAttachmentEntity(
+                 new AttachmentData(
+                         attachmentDoc.getShortAttachmentId(),
+                         attachmentDecipheringResultWrapper.getValue().getFileExtension(),
+                         attachmentDecipheringResultWrapper.getValue().getBytes()),
+                 attachmentEntityWrapper);
+    }
+
     private Error downloadLinkedAttachmentDefault(
             final ResponseAttachmentLinked attachmentLinked,
             final AttachmentType attachmentType,
@@ -563,25 +637,18 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 .build();
         HashMap<AttachmentSize, byte[]> attachmentSizeBytesHashMap = new HashMap<>();
 
-        try {
-            for (final Map.Entry<AttachmentSize, String> attachmentSizeLink :
-                    attachmentLinked.getSizeUrlHashMap().entrySet())
-            {
-                Request request = new Request.Builder()
-                        .url(attachmentSizeLink.getValue())
-                        .build();
-                Response response = okHttpClient.newCall(request).execute();
+        for (final Map.Entry<AttachmentSize, String> attachmentSizeLink :
+                attachmentLinked.getSizeUrlHashMap().entrySet())
+        {
+            ObjectWrapper<byte[]> downloadedBytesWrapper = new ObjectWrapper<>();
+            Error downloadingError =
+                    downloadFile(
+                            okHttpClient, attachmentSizeLink.getValue(), downloadedBytesWrapper);
 
-                if (!response.isSuccessful())
-                    return new Error("Downloading Attachment process has been failed!", true);
+            if (downloadingError != null)
+                return downloadingError;
 
-                attachmentSizeBytesHashMap.put(attachmentSizeLink.getKey(), response.body().bytes());
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-
-            return new Error(e.getMessage(), true);
+            attachmentSizeBytesHashMap.put(attachmentSizeLink.getKey(), downloadedBytesWrapper.getValue());
         }
 
         ObjectWrapper<HashMap<AttachmentSize, AttachmentData>> attachmentSizeDataHashMapWrapper =
@@ -598,6 +665,41 @@ public class MessageProcessorVK extends MessageProcessorBase {
         return generateAttachmentEntity(
                 attachmentSizeDataHashMapWrapper.getValue(),
                 attachmentEntityWrapper);
+    }
+
+    private Error downloadFile(
+            final OkHttpClient okHttpClient,
+            final String url,
+            ObjectWrapper<byte[]> downloadedBytesWrapper)
+    {
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        try {
+            Response response = okHttpClient.newCall(request).execute();
+
+            if (!response.isSuccessful())
+                return new Error("Downloading Attachment process has been failed!", true);
+
+            downloadedBytesWrapper.setValue(response.body().bytes());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            return new Error(e.getMessage(), true);
+        }
+
+        return null;
+    }
+
+    private Error decipherAttachment(
+            final MessageCipherProcessor messageCipherProcessor,
+            final byte[] sourceBytes,
+            ObjectWrapper<MessageCipherProcessor.AttachmentDecipheringResult> attachmentDecipheringResultWrapper)
+    {
+        return messageCipherProcessor.decipherAttachmentBytes(
+                sourceBytes, attachmentDecipheringResultWrapper);
     }
 
     private Error generateAttachmentSizeDataHashMap(
@@ -668,6 +770,20 @@ public class MessageProcessorVK extends MessageProcessorBase {
         }
 
         attachmentSizeDataHashMapWrapper.setValue(attachmentSizeDataHashMap);
+
+        return null;
+    }
+
+    private Error generateDecipheredAttachmentEntity(
+            final AttachmentData attachmentData,
+            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+    {
+        AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
+
+        if (attachmentsStore == null)
+            return new Error("Attachment Store hasn't been initialized!", true);
+
+        attachmentEntityWrapper.setValue(attachmentsStore.saveCachedAttachment(attachmentData));
 
         return null;
     }

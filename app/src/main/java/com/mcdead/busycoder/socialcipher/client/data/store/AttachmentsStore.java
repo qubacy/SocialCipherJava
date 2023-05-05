@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.client.data.store;
 
+import android.net.Uri;
+
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityGenerator;
@@ -31,6 +33,40 @@ public class AttachmentsStore {
         return s_instance;
     }
 
+    public AttachmentEntityBase saveCachedAttachment(
+            final AttachmentData attachmentData)
+    {
+        if (attachmentData == null) return null;
+        if (!attachmentData.isValid()) return null;
+
+        synchronized (m_attachmentsHash) {
+            if (m_attachmentsHash.containsKey(attachmentData.getName()))
+                return m_attachmentsHash.get(attachmentData.getName());
+
+            HashMap<AttachmentSize, String> attachmentSizeFilePathHashMap = new HashMap<>();
+
+            String savedFilePath = saveAttachmentToFile(
+                    attachmentData.getName(),
+                    AttachmentSize.STANDARD,
+                    attachmentData,
+                    true);
+
+            if (savedFilePath == null) return null;
+
+            attachmentSizeFilePathHashMap.put(AttachmentSize.STANDARD, savedFilePath);
+
+            AttachmentEntityBase attachmentEntity = AttachmentEntityGenerator
+                    .generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
+                            attachmentData.getName(), attachmentSizeFilePathHashMap);
+
+            if (attachmentEntity == null) return null;
+
+            m_attachmentsHash.put(attachmentData.getName(), attachmentEntity);
+        }
+
+        return m_attachmentsHash.get(attachmentData.getName());
+    }
+
     public AttachmentEntityBase saveAttachment(
             final HashMap<AttachmentSize, AttachmentData> attachmentSizeDataHashMap)
     {
@@ -60,7 +96,8 @@ public class AttachmentsStore {
                 String savedFilePath = saveAttachmentToFile(
                         standardAttachmentData.getName(),
                         attachmentSizeData.getKey(),
-                        attachmentSizeData.getValue());
+                        attachmentSizeData.getValue(),
+                        false);
 
                 if (savedFilePath == null) return null;
 
@@ -82,25 +119,43 @@ public class AttachmentsStore {
     private String saveAttachmentToFile(
             final String attachmentId,
             final AttachmentSize attachmentSize,
-            final AttachmentData attachmentData)
+            final AttachmentData attachmentData,
+            final boolean isCached)
     {
         SettingsSystem settingsSystem = SettingsSystem.getInstance();
 
         if (settingsSystem == null) return null;
         if (settingsSystem.getAttachmentsDir() == null) return null;
 
-        String newAttachmentFilePath = generateAttachmentFilePath(
-                settingsSystem.getAttachmentsDir(),
-                attachmentId,
-                attachmentSize,
-                attachmentData.getExtension());
+        String attachmentDir = (isCached ?
+                settingsSystem.getCacheDir().getAbsolutePath() :
+                settingsSystem.getAttachmentsDir());
+        String newAttachmentFilePath = null;
+
+        if (isCached) {
+            newAttachmentFilePath =
+                    generateCachedAttachmentFilePath(
+                            attachmentDir,
+                            attachmentId,
+                            attachmentData.getExtension());
+
+        } else {
+            newAttachmentFilePath =
+                    generateAttachmentFilePath(
+                        attachmentDir,
+                        attachmentId,
+                        attachmentSize,
+                        attachmentData.getExtension());
+        }
 
         File newAttachmentFile = new File(newAttachmentFilePath);
 
         try {
-            if (!newAttachmentFile.getParentFile().exists())
-                if (!newAttachmentFile.getParentFile().mkdirs())
-                    return null;
+            if (!isCached) {
+                if (!newAttachmentFile.getParentFile().exists())
+                    if (!newAttachmentFile.getParentFile().mkdirs())
+                        return null;
+            }
 
             if (!newAttachmentFile.createNewFile())
                 return null;
@@ -131,6 +186,16 @@ public class AttachmentsStore {
     {
         return (dirPath +
                 '/' + String.valueOf(attachmentSize.getId()) +
+                '/' + attachmentId +
+                '.' + attachmentExtension);
+    }
+
+    private String generateCachedAttachmentFilePath(
+            final String dirPath,
+            final String attachmentId,
+            final String attachmentExtension)
+    {
+        return (dirPath +
                 '/' + attachmentId +
                 '.' + attachmentExtension);
     }

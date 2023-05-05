@@ -500,19 +500,27 @@ public class ChatFragment extends Fragment
             }
 
             if (!attachmentDataList.isEmpty()) {
-                ObjectWrapper<List<AttachmentData>> processedAttachmentData = new ObjectWrapper<>();
-                cipheringError =
-                        messageCipherProcessor.processAttachmentData(
-                                attachmentDataList, true, processedAttachmentData);
+                List<AttachmentData> processedAttachmentDataList = new ArrayList<>();
 
-                if (cipheringError != null) {
-                    ErrorBroadcastReceiver.broadcastError(cipheringError,
-                            getActivity().getApplicationContext());
+                for (final AttachmentData attachmentData : attachmentDataList) {
+                    ObjectWrapper<AttachmentData> processedAttachmentData = new ObjectWrapper<>();
+                    cipheringError =
+                            messageCipherProcessor.cipherAttachmentData(
+                                    getContext().getContentResolver(),
+                                    attachmentData,
+                                    processedAttachmentData);
 
-                    return;
+                    if (cipheringError != null) {
+                        ErrorBroadcastReceiver.broadcastError(cipheringError,
+                                getActivity().getApplicationContext());
+
+                        return;
+                    }
+
+                    processedAttachmentDataList.add(processedAttachmentData.getValue());
                 }
 
-                attachmentDataList = processedAttachmentData.getValue();
+                attachmentDataList = processedAttachmentDataList;
             }
         }
 

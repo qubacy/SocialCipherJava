@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private Error init() {
-        if (!SettingsManager.initializeSettings(getFilesDir().getAbsolutePath())) {
+        if (!SettingsManager.initializeSettings(getFilesDir().getAbsolutePath(), getApplicationContext())) {
             Toast.makeText(this, "Settings loading error!", Toast.LENGTH_LONG)
                     .show();
         }
