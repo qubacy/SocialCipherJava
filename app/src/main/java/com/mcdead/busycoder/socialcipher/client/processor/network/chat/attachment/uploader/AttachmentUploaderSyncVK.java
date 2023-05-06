@@ -222,7 +222,7 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
         okhttp3.Response response = httpClient.newCall(uploadingUrlRequest).execute();
 
         if (!response.isSuccessful())
-            return new Error("Obtained uploading result wasn't successful!", true);
+            return new Error("Obtained uploading result wasn't successful!", false);
 
         String responseJsonBody = response.body().string();
 

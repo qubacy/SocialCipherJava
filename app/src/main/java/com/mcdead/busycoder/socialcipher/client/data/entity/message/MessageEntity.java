@@ -73,6 +73,14 @@ public class MessageEntity {
         return true;
     }
 
+    public boolean setCiphered() {
+        if (m_isCiphered) return false;
+
+        m_isCiphered = true;
+
+        return true;
+    }
+
     public List<ResponseAttachmentInterface> getAttachmentToLoad() {
         return m_attachmentToLoadList;
     }

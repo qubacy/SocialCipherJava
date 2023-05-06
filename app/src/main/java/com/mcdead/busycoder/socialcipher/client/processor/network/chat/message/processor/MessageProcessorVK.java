@@ -24,6 +24,7 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoI
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
@@ -119,7 +120,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         MessageCipherProcessor messageCipherProcessor =
                 MessageCipherProcessor.getInstance(peerId);
         String processedMessageText = updateVK.text;
-        boolean isCiphered = messageCipherProcessor != null;
+        boolean isCiphered = false;
 
         if (messageCipherProcessor != null) {
             Error cipheringError;
@@ -131,8 +132,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
                 if (cipheringError != null)
                     return cipheringError;
-                if (!processedSuccessFlagText.getValue().first)
-                    isCiphered = false;
+                if (processedSuccessFlagText.getValue().first)
+                    isCiphered = true;
 
                 processedMessageText = processedSuccessFlagText.getValue().second;
             }
@@ -157,7 +158,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
     @Override
     public Error processMessageAttachments(
             final MessageEntity message,
-            final long charId)
+            final long chatId)
     {
         if (message == null)
             return new Error("Message hasn't been initialized!", true);
@@ -165,16 +166,21 @@ public class MessageProcessorVK extends MessageProcessorBase {
             return null;
 
         List<AttachmentEntityBase> loadedAttachments = new ArrayList<>();
+        boolean icCiphered = false;
 
         for (final ResponseAttachmentInterface attachmentToLoad : message.getAttachmentToLoad()) {
             if (attachmentToLoad == null) continue;
 
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
-            Error err = processAttachment(attachmentToLoad, charId, attachmentEntityWrapper);
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper =
+                    new ObjectWrapper<>(new Pair<>(null, false));
+            Error err = processAttachment(attachmentToLoad, chatId, attachmentEntityCipheredFlagWrapper);
 
             if (err != null) return err;
 
-            loadedAttachments.add(attachmentEntityWrapper.getValue());
+            loadedAttachments.add(attachmentEntityCipheredFlagWrapper.getValue().first);
+
+            if (attachmentEntityCipheredFlagWrapper.getValue().second && !icCiphered)
+                icCiphered = true;
         }
 
         if (loadedAttachments.isEmpty()) return null;
@@ -184,7 +190,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (dialogsStore == null)
             return new Error("Dialogs Store hasn't been initialized!", true);
 
-        if (!dialogsStore.setMessageAttachments(loadedAttachments, charId, message.getId()))
+        if (!dialogsStore.setMessageAttachments(loadedAttachments, chatId, message.getId(), icCiphered))
             return new Error(
                 "Setting attachments to message process went wrong!",
                 true);
@@ -195,7 +201,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
     private Error processAttachment(
             ResponseAttachmentInterface attachmentToLoad,
             final long chatId,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         ResponseAttachmentBase attachmentVK = (ResponseAttachmentBase) attachmentToLoad;
 
@@ -208,12 +214,16 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (attachmentTypeDefiner == null)
             return new Error("AttachmentTypeDefiner hasn't been initialized!", true);
 
+        ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
         Error loadAttachmentError = loadAttachment(attachmentVK, attachmentEntityWrapper);
 
         if (loadAttachmentError != null)
             return loadAttachmentError;
-        if (attachmentEntityWrapper.getValue() != null)
+        if (attachmentEntityWrapper.getValue() != null) {
+            attachmentEntityCipheredFlagWrapper.setValue(new Pair<>(attachmentEntityWrapper.getValue(), false));
+
             return null;
+        }
 
         ObjectWrapper<ResponseAttachmentBase> preparedToDownloadAttachmentWrapper =
                 new ObjectWrapper<>();
@@ -225,7 +235,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         attachmentVK = preparedToDownloadAttachmentWrapper.getValue();
 
-        Error downloadAttachmentError = downloadAttachment(attachmentVK, chatId, attachmentEntityWrapper);
+        Error downloadAttachmentError =
+                downloadAttachment(attachmentVK, chatId, attachmentEntityCipheredFlagWrapper);
 
         if (downloadAttachmentError != null)
             return downloadAttachmentError;
@@ -380,14 +391,14 @@ public class MessageProcessorVK extends MessageProcessorBase {
     private Error downloadAttachment(
             final ResponseAttachmentBase attachmentToDownload,
             final long chatId,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         AttachmentType attachmentType = m_attachmentTypeDefiner.defineAttachmentTypeByString(
                 attachmentToDownload.getAttachmentType());
 
         switch (attachmentToDownload.getResponseAttachmentType()) {
-            case STORED: return downloadStoredAttachment((ResponseAttachmentStored) attachmentToDownload, attachmentType, attachmentEntityWrapper);
-            case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, chatId, attachmentEntityWrapper);
+            case STORED: return downloadStoredAttachment((ResponseAttachmentStored) attachmentToDownload, attachmentType, attachmentEntityCipheredFlagWrapper);
+            case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, chatId, attachmentEntityCipheredFlagWrapper);
         }
 
         return new Error("Downloading Attachment operation cannot be executed on a provided attachment!", true);
@@ -396,7 +407,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
     private Error downloadStoredAttachment(
             final ResponseAttachmentStored attachmentToDownload,
             final AttachmentType attachmentType,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         VKAPIProvider vkAPIProvider =
                 (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
@@ -411,12 +422,12 @@ public class MessageProcessorVK extends MessageProcessorBase {
                     vkAPIAttachment,
                     attachmentType,
                     attachmentToDownload,
-                    attachmentEntityWrapper);
+                    attachmentEntityCipheredFlagWrapper);
             case DOC: return downloadStoredAttachmentDoc(
                     vkAPIAttachment,
                     attachmentType,
                     attachmentToDownload,
-                    attachmentEntityWrapper);
+                    attachmentEntityCipheredFlagWrapper);
             case AUDIO: return null;
             case VIDEO: return null;
         }
@@ -428,7 +439,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final VKAPIAttachment vkAPIAttachment,
             final AttachmentType attachmentType,
             final ResponseAttachmentStored attachmentToDownload,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         ResponsePhotoItem responsePhotoItem = null;
 
@@ -483,14 +494,14 @@ public class MessageProcessorVK extends MessageProcessorBase {
         return downloadLinkedAttachmentDefault(
                 attachmentLinked,
                 attachmentType,
-                attachmentEntityWrapper);
+                attachmentEntityCipheredFlagWrapper);
     }
 
     private Error downloadStoredAttachmentDoc(
             final VKAPIAttachment vkAPIAttachment,
             final AttachmentType attachmentType,
             final ResponseAttachmentStored attachmentToDownload,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         ResponseDocumentItem responseDocItem = null;
 
@@ -536,14 +547,14 @@ public class MessageProcessorVK extends MessageProcessorBase {
         return downloadLinkedAttachmentDefault(
                 responseAttachmentDoc,
                 attachmentType,
-                attachmentEntityWrapper);
+                attachmentEntityCipheredFlagWrapper);
     }
 
     private Error downloadLinkedAttachment(
             final ResponseAttachmentLinked attachmentLink,
             final AttachmentType attachmentType,
             final long chatId,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         MessageCipherProcessor messageCipherProcessor =
                 MessageCipherProcessor.getInstance(chatId);
@@ -558,7 +569,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             messageCipherProcessor,
                             attachmentDoc,
                             successFlagWrapper,
-                            attachmentEntityWrapper);
+                                attachmentEntityCipheredFlagWrapper);
 
                 if (downloadingCipheredError != null)
                     return downloadingCipheredError;
@@ -570,7 +581,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         switch (attachmentType) {
             case IMAGE:
-            case DOC: return downloadLinkedAttachmentDefault(attachmentLink, attachmentType, attachmentEntityWrapper);
+            case DOC: return downloadLinkedAttachmentDefault(attachmentLink, attachmentType, attachmentEntityCipheredFlagWrapper);
             case AUDIO: return null;
             case VIDEO: return null;
         }
@@ -584,7 +595,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final MessageCipherProcessor cipherProcessor,
             final ResponseAttachmentDoc attachmentDoc,
             ObjectWrapper<Boolean> successFlagWrapper,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .build();
@@ -620,18 +631,28 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         successFlagWrapper.setValue(true);
 
-         return generateDecipheredAttachmentEntity(
+        ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
+        Error generatingError =
+             generateDecipheredAttachmentEntity(
                  new AttachmentData(
                          attachmentDoc.getShortAttachmentId(),
                          attachmentDecipheringResultWrapper.getValue().getFileExtension(),
                          attachmentDecipheringResultWrapper.getValue().getBytes()),
-                 attachmentEntityWrapper);
+                     attachmentEntityWrapper);
+
+        if (generatingError != null)
+            return generatingError;
+
+        attachmentEntityCipheredFlagWrapper.setValue(
+                new Pair<>(attachmentEntityWrapper.getValue(), true));
+
+        return null;
     }
 
     private Error downloadLinkedAttachmentDefault(
             final ResponseAttachmentLinked attachmentLinked,
             final AttachmentType attachmentType,
-            ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
+            ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .build();
@@ -662,9 +683,19 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (attachmentDataError != null)
             return attachmentDataError;
 
-        return generateAttachmentEntity(
-                attachmentSizeDataHashMapWrapper.getValue(),
-                attachmentEntityWrapper);
+        ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
+        Error generatingError =
+                generateAttachmentEntity(
+                    attachmentSizeDataHashMapWrapper.getValue(),
+                        attachmentEntityWrapper);
+
+        if (generatingError != null)
+            return generatingError;
+
+        attachmentEntityCipheredFlagWrapper.setValue(
+                new Pair<>(attachmentEntityWrapper.getValue(), false));
+
+        return null;
     }
 
     private Error downloadFile(

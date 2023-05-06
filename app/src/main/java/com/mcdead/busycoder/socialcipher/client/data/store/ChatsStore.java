@@ -60,7 +60,8 @@ public class ChatsStore {
     public boolean setMessageAttachments(
             final List<AttachmentEntityBase> attachmentsList,
             final long chatId,
-            final long messageId)
+            final long messageId,
+            final boolean isCiphered)
     {
         if (attachmentsList == null) return false;
 
@@ -75,6 +76,8 @@ public class ChatsStore {
 
             if (!message.setAttachments(attachmentsList))
                 return false;
+
+            if (isCiphered) message.setCiphered();
         }
 
         return true;
