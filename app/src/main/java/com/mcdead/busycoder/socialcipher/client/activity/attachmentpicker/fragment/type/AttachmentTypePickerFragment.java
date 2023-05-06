@@ -72,20 +72,11 @@ public class AttachmentTypePickerFragment extends Fragment {
     }
 
     private void setChosenButton(int buttonResourceId) {
-        Drawable chosenButtonBackground
-                = ResourcesCompat.getDrawable(getResources(),
-                    R.drawable.attachment_picker_button_chosen_shape,
-                    null);
-        Drawable defaultButtonBackground
-                = ResourcesCompat.getDrawable(getResources(),
-                R.drawable.attachment_picker_button_shape,
-                null);
-
         for (final AppCompatImageButton button : m_buttons) {
             if (button.getId() == buttonResourceId)
-                button.setBackground(chosenButtonBackground);
+                button.setBackgroundResource(R.drawable.attachment_picker_button_chosen_shape);
             else
-                button.setBackground(defaultButtonBackground);
+                button.setBackgroundResource(R.drawable.attachment_picker_button_shape);
         }
     }
 }
