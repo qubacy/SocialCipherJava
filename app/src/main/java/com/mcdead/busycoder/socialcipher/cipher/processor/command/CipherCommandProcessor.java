@@ -375,6 +375,16 @@ public class CipherCommandProcessor implements CommandProcessor {
             final long chatId,
             final long initializerPeerId)
     {
+        long curTime = System.currentTimeMillis();
+
+        if ((initRequestCommand.getStartTimeMilliseconds() +
+            C_SESSION_SETTING_PRE_INIT_PHASE_TIMESPAN_MILLISECONDS <=
+            curTime) &&
+            (initRequestCommand.getStartTimeMilliseconds() > curTime))
+        {
+            return null;
+        }
+
         if (m_chatIdInitDataHashMap.containsKey(chatId))
             return null;
 
@@ -463,10 +473,6 @@ public class CipherCommandProcessor implements CommandProcessor {
             return cipherSessionCreatingError;
 
         // todo: process received 0-side-public data (HOW??)..
-
-        // 0 - 1 - 2;
-        // 0 - 2 - 1;
-        // 2 - 1 - 0;
 
         CipherSessionStore cipherSessionStore = CipherSessionStore.getInstance();
 

@@ -22,11 +22,8 @@ import com.mcdead.busycoder.socialcipher.client.data.utility.message.MessageText
 import com.mcdead.busycoder.socialcipher.utility.TimeUtility;
 
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.util.List;
-import java.util.TimeZone;
 
 public class MessageListViewHolder extends RecyclerView.ViewHolder {
     private ConstraintLayout m_itemWrapper = null;
