@@ -19,9 +19,11 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.Attachmen
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.utility.message.MessageTextGenerator;
+import com.mcdead.busycoder.socialcipher.utility.TimeUtility;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.TimeZone;
@@ -57,11 +59,11 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     {
         if (message == null) return false;
 
-        int offsetInSec = TimeZone.getDefault().getRawOffset() / 1000;
+        LocalTime localTime =
+                TimeUtility.getLocalTimeFromUTCMilliseconds(message.getTimestamp());
 
         m_text.setText(MessageTextGenerator.generateChatMessageText(message));
-        m_timestamp.setText(String.valueOf(
-                LocalDateTime.ofEpochSecond(message.getTimestamp(), 0, ZoneOffset.ofTotalSeconds(offsetInSec)).toLocalTime()));
+        m_timestamp.setText(String.valueOf(localTime));
 
         ConstraintLayout.LayoutParams wrapperLayoutParams =
                 (ConstraintLayout.LayoutParams) m_itemWrapper.getLayoutParams();
