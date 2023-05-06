@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/chat_list_activity_menu_reset_cache"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/ic_reset_cache_24"
+        android:title="@string/chat_list_activity_menu_reset_cache_caption"/>
+
+</menu>

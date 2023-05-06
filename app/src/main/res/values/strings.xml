@@ -19,4 +19,5 @@
     <string name="fragment_signin_token_text_hint">Type your token...</string>
     <string name="fragment_signin_token_accept_button_caption">Accept</string>
 
+    <string name="chat_list_activity_menu_reset_cache_caption">Reset Cache</string>
 </resources>

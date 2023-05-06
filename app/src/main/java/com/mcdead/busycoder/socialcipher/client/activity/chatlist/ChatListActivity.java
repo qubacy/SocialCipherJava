@@ -4,7 +4,12 @@ import static com.mcdead.busycoder.socialcipher.client.processor.update.service.
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,12 +21,18 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.loadingscreen.LoadingPopUpWindow;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
+import com.mcdead.busycoder.socialcipher.client.processor.filesystem.cache.CacheCleanerBase;
+import com.mcdead.busycoder.socialcipher.client.processor.filesystem.cache.CacheCleanerCallback;
+import com.mcdead.busycoder.socialcipher.client.processor.filesystem.cache.CacheCleanerGenerator;
+import com.mcdead.busycoder.socialcipher.client.processor.filesystem.cache.data.CacheCleanerResult;
 import com.mcdead.busycoder.socialcipher.client.processor.update.service.UpdateProcessorService;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorService;
 
 public class ChatListActivity extends AppCompatActivity
-    implements ChatListFragmentCallback
+    implements
+        ChatListFragmentCallback,
+        CacheCleanerCallback
 {
     private LoadingPopUpWindow m_loadingPopUpWindow = null;
 
@@ -123,5 +134,57 @@ public class ChatListActivity extends AppCompatActivity
         if (m_loadingPopUpWindow == null) return;
 
         m_loadingPopUpWindow.dismiss();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+
+        menuInflater.inflate(R.menu.chat_list_activity_menu, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.chat_list_activity_menu_reset_cache:
+                return onCacheResettingRequested();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private boolean onCacheResettingRequested() {
+        CacheCleanerBase cacheCleaner =
+                CacheCleanerGenerator.generateCacheCleaner(this);
+
+        if (cacheCleaner == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Cache Cleaner Generator hasn't generated the cleaner!", true),
+                    getApplicationContext()
+            );
+        }
+
+        cacheCleaner.execute();
+
+        return true;
+    }
+
+    @Override
+    public void onCacheCleanerErrorOccurred(
+            final Error error)
+    {
+        ErrorBroadcastReceiver.broadcastError(error, getApplicationContext());
+    }
+
+    @Override
+    public void onCacheCleanerResultGotten(
+            final CacheCleanerResult cacheCleanerResult)
+    {
+        if (cacheCleanerResult.isSuccessful())
+            Toast.makeText(this, "Cache has been reset!", Toast.LENGTH_LONG).show();
+        else
+            Toast.makeText(this, "Cache hasn't been reset!", Toast.LENGTH_LONG).show();
     }
 }
