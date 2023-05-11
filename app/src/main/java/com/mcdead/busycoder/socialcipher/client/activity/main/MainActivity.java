@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.cipher.data.storage.CipherSessionStore;
 import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
@@ -157,7 +158,8 @@ public class MainActivity extends AppCompatActivity
     private Error resetStorages() {
         if (ChatsStore.getInstance() == null
          || AttachmentsStore.getInstance() == null
-         || UsersStore.getInstance() == null)
+         || UsersStore.getInstance() == null
+         || CipherSessionStore.getInstance() == null)
         {
             return new Error("Stores haven't been initialized!", true);
         }
@@ -165,6 +167,7 @@ public class MainActivity extends AppCompatActivity
         ChatsStore.getInstance().clean();
         AttachmentsStore.getInstance().clean();
         UsersStore.getInstance().clean();
+        CipherSessionStore.getInstance().clean();
 
         return null;
     }

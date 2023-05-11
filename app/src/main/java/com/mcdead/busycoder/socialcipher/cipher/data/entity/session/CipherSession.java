@@ -4,7 +4,6 @@ import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.Cipher
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.session.state.init.CipherSessionStateInit;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class CipherSession {
     private CipherSessionState m_state;
@@ -46,27 +45,6 @@ public class CipherSession {
     public int getSessionSideCount() {
         return m_userPeerIdSessionSideIdHashMap.size();
     }
-
-//    public Long getUserPeerIdWithSideId(final int sideId) {
-//        if (sideId < 0) return null;
-//        if (m_sessionSideIdUserPeerIdHashMap.containsKey(sideId))
-//            return null;
-//
-//        return m_sessionSideIdUserPeerIdHashMap.get(sideId);
-//    }
-//
-//    public Integer getSideIdWithUserPeerId(final long userPeerId) {
-//        if (userPeerId == 0) return null;
-//
-//        for (final Map.Entry<Integer, Long> sideIdUserPeerIdEntry :
-//                m_sessionSideIdUserPeerIdHashMap.entrySet())
-//        {
-//            if (sideIdUserPeerIdEntry.getValue() == userPeerId)
-//                return sideIdUserPeerIdEntry.getKey();
-//        }
-//
-//        return null;
-//    }
 
     public HashMap<Long, Integer> getUserPeerIdSessionSideIdHashMap() {
         return m_userPeerIdSessionSideIdHashMap;

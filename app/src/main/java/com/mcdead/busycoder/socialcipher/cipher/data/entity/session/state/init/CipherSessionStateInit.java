@@ -8,15 +8,12 @@ import com.mcdead.busycoder.socialcipher.cipher.utility.CipherKeyUtility;
 
 import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
 
 import javax.crypto.KeyAgreement;
 
 public class CipherSessionStateInit implements CipherSessionState {
-    //final private PrivateKey m_privateKey;
     final private PublicKey m_publicKey;
 
     final private KeyAgreement m_keyAgreement;
@@ -26,12 +23,10 @@ public class CipherSessionStateInit implements CipherSessionState {
     private byte[] m_sharedSecret = null;
 
     protected CipherSessionStateInit(
-            //final PrivateKey privateKey,
             final PublicKey publicKey,
             final KeyAgreement keyAgreement,
             final List<CipherSessionInitRoute> routeList)
     {
-        //m_privateKey = privateKey;
         m_publicKey = publicKey;
 
         m_keyAgreement = keyAgreement;
@@ -78,10 +73,6 @@ public class CipherSessionStateInit implements CipherSessionState {
         }
 
         return sideProcessedData.getEncoded();
-    }
-
-    public boolean isInitCompleted() {
-        return m_routeList.isEmpty();
     }
 
     public byte[] getSharedSecret() {

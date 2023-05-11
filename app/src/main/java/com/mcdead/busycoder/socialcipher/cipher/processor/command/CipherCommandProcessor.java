@@ -20,7 +20,6 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCom
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRequestCompleted;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRoute;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataSessionSet;
-import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.buffer.CipherSessionInitBuffer;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.buffer.CipherSessionInitData;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.buffer.CipherSessionInitDataInitializer;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.parser.CipherCommandDataParser;
@@ -275,16 +274,11 @@ public class CipherCommandProcessor implements CommandProcessor {
         if (serializingError != null)
             return serializingError;
 
-        // todo: creating a buffer obj.:
-
-        CipherSessionInitBuffer cipherSessionInitBuffer =
-                new CipherSessionInitBuffer(
-                        settingsCipher.getConfiguration());
         CipherSessionInitDataInitializer cipherSessionPreInitDataInitializer =
                 new CipherSessionInitDataInitializer(
                         curTimeMilliseconds,
                         m_callback.getLocalPeerId(),
-                        cipherSessionInitBuffer);
+                        settingsCipher.getConfiguration());
 
         m_chatIdInitDataHashMap.put(chatId, cipherSessionPreInitDataInitializer);
 
@@ -418,15 +412,11 @@ public class CipherCommandProcessor implements CommandProcessor {
 
         // todo: adding new buffer obj.
 
-        CipherSessionInitBuffer buffer =
-                new CipherSessionInitBuffer(
-                        initRequestCommand.getCipherConfiguration());
-
         CipherSessionInitData cipherSessionInitData =
                 new CipherSessionInitData(
                         initRequestCommand.getStartTimeMilliseconds(),
                         initializerPeerId,
-                        buffer);
+                        initRequestCommand.getCipherConfiguration());
 
         m_chatIdInitDataHashMap.put(chatId, cipherSessionInitData);
 
@@ -724,12 +714,7 @@ public class CipherCommandProcessor implements CommandProcessor {
         if (preInitData == null)
             return null;
 
-        CipherSessionInitBuffer buffer = preInitData.getBuffer();
-
-        if (buffer == null)
-            return new Error("Cipher Session Init Buffer creating during Setting State procedure has been failed!", true);
-
-        CipherConfiguration cipherConfiguration = buffer.getCipherConfiguration();
+        CipherConfiguration cipherConfiguration = preInitData.getCipherConfiguration();
         CipherKey cipherKey =
                 CipherKeyGenerator.generateCipherKeyWithConfiguration(
                         cipherConfiguration, sharedSecret);

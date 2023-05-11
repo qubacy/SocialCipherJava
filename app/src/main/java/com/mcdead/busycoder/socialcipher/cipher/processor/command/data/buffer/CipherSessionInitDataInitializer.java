@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.data.buffer;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherConfiguration;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.util.ArrayList;
@@ -12,9 +13,9 @@ public class CipherSessionInitDataInitializer extends CipherSessionInitData {
     public CipherSessionInitDataInitializer(
             final long startTimeMillisecond,
             final long initializerPeerId,
-            final CipherSessionInitBuffer buffer)
+            final CipherConfiguration cipherConfiguration)
     {
-        super(startTimeMillisecond, initializerPeerId, buffer);
+        super(startTimeMillisecond, initializerPeerId, cipherConfiguration);
 
         m_userPeerIdList = new ArrayList<>();
         m_routeCounterList = new ArrayList<>();

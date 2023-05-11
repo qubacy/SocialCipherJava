@@ -7,10 +7,10 @@ import java.util.HashMap;
 public class CipherSessionStore {
     private static CipherSessionStore s_instance = null;
 
-    final private HashMap<Long, CipherSession> m_cipherSideIdSessionHashMap;
+    final private HashMap<Long, CipherSession> m_cipherChatIdSessionHashMap;
 
     private CipherSessionStore() {
-        m_cipherSideIdSessionHashMap = new HashMap<>();
+        m_cipherChatIdSessionHashMap = new HashMap<>();
     }
 
     public synchronized static CipherSessionStore getInstance() {
@@ -27,8 +27,8 @@ public class CipherSessionStore {
         if (session == null || chatId == 0)
             return false;
 
-        synchronized (m_cipherSideIdSessionHashMap) {
-            m_cipherSideIdSessionHashMap.put(
+        synchronized (m_cipherChatIdSessionHashMap) {
+            m_cipherChatIdSessionHashMap.put(
                     chatId,
                     session);
         }
@@ -41,11 +41,11 @@ public class CipherSessionStore {
     {
         if (chatId == 0) return null;
 
-        synchronized (m_cipherSideIdSessionHashMap) {
-            if (!m_cipherSideIdSessionHashMap.containsKey(chatId))
+        synchronized (m_cipherChatIdSessionHashMap) {
+            if (!m_cipherChatIdSessionHashMap.containsKey(chatId))
                 return null;
 
-            return m_cipherSideIdSessionHashMap.get(chatId);
+            return m_cipherChatIdSessionHashMap.get(chatId);
         }
     }
 
@@ -54,13 +54,17 @@ public class CipherSessionStore {
     {
         if (chatId == 0) return false;
 
-        synchronized (m_cipherSideIdSessionHashMap) {
-            if (!m_cipherSideIdSessionHashMap.containsKey(chatId))
+        synchronized (m_cipherChatIdSessionHashMap) {
+            if (!m_cipherChatIdSessionHashMap.containsKey(chatId))
                 return false;
 
-            m_cipherSideIdSessionHashMap.remove(chatId);
+            m_cipherChatIdSessionHashMap.remove(chatId);
         }
 
         return true;
+    }
+
+    public synchronized void clean() {
+        m_cipherChatIdSessionHashMap.clear();
     }
 }
