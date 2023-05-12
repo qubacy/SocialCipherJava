@@ -40,7 +40,7 @@ public class ChatListActivity extends AppCompatActivity
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_dialogs);
+        setContentView(R.layout.activity_chats);
 
         if (getSupportActionBar() != null) {
             ActionBar actionBar = getSupportActionBar();

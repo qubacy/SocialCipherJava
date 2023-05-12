@@ -2,7 +2,6 @@ package com.mcdead.busycoder.socialcipher.client.activity.signin;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,7 +28,7 @@ public class SignInWebViewActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_login_web_view);
+        setContentView(R.layout.activity_login);
 
         m_curLoginMode = LoginMode.LOGIN_DATA;
 

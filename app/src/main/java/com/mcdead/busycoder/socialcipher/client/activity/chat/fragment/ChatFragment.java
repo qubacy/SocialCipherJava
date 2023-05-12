@@ -134,7 +134,7 @@ public class ChatFragment extends Fragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_dialog, container, false);
+        View view = inflater.inflate(R.layout.fragment_chat, container, false);
 
         m_messagesList = view.findViewById(R.id.messages_list);
 

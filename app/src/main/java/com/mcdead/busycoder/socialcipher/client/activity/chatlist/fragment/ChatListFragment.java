@@ -106,7 +106,7 @@ public class ChatListFragment extends Fragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_dialogs_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_chats, container, false);
 
         m_dialogsListRecyclerView = view.findViewById(R.id.dialogs_recycler_view);
         m_dialogsListAdapter = new ChatListAdapter(getActivity(), this, this);

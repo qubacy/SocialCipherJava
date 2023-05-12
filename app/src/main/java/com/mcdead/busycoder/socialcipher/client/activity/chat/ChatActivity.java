@@ -39,7 +39,7 @@ public class ChatActivity extends AppCompatActivity
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_dialog);
+        setContentView(R.layout.activity_chat);
 
         ObjectWrapper<Long> peerIdWrapper = new ObjectWrapper<>();
         Error peerIdError = retrievePeerIdFromIntent(peerIdWrapper);

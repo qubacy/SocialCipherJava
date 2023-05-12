@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Social Cipher</string>
+    <string name="header_quote_caption">Ничего кроме шифрования</string>
+    <string name="message_sending_text_hint">Введите текст сообщения..</string>
+    <string name="chat_list_action_bar_title">Мои Чаты</string>
+    <string name="attachment_shower_action_bar_title">Вложения сообщения</string>
+    <string name="loading_screen_caption">Ожидайте</string>
+    <string name="attachment_type_picker_header_caption">Выберите тип вложения:</string>
+    <string name="attachment_picker_confirm_button_caption">Принять</string>
+    <string name="request_answer_accept_button_caption">Принять</string>
+    <string name="request_answer_cancel_button_caption">Отмена</string>
+    <string name="signin_switch_login_type_button_caption">Сменить тип авторизации</string>
+    <string name="fragment_signin_token_text_hint">Введите токен..</string>
+    <string name="fragment_signin_token_accept_button_caption">Принять</string>
+    <string name="chat_list_activity_menu_reset_cache_caption">Сбросить кэш</string>
+</resources>
