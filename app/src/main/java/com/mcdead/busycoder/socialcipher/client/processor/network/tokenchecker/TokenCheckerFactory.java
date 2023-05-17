@@ -4,7 +4,9 @@ import com.mcdead.busycoder.socialcipher.client.processor.network.tokenchecker.r
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class TokenCheckerFactory {
-    public static TokenCheckerBase generateTokenChecker(final TokenCheckResultInterface callback) {
+    public static TokenCheckerBase generateTokenChecker(
+            final TokenCheckResultInterface callback)
+    {
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
         if (settingsNetwork == null) return null;

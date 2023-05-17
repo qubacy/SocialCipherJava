@@ -14,17 +14,36 @@ import com.mcdead.busycoder.socialcipher.command.CommandContext;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class CipherCommandDataSerializer {
+    public static final HashMap<ErrorType, Error> C_ERROR_HASH_MAP =
+            new HashMap<ErrorType, Error>()
+            {
+                {
+                    put(ErrorType.INCORRECT_ARGS,
+                            new Error("Cipher Command Data serialization args were incorrect!", true));
+                    put(ErrorType.FAILED_PUBLIC_KEY_ENCODING,
+                            new Error("Public Key encoding went wrong!", true));
+                    put(ErrorType.FAILED_ROUTE_DATA_ENCODING,
+                            new Error("Routing Data encoding went wrong!", true));
+                }
+            };
+
+    public static enum ErrorType {
+        INCORRECT_ARGS,
+
+        FAILED_PUBLIC_KEY_ENCODING,
+        FAILED_ROUTE_DATA_ENCODING,
+
+    };
+
     public static Error serializeCipherCommandData(
             final CipherCommandData cipherCommandData,
             ObjectWrapper<String> serializedCipherCommandDataWrapper)
     {
         if (cipherCommandData == null || serializedCipherCommandDataWrapper == null)
-            return new Error("Cipher Command Data serialization args were incorrect!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ARGS);
 
         StringBuilder serializedCipherCommandData = new StringBuilder();
 
@@ -141,18 +160,9 @@ public class CipherCommandDataSerializer {
         String publicKeyAsBase64String = Base64.encodeToString(publicKeyBytes, Base64.NO_WRAP);
 
         if (publicKeyAsBase64String == null)
-            return new Error("Public Key encoding went wrong!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_PUBLIC_KEY_ENCODING);
 
         serializedCipherCommandData.append(publicKeyAsBase64String);
-//        serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
-//
-//        String sidePublicDataAsBase64String =
-//                Base64.encodeToString(cipherCommandData.getSidePublicData(), Base64.NO_WRAP);
-//
-//        if (sidePublicDataAsBase64String == null)
-//            return new Error("Side Public Data encoding went wrong!", true);
-//
-//        serializedCipherCommandData.append(sidePublicDataAsBase64String);
 
         return null;
     }
@@ -180,7 +190,7 @@ public class CipherCommandDataSerializer {
                             (byte[]) sideIdRouteIdDataEntry.getValue().second, Base64.NO_WRAP);
 
             if (dataAsBase64String == null)
-                return new Error("Routing Data encoding went wrong!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ROUTE_DATA_ENCODING);
 
             serializedCipherCommandData.append(dataAsBase64String);
             serializedCipherCommandData.append((index + 1 ==  sideIdRouteIdDataHashMapSize ?

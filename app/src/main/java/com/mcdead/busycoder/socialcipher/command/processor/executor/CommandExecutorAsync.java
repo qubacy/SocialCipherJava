@@ -129,13 +129,10 @@ public class CommandExecutorAsync
             }
 
             // todo: processing incoming command..
-            // todo: mb i should process pending commands in inline CYCLE here?
 
             CommandMessage commandMessage = m_pendingCommandMessageQueueShared.poll();
 
             if (commandMessage == null) continue;
-
-            Log.d(getClass().getName(), "New message received: chat_id: " + commandMessage.getPeerId() + "; init_peer_id: " + commandMessage.getInitializerPeerId() + "; command_string: " + commandMessage.getCommandString());
 
             if (commandMessage.getInitializerPeerId() == m_localPeerId)
                 continue;

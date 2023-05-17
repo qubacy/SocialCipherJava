@@ -22,10 +22,8 @@ import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 
 public class CipherCommandDataParser {
     private static final int C_SHARED_SECTION_COUNT = 1;
@@ -39,28 +37,117 @@ public class CipherCommandDataParser {
 
     private static final int C_MIN_PEER_ID_SIDE_ID_PAIR_COUNT = 2;
 
+    public static final HashMap<ErrorType, Error> C_ERROR_HASH_MAP =
+            new HashMap<ErrorType, Error>()
+            {
+                {
+                    put(ErrorType.INCORRECT_ARGS,
+                            new Error("Cipher Command Data parsing args were incorrect!", true));
+                    put(ErrorType.EMPTY_DATA_STRING,
+                            new Error("Cipher Command Data string was empty!", true));
+                    put(ErrorType.SMALL_SECTION_COUNT,
+                            new Error("Serialized Cipher Command hadn't enough sections!", true));
+                    put(ErrorType.INCORRECT_TYPE,
+                            new Error("Serialized Cipher Command had an incorrect type!", true));
+
+                    put(ErrorType.INCORRECT_INIT_REQUEST,
+                            new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true));
+                    put(ErrorType.INCORRECT_CIPHER_CONFIGURATION,
+                            new Error("Incorrect Cipher Configuration has been provided!", true));
+                    put(ErrorType.FAILED_INIT_REQUEST_GENERATION,
+                            new Error("Cipher Command Data Init Request generating has been failed!", true));
+
+                    put(ErrorType.INCORRECT_INIT_ACCEPT,
+                            new Error("Incorrect Serialized Cipher Command Data Init Accept has been provided", true));
+                    put(ErrorType.FAILED_INIT_ACCEPT_GENERATION,
+                            new Error("Cipher Command Data Init Accept parsing has been failed!", true));
+
+                    put(ErrorType.INCORRECT_INIT_COMPLETED,
+                            new Error("Incorrect Serialized Cipher Command Data Init Completed has been provided", true));
+                    put(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIRS_COUNT,
+                            new Error("Peer Id Side Id pairs count was incorrect during parsing process!", true));
+                    put(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_PARTS_COUNT,
+                            new Error("Peer Id Side Id pair parts count was incorrect during parsing process!", true));
+                    put(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_DATA,
+                            new Error("Peer Id Side Id were incorrect during parsing process!", true));
+                    put(ErrorType.NULL_PUBLIC_KEY_BYTES,
+                            new Error("Public Key Bytes were null during parsing process!", true));
+                    put(ErrorType.FAILED_PUBLIC_KEY_CREATION,
+                            new Error("Public Key creation failed during parsing process!", true));
+                    put(ErrorType.FAILED_INIT_COMPLETED_GENERATION,
+                            new Error("Cipher Command Data Init Request Completed parsing has been failed!", true));
+
+                    put(ErrorType.INCORRECT_INIT_ROUTE,
+                            new Error("Incorrect Serialized Cipher Command Data Init Route has been provided", true));
+                    put(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIRS_COUNT,
+                            new Error("Route Id Data pairs count was incorrect during parsing process!", true));
+                    put(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIR_PARTS_COUNT,
+                            new Error("Route Id Data pair parts count was incorrect during parsing process!", true));
+                    put(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIR_DATA,
+                            new Error("Route Id Data were incorrect during parsing process!", true));
+                    put(ErrorType.FAILED_INIT_ROUTE_GENERATION,
+                            new Error("Cipher Command Data Init Route parsing has been failed!", true));
+
+                    put(ErrorType.INCORRECT_SESSION_SET,
+                            new Error("Incorrect Serialized Cipher Command Data Session Set has been provided", true));
+                    put(ErrorType.FAILED_SESSION_SET_GENERATION,
+                            new Error("Cipher Command Data Session Set parsing has been failed!", true));
+                }
+            };
+
+    public static enum ErrorType {
+        INCORRECT_ARGS,
+        EMPTY_DATA_STRING,
+        SMALL_SECTION_COUNT,
+        INCORRECT_TYPE,
+
+        INCORRECT_INIT_REQUEST,
+        INCORRECT_CIPHER_CONFIGURATION,
+        FAILED_INIT_REQUEST_GENERATION,
+
+        INCORRECT_INIT_ACCEPT,
+        FAILED_INIT_ACCEPT_GENERATION,
+
+        INCORRECT_INIT_COMPLETED,
+        INCORRECT_PEER_ID_SIDE_ID_PAIRS_COUNT,
+        INCORRECT_PEER_ID_SIDE_ID_PAIR_PARTS_COUNT,
+        INCORRECT_PEER_ID_SIDE_ID_PAIR_DATA,
+        NULL_PUBLIC_KEY_BYTES,
+        FAILED_PUBLIC_KEY_CREATION,
+        FAILED_INIT_COMPLETED_GENERATION,
+
+        INCORRECT_INIT_ROUTE,
+        INCORRECT_ROUTE_ID_DATA_PAIRS_COUNT,
+        INCORRECT_ROUTE_ID_DATA_PAIR_PARTS_COUNT,
+        INCORRECT_ROUTE_ID_DATA_PAIR_DATA,
+        FAILED_INIT_ROUTE_GENERATION,
+
+        INCORRECT_SESSION_SET,
+        FAILED_SESSION_SET_GENERATION
+    };
+
     public static Error parseCipherCommandData(
             final String cipherCommandDataString,
             ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
     {
         if (cipherCommandDataString == null || cipherCommandDataWrapper == null)
-            return new Error("Cipher Command Data parsing args were incorrect!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ARGS);
         if (cipherCommandDataString.isEmpty())
-            return new Error("Cipher Command Data string was empty!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.EMPTY_DATA_STRING);
 
         String[] cipherCommandSections =
                 cipherCommandDataString.split(
                         String.valueOf(CommandContext.C_SECTION_DIVIDER_CHAR));
 
         if (cipherCommandSections.length < C_MIN_SECTION_COUNT)
-            return new Error("Serialized Cipher Command hadn't enough sections!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.SMALL_SECTION_COUNT);
 
         int cipherCommandTypeId = Integer.parseInt(cipherCommandSections[0]);
         CipherCommandType cipherCommandType =
                 CipherCommandType.getCommandTypeById(cipherCommandTypeId);
 
         if (cipherCommandType == null)
-            return new Error("Serialized Cipher Command had an incorrect type!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_TYPE);
 
         Error parsingError = null;
 
@@ -119,31 +206,31 @@ public class CipherCommandDataParser {
             ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
     {
         if (serializedCipherCommandDataSections.length < C_INIT_REQUEST_SECTION_COUNT + C_SHARED_SECTION_COUNT)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_REQUEST);
 
         int cipherAlgorithmId = Integer.parseInt(serializedCipherCommandDataSections[1]);
         CipherAlgorithm cipherAlgorithm = CipherAlgorithm.getAlgorithmById(cipherAlgorithmId);
 
         if (cipherAlgorithm == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_REQUEST);
 
         int cipherModeId = Integer.parseInt(serializedCipherCommandDataSections[2]);
         CipherMode cipherMode = CipherMode.getModeById(cipherModeId);
 
         if (cipherMode == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_REQUEST);
 
         int cipherPaddingId = Integer.parseInt(serializedCipherCommandDataSections[3]);
         CipherPadding cipherPadding = CipherPadding.getPaddingById(cipherPaddingId);
 
         if (cipherPadding == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_REQUEST);
 
         int cipherKeySizeId = Integer.parseInt(serializedCipherCommandDataSections[4]);
         CipherKeySize cipherKeySize = CipherKeySize.getCipherKeySizeById(cipherKeySizeId);
 
         if (cipherKeySize == null)
-            return new Error("Incorrect Serialized Cipher Command Data Init Request has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_REQUEST);
 
         CipherConfiguration cipherConfiguration =
                 CipherConfiguration.getInstance(
@@ -153,7 +240,7 @@ public class CipherCommandDataParser {
                         cipherKeySize);
 
         if (cipherConfiguration == null)
-            return new Error("Incorrect Cipher Configuration has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_CIPHER_CONFIGURATION);
 
         long startTimeMilliseconds = Long.parseLong(serializedCipherCommandDataSections[5]);
 
@@ -163,7 +250,7 @@ public class CipherCommandDataParser {
                         startTimeMilliseconds);
 
         if (cipherCommandDataInitRequest == null)
-            return new Error("Cipher Command Data Init Request parsing has been failed!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_INIT_REQUEST_GENERATION);
 
         cipherCommandDataWrapper.setValue(cipherCommandDataInitRequest);
 
@@ -175,13 +262,13 @@ public class CipherCommandDataParser {
             ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
     {
         if (serializedCipherCommandDataSections.length < C_INIT_ACCEPT_SECTION_COUNT + C_SHARED_SECTION_COUNT)
-            return new Error("Incorrect Serialized Cipher Command Data Init Accept has been provided", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_ACCEPT);
 
         CipherCommandDataInitAccept cipherCommandDataInitAccept =
                 CipherCommandDataInitAccept.getInstance();
 
         if (cipherCommandDataInitAccept == null)
-            return new Error("Cipher Command Data Init Accept parsing has been failed!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_INIT_ACCEPT_GENERATION);
 
         cipherCommandDataWrapper.setValue(cipherCommandDataInitAccept);
 
@@ -193,14 +280,14 @@ public class CipherCommandDataParser {
             ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
     {
         if (serializedCipherCommandDataSections.length < C_INIT_COMPLETED_SECTION_COUNT + C_SHARED_SECTION_COUNT)
-            return new Error("Incorrect Serialized Cipher Command Data Init Completed has been provided", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_COMPLETED);
 
         String[] serializedPeerIdSideIdPairList =
                 serializedCipherCommandDataSections[1].split(
                         String.valueOf(CommandContext.C_SAME_TYPE_DATA_PIECE_DIVIDER_CHAR));
 
         if (serializedPeerIdSideIdPairList.length < C_MIN_PEER_ID_SIDE_ID_PAIR_COUNT)
-            return new Error("Peer Id Side Id pairs count was incorrect during parsing process!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIRS_COUNT);
 
         HashMap<Long,Integer> peerIdSideIdHashMap = new HashMap<>();
 
@@ -210,13 +297,13 @@ public class CipherCommandDataParser {
                             String.valueOf(CommandContext.C_PAIR_DATA_DIVIDER_CHAR));
 
             if (serializedPeerIdSideIdPairParts.length < 2)
-                return new Error("Peer Id Side Id pair parts count was incorrect during parsing process!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_PARTS_COUNT);;
 
             long peerId = Long.parseLong(serializedPeerIdSideIdPairParts[0]);
             int sideId = Integer.parseInt(serializedPeerIdSideIdPairParts[1]);
 
             if (peerId == 0 || sideId < 0)
-                return new Error("Peer Id Side Id were incorrect during parsing process!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_DATA);;
 
             peerIdSideIdHashMap.put(peerId, sideId);
         }
@@ -225,7 +312,7 @@ public class CipherCommandDataParser {
                 Base64.getDecoder().decode(serializedCipherCommandDataSections[2].getBytes(StandardCharsets.UTF_8));
 
         if (publicKeyBytes == null)
-            return new Error("Public Key Bytes were null during parsing process!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_PUBLIC_KEY_BYTES);
 
         PublicKey publicKey =
                 CipherKeyUtility.generatePublicKeyWithBytes(
@@ -233,22 +320,15 @@ public class CipherCommandDataParser {
                         publicKeyBytes);
 
         if (publicKey == null)
-            return new Error("Public Key creation failed during parsing process!", true);
-
-//        byte[] sidePublicData =
-//                Base64.getDecoder().decode(serializedCipherCommandDataSections[3].getBytes(StandardCharsets.UTF_8));
-//
-//        if (sidePublicData == null)
-//            return new Error("Side Public Data was null during parsing process!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_PUBLIC_KEY_CREATION);
 
         CipherCommandDataInitRequestCompleted cipherCommandDataInitRequestCompleted =
                 CipherCommandDataInitRequestCompleted.getInstance(
                         peerIdSideIdHashMap,
                         publicKey);
-//                        sidePublicData);
 
         if (cipherCommandDataInitRequestCompleted == null)
-            return new Error("Cipher Command Data Init Request Completed parsing has been failed!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_INIT_COMPLETED_GENERATION);
 
         cipherCommandDataWrapper.setValue(cipherCommandDataInitRequestCompleted);
 
@@ -260,14 +340,14 @@ public class CipherCommandDataParser {
             ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
     {
         if (serializedCipherCommandDataSections.length < C_INIT_ROUTE_SECTION_COUNT + C_SHARED_SECTION_COUNT)
-            return new Error("Incorrect Serialized Cipher Command Data Init Route has been provided", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_INIT_ROUTE);
 
         String[] routeIdDataPairs =
                 serializedCipherCommandDataSections[1].split(
                         String.valueOf(CommandContext.C_SAME_TYPE_DATA_PIECE_DIVIDER_CHAR));
 
         if (routeIdDataPairs.length <= 0)
-            return new Error("Incorrect Serialized Cipher Command Data Init Route has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIRS_COUNT);
 
         HashMap<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMap = new HashMap<>();
 
@@ -276,14 +356,14 @@ public class CipherCommandDataParser {
                     routeIdDataPair.split(String.valueOf(CommandContext.C_PAIR_DATA_DIVIDER_CHAR));
 
             if (routeIdDataPairParts.length < 3)
-                return new Error("Route Id Data pair parts count was incorrect during parsing process!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIR_PARTS_COUNT);
 
             int sideId = Integer.parseInt(routeIdDataPairParts[0]);
             int routeId = Integer.parseInt(routeIdDataPairParts[1]);
             byte[] data = Base64.getDecoder().decode(routeIdDataPairParts[2].getBytes(StandardCharsets.UTF_8));
 
             if (sideId < 0 || routeId < 0 || data == null)
-                return new Error("Route Id Data were incorrect during parsing process!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIR_DATA);;
 
             sideIdRouteIdDataHashMap.put(sideId, new Pair<>(routeId, data));
         }
@@ -292,7 +372,7 @@ public class CipherCommandDataParser {
                 CipherCommandDataInitRoute.getInstance(sideIdRouteIdDataHashMap);
 
         if (cipherCommandDataInitRoute == null)
-            return new Error("Cipher Command Data Init Route parsing has been failed!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_INIT_ROUTE_GENERATION);
 
         cipherCommandDataWrapper.setValue(cipherCommandDataInitRoute);
 
@@ -304,13 +384,13 @@ public class CipherCommandDataParser {
             ObjectWrapper<CipherCommandData> cipherCommandDataWrapper)
     {
         if (serializedCipherCommandDataSections.length < C_SESSION_SET_SECTION_COUNT + C_SHARED_SECTION_COUNT)
-            return new Error("Incorrect Serialized Cipher Command Data Session Set has been provided", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_SESSION_SET);
 
         CipherCommandDataSessionSet cipherCommandDataSessionSet =
                 CipherCommandDataSessionSet.getInstance();
 
         if (cipherCommandDataSessionSet == null)
-            return new Error("Cipher Command Data Session Set parsing has been failed!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_SESSION_SET_GENERATION);
 
         cipherCommandDataWrapper.setValue(cipherCommandDataSessionSet);
 

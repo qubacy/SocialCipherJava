@@ -2,20 +2,35 @@ package com.mcdead.busycoder.socialcipher.command.processor.preparer.serializer;
 
 import static com.mcdead.busycoder.socialcipher.command.CommandContext.C_BROADCAST_SYMBOLS;
 
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.serializer.CipherCommandDataSerializer;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandContext;
 import com.mcdead.busycoder.socialcipher.command.data.entity.CommandData;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class CommandDataSerializer {
+    public static final HashMap<ErrorType, Error> C_ERROR_HASH_MAP =
+            new HashMap<ErrorType, Error>()
+            {
+                {
+                    put(ErrorType.INCORRECT_ARGS,
+                            new Error("Serialization input was incorrect!", true));
+                }
+            };
+
+    public static enum ErrorType {
+        INCORRECT_ARGS
+    };
+
     public static Error serializeCommandData(
             final CommandData commandData,
             ObjectWrapper<String> serializedCommandDataWrapper)
     {
         if (commandData == null || serializedCommandDataWrapper == null)
-            return new Error("Serialization input was incorrect!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ARGS);
 
         StringBuilder serializedCommandData =
                 new StringBuilder(CommandContext.C_COMMAND_BEGINNING_SYMBOLS);
