@@ -7,6 +7,8 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration
 import com.mcdead.busycoder.socialcipher.cipher.processor.cipherer.configuration.CipherPadding;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandType;
 
+import java.util.Objects;
+
 public class CipherCommandDataInitRequest extends CipherCommandData {
     final private CipherConfiguration m_cipherConfiguration;
 
@@ -59,5 +61,22 @@ public class CipherCommandDataInitRequest extends CipherCommandData {
     @Override
     public CipherCommandType getType() {
         return CipherCommandType.CIPHER_SESSION_INIT_REQUEST;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CipherCommandDataInitRequest that = (CipherCommandDataInitRequest) o;
+
+        return m_startTimeMilliseconds == that.m_startTimeMilliseconds &&
+                Objects.equals(m_cipherConfiguration, that.m_cipherConfiguration);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_cipherConfiguration, m_startTimeMilliseconds);
     }
 }

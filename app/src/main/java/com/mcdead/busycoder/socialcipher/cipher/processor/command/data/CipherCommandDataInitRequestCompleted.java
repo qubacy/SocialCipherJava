@@ -4,6 +4,7 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandT
 
 import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class CipherCommandDataInitRequestCompleted extends CipherCommandData {
     final HashMap<Long, Integer> m_peerIdSideIdHashMap;
@@ -45,5 +46,23 @@ public class CipherCommandDataInitRequestCompleted extends CipherCommandData {
     @Override
     public CipherCommandType getType() {
         return CipherCommandType.CIPHER_SESSION_INIT_COMPLETED;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CipherCommandDataInitRequestCompleted that =
+                (CipherCommandDataInitRequestCompleted) o;
+
+        return Objects.equals(m_peerIdSideIdHashMap, that.m_peerIdSideIdHashMap) &&
+                Objects.equals(m_publicKey, that.m_publicKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_peerIdSideIdHashMap, m_publicKey);
     }
 }

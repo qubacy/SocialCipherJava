@@ -1,7 +1,7 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command;
 
 import android.util.Log;
-import android.util.Pair;
+import androidx.core.util.Pair;
 
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKey;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKeyGenerator;

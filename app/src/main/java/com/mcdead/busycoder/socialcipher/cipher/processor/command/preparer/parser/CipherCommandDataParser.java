@@ -1,6 +1,6 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.parser;
 
-import android.util.Pair;
+import androidx.core.util.Pair;
 
 import com.mcdead.busycoder.socialcipher.cipher.CipherContext;
 import com.mcdead.busycoder.socialcipher.cipher.data.entity.key.CipherKeySize;
@@ -297,19 +297,29 @@ public class CipherCommandDataParser {
                             String.valueOf(CommandContext.C_PAIR_DATA_DIVIDER_CHAR));
 
             if (serializedPeerIdSideIdPairParts.length < 2)
-                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_PARTS_COUNT);;
+                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_PARTS_COUNT);
 
             long peerId = Long.parseLong(serializedPeerIdSideIdPairParts[0]);
             int sideId = Integer.parseInt(serializedPeerIdSideIdPairParts[1]);
 
             if (peerId == 0 || sideId < 0)
-                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_DATA);;
+                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_DATA);
 
             peerIdSideIdHashMap.put(peerId, sideId);
         }
 
-        byte[] publicKeyBytes =
-                Base64.getDecoder().decode(serializedCipherCommandDataSections[2].getBytes(StandardCharsets.UTF_8));
+        byte[] publicKeyBytes = null;
+
+        try {
+            publicKeyBytes =
+                Base64.getDecoder().
+                        decode(serializedCipherCommandDataSections[2].getBytes(StandardCharsets.UTF_8));
+
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_PUBLIC_KEY_BYTES);
+        }
 
         if (publicKeyBytes == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_PUBLIC_KEY_BYTES);
@@ -360,7 +370,17 @@ public class CipherCommandDataParser {
 
             int sideId = Integer.parseInt(routeIdDataPairParts[0]);
             int routeId = Integer.parseInt(routeIdDataPairParts[1]);
-            byte[] data = Base64.getDecoder().decode(routeIdDataPairParts[2].getBytes(StandardCharsets.UTF_8));
+
+            byte[] data = null;
+
+            try {
+                data = Base64.getDecoder().decode(routeIdDataPairParts[2].getBytes(StandardCharsets.UTF_8));
+
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+
+                return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIR_DATA);
+            }
 
             if (sideId < 0 || routeId < 0 || data == null)
                 return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ROUTE_ID_DATA_PAIR_DATA);;

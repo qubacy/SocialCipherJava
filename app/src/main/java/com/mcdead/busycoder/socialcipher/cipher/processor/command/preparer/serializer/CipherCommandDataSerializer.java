@@ -1,7 +1,7 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.serializer;
 
 import android.util.Base64;
-import android.util.Pair;
+import androidx.core.util.Pair;
 
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandData;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitAccept;
