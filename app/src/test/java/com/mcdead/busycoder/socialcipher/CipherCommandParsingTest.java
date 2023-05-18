@@ -18,11 +18,13 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCom
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataInitRoute;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandDataSessionSet;
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.parser.CipherCommandDataParser;
+import com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.serializer.CipherCommandDataSerializer;
 import com.mcdead.busycoder.socialcipher.cipher.utility.CipherKeyUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandContext;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -34,6 +36,68 @@ import java.util.List;
 import java.util.Map;
 
 public class CipherCommandParsingTest {
+    private CipherConfiguration m_correctCipherConfig = null;
+    private long m_creationTime = 0;
+
+    private HashMap<Long, Integer> m_correctPeerIdSideIdHashMap = null;
+    private String m_correctPublicKeyData = null;
+    private byte[] m_correctPublicKeyBytes = null;
+    private PublicKey m_correctPublicKey = null;
+    private HashMap<Integer, Pair<Integer, byte[]>> m_correctSideIdRouteIdDataHashMap = null;
+
+    private HashMap<Long, Integer> m_incorrectShortPeerIdSideIdHashMap = null;
+    private HashMap<Long, Integer> m_incorrectDataPeerIdSideIdHashMap = null;
+
+    @Before
+    public void prepareCommonData() {
+        // CORRECT DATA:
+
+        m_correctCipherConfig =
+                CipherConfiguration.getInstance(
+                        CipherAlgorithm.AES,
+                        CipherMode.CTR,
+                        CipherPadding.NO_PADDING,
+                        CipherKeySize.KEY_256);
+        m_creationTime = System.currentTimeMillis();
+
+        m_correctPeerIdSideIdHashMap = new HashMap<Long, Integer>() {
+            {
+                put(1L, 0);
+                put(2L, 1);
+            }
+        };
+        m_correctPublicKeyData =
+                "MIIDJjCCAhgGCSqGSIb3DQEDATCCAgkCggEBAJVHXPXZPllsP80dkCrdAvQn9fPHIQMTu0X7TVuy5f4cvWeM1LvdhMmDa+HzHAd3clrrbC/Di4X0gHb6drzYFGzImm+y9wbdcZiYwgg9yNiW+EBi4snJTRN7BUqNgJatuNUZUjmO7KhSoK8S34Pkdapl1OwMOKlWDVZhGG/5i5/J62Du6LAwN2sja8c746zb10/WHB0kdfowd7jwgEZ4gf9+HKVv7gZteVBq3lHtu1RDpWOSfbxLpSAIZ0YXXIiFkl68ZMYUeQZ3NJaZDLcU7GZzBOJh+u4zs8vfAI4MP6kGUNl9OQnJJ1v0rIb/yz0D5t/IraWTQkLdbTvMoqQGywsCggEAQt67naWz2IzJVuCHh+w/Ogm7pfSLiJp0qvUxdKoPvn48W4/NelO+9WOw6YVgMolgqVF/QBTTMl/Hlivx4Ek3DXbRMUp2E355Lz8NuFnQleSluTICTweezy7wnHl0UrB3DhNQeC7Vfd95SXnc7yPLlvGDBhllxOvJPJxxxWuSWVWnX5TMzxRJrEPVhtC+7kMlGwsihzSdaN4NFEQD8T6AL0FG2ILgV68ZtvYnXGZ2yPoOPKJxOjJX/Rsn0GOfaV40fY0c+ayBmibKmwTLDrm3sDWYjRW7rGUhKlUjnPx+WPrjjXJQq5mR/7yXE0Al/ozgTEOZrZZWm+kaVG9JeGk8egOCAQYAAoIBAQCGSu/Eyxg5oAG5BwHVEQzLMc6GVGwtPCZPFsD5UzyYLYnHPolyB2CzFWHNQBHN7Jj5jPZtUVvkY+KNKogscJdOjrbrioXxylqTJ/w/3/U9Q1/HuyK2PGlFDpK/dryeTr62ZIJDYa62NVchVBWSikPEFWk2ZO+CNX+RKgJs4SSfvMl52jn1U0QSAbIlxEuJX0D0s3KrbC+8Mx7G1LS05c8to2toQ0ItqsWgR/HpAt9rThLEVh5Z2frVXN5ndeUGeXvCpIPjnGKDLB7ImytKaEzJT3SA5K5qpQRIKwwrw3nf+IQzBxdMDmuHQd7fgvT/WMsuLLvEM1ecuk3YvGxvBYQ5";
+        m_correctPublicKeyBytes =
+                Base64.getDecoder().decode(m_correctPublicKeyData.getBytes(StandardCharsets.UTF_8));
+        m_correctPublicKey =
+                CipherKeyUtility.generatePublicKeyWithBytes(
+                        CipherContext.C_ALGORITHM,
+                        m_correctPublicKeyBytes);
+        m_correctSideIdRouteIdDataHashMap =
+                new HashMap<Integer, Pair<Integer, byte[]>>() {
+                    {
+                        put(0, new Pair<>(1, m_correctPublicKeyBytes));
+                    }
+                };
+
+        // INCORRECT DATA:
+
+        m_incorrectShortPeerIdSideIdHashMap =
+                new HashMap<Long, Integer>() {
+                    {
+                        put(1L, 0);
+                    }
+                };
+        m_incorrectDataPeerIdSideIdHashMap =
+                new HashMap<Long, Integer>() {
+                    {
+                        put(1L, 0);
+                        put(2L, -1);
+                    }
+                };
+    }
+
     private String generateInitRequestCipherCommandString(
             final CipherConfiguration correctCipherConfig,
             final long creationTime)
@@ -136,23 +200,15 @@ public class CipherCommandParsingTest {
             new ArrayList<CipherParserTestData>()
             {
                 {
-                    CipherConfiguration correctCipherConfig =
-                            CipherConfiguration.getInstance(
-                                    CipherAlgorithm.AES,
-                                    CipherMode.CTR,
-                                    CipherPadding.NO_PADDING,
-                                    CipherKeySize.KEY_256);
-                    long creationTime = System.currentTimeMillis();
-
                     // CORRECT COMMANDS:
 
                     add(new CipherParserTestData(
-                            generateInitRequestCipherCommandString(correctCipherConfig, creationTime),
+                            generateInitRequestCipherCommandString(m_correctCipherConfig, m_creationTime),
                             null,
                             new ObjectWrapper<>(
                                     CipherCommandDataInitRequest.getInstance(
-                                            correctCipherConfig,
-                                            creationTime)
+                                            m_correctCipherConfig,
+                                            m_creationTime)
                             )));
                     add(new CipherParserTestData(
                             new StringBuilder().
@@ -163,43 +219,21 @@ public class CipherCommandParsingTest {
                                     CipherCommandDataInitAccept.getInstance()
                             )));
 
-                    HashMap<Long, Integer> peerIdSideIdHashMap =
-                            new HashMap<Long, Integer>() {
-                                {
-                                    put(1L, 0);
-                                    put(2L, 1);
-                                }
-                            };
-                    String correctPublicKeyData =
-                            "MIIDJjCCAhgGCSqGSIb3DQEDATCCAgkCggEBAJVHXPXZPllsP80dkCrdAvQn9fPHIQMTu0X7TVuy5f4cvWeM1LvdhMmDa+HzHAd3clrrbC/Di4X0gHb6drzYFGzImm+y9wbdcZiYwgg9yNiW+EBi4snJTRN7BUqNgJatuNUZUjmO7KhSoK8S34Pkdapl1OwMOKlWDVZhGG/5i5/J62Du6LAwN2sja8c746zb10/WHB0kdfowd7jwgEZ4gf9+HKVv7gZteVBq3lHtu1RDpWOSfbxLpSAIZ0YXXIiFkl68ZMYUeQZ3NJaZDLcU7GZzBOJh+u4zs8vfAI4MP6kGUNl9OQnJJ1v0rIb/yz0D5t/IraWTQkLdbTvMoqQGywsCggEAQt67naWz2IzJVuCHh+w/Ogm7pfSLiJp0qvUxdKoPvn48W4/NelO+9WOw6YVgMolgqVF/QBTTMl/Hlivx4Ek3DXbRMUp2E355Lz8NuFnQleSluTICTweezy7wnHl0UrB3DhNQeC7Vfd95SXnc7yPLlvGDBhllxOvJPJxxxWuSWVWnX5TMzxRJrEPVhtC+7kMlGwsihzSdaN4NFEQD8T6AL0FG2ILgV68ZtvYnXGZ2yPoOPKJxOjJX/Rsn0GOfaV40fY0c+ayBmibKmwTLDrm3sDWYjRW7rGUhKlUjnPx+WPrjjXJQq5mR/7yXE0Al/ozgTEOZrZZWm+kaVG9JeGk8egOCAQYAAoIBAQCGSu/Eyxg5oAG5BwHVEQzLMc6GVGwtPCZPFsD5UzyYLYnHPolyB2CzFWHNQBHN7Jj5jPZtUVvkY+KNKogscJdOjrbrioXxylqTJ/w/3/U9Q1/HuyK2PGlFDpK/dryeTr62ZIJDYa62NVchVBWSikPEFWk2ZO+CNX+RKgJs4SSfvMl52jn1U0QSAbIlxEuJX0D0s3KrbC+8Mx7G1LS05c8to2toQ0ItqsWgR/HpAt9rThLEVh5Z2frVXN5ndeUGeXvCpIPjnGKDLB7ImytKaEzJT3SA5K5qpQRIKwwrw3nf+IQzBxdMDmuHQd7fgvT/WMsuLLvEM1ecuk3YvGxvBYQ5";
-                    byte[] publicKeyBytes =
-                            Base64.getDecoder().decode(correctPublicKeyData.getBytes(StandardCharsets.UTF_8));
-                    PublicKey publicKey =
-                            CipherKeyUtility.generatePublicKeyWithBytes(
-                                    CipherContext.C_ALGORITHM,
-                                    publicKeyBytes);
-
                     add(new CipherParserTestData(
                             generateInitCompletedCipherCommandString(
-                                    peerIdSideIdHashMap,
-                                    correctPublicKeyData),
+                                    m_correctPeerIdSideIdHashMap,
+                                    m_correctPublicKeyData),
                             null,
                             new ObjectWrapper<>(
-                                    CipherCommandDataInitRequestCompleted.getInstance(peerIdSideIdHashMap, publicKey)
+                                    CipherCommandDataInitRequestCompleted.getInstance(
+                                            m_correctPeerIdSideIdHashMap, m_correctPublicKey)
                             )));
 
-                    HashMap<Integer, Pair<Integer, byte[]>> sideIdRouteIdDataHashMap =
-                            new HashMap<Integer, Pair<Integer, byte[]>>() {
-                                {
-                                    put(0, new Pair<>(1, publicKeyBytes));
-                                }
-                            };
-
                     add(new CipherParserTestData(
-                            generateInitRouteCipherCommandString(sideIdRouteIdDataHashMap),
+                            generateInitRouteCipherCommandString(m_correctSideIdRouteIdDataHashMap),
                             null,
                             new ObjectWrapper<>(
-                                    CipherCommandDataInitRoute.getInstance(sideIdRouteIdDataHashMap)
+                                    CipherCommandDataInitRoute.getInstance(m_correctSideIdRouteIdDataHashMap)
                             )
                     ));
 
@@ -245,11 +279,11 @@ public class CipherCommandParsingTest {
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.INCORRECT_INIT_REQUEST),
                             new ObjectWrapper<>()));
                     add(new CipherParserTestData(
-                            generateInitRequestCipherCommandString(null, creationTime),
+                            generateInitRequestCipherCommandString(null, m_creationTime),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.INCORRECT_INIT_REQUEST),
                             new ObjectWrapper<>()));
                     add(new CipherParserTestData(
-                            generateInitRequestCipherCommandString(correctCipherConfig, -1),
+                            generateInitRequestCipherCommandString(m_correctCipherConfig, -1),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.FAILED_INIT_REQUEST_GENERATION),
                             new ObjectWrapper<>()));
 
@@ -263,20 +297,13 @@ public class CipherCommandParsingTest {
                             new ObjectWrapper<>()
                     ));
 
-                    HashMap<Long, Integer> incorrectPeerIdSideIdHashMap =
-                        new HashMap<Long, Integer>() {
-                            {
-                                put(1L, 0);
-                            }
-                        };
-
                     add(new CipherParserTestData(
-                            generateInitCompletedCipherCommandString(incorrectPeerIdSideIdHashMap, correctPublicKeyData),
+                            generateInitCompletedCipherCommandString(m_incorrectShortPeerIdSideIdHashMap, m_correctPublicKeyData),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIRS_COUNT),
                             new ObjectWrapper<>()
                     ));
                     add(new CipherParserTestData(
-                            generateInitCompletedCipherCommandString(peerIdSideIdHashMap, ""),
+                            generateInitCompletedCipherCommandString(m_correctPeerIdSideIdHashMap, ""),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.INCORRECT_INIT_COMPLETED),
                             new ObjectWrapper<>()
                     ));
@@ -288,7 +315,7 @@ public class CipherCommandParsingTest {
                                     append(CommandContext.C_PAIR_DATA_DIVIDER_CHAR).
                                     append(String.valueOf(0)).
                                     append(CommandContext.C_SECTION_DIVIDER_CHAR).
-                                    append(correctPublicKeyData).
+                                    append(m_correctPublicKeyData).
                                     toString(),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIRS_COUNT),
                             new ObjectWrapper<>()
@@ -304,26 +331,24 @@ public class CipherCommandParsingTest {
                                     append(String.valueOf(2)).
                                     append(CommandContext.C_PAIR_DATA_DIVIDER_CHAR).
                                     append(CommandContext.C_SECTION_DIVIDER_CHAR).
-                                    append(correctPublicKeyData).
+                                    append(m_correctPublicKeyData).
                                     toString(),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_PARTS_COUNT),
                             new ObjectWrapper<>()
                     ));
 
-                    incorrectPeerIdSideIdHashMap.put(2L, -1);
-
                     add(new CipherParserTestData(
-                            generateInitCompletedCipherCommandString(incorrectPeerIdSideIdHashMap, correctPublicKeyData),
+                            generateInitCompletedCipherCommandString(m_incorrectDataPeerIdSideIdHashMap, m_correctPublicKeyData),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.INCORRECT_PEER_ID_SIDE_ID_PAIR_DATA),
                             new ObjectWrapper<>()
                     ));
                     add(new CipherParserTestData(
-                            generateInitCompletedCipherCommandString(peerIdSideIdHashMap, Base64.getEncoder().encodeToString(new byte[]{1, 42})),
+                            generateInitCompletedCipherCommandString(m_correctPeerIdSideIdHashMap, Base64.getEncoder().encodeToString(new byte[]{1, 42})),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.FAILED_PUBLIC_KEY_CREATION),
                             new ObjectWrapper<>()
                     ));
                     add(new CipherParserTestData(
-                            generateInitCompletedCipherCommandString(peerIdSideIdHashMap, "something.."),
+                            generateInitCompletedCipherCommandString(m_correctPeerIdSideIdHashMap, "something.."),
                             CipherCommandDataParser.C_ERROR_HASH_MAP.get(CipherCommandDataParser.ErrorType.NULL_PUBLIC_KEY_BYTES),
                             new ObjectWrapper<>()
                     ));
@@ -385,6 +410,74 @@ public class CipherCommandParsingTest {
         }
     }
 
+    @Test
+    public void serializingCipherCommandDataMatrix() {
+        List<CipherSerializerTestData> serializingCipherCommandDataList =
+            new ArrayList<CipherSerializerTestData>() {
+                {
+                    // CORRECT CIPHER COMMAND DATA:
+
+                    add(new CipherSerializerTestData(
+                       CipherCommandDataInitRequest.getInstance(m_correctCipherConfig, m_creationTime),
+                        null,
+                        new ObjectWrapper<>(
+                            generateInitRequestCipherCommandString(m_correctCipherConfig, m_creationTime))
+                    ));
+                    add(new CipherSerializerTestData(
+                        CipherCommandDataInitAccept.getInstance(),
+                        null,
+                        new ObjectWrapper<>(
+                            new StringBuilder().
+                                append(String.valueOf(CipherCommandType.CIPHER_SESSION_INIT_ACCEPT.getId())).
+                                append(CommandContext.C_SECTION_DIVIDER_CHAR).
+                                toString())
+                    ));
+                    add(new CipherSerializerTestData(
+                        CipherCommandDataInitRequestCompleted.getInstance(
+                            m_correctPeerIdSideIdHashMap, m_correctPublicKey),
+                        null,
+                        new ObjectWrapper<>(
+                            generateInitCompletedCipherCommandString(
+                                m_correctPeerIdSideIdHashMap, m_correctPublicKeyData))
+                    ));
+                    add(new CipherSerializerTestData(
+                        CipherCommandDataInitRoute.getInstance(m_correctSideIdRouteIdDataHashMap),
+                        null,
+                        new ObjectWrapper<>(
+                            generateInitRouteCipherCommandString(m_correctSideIdRouteIdDataHashMap))
+                    ));
+                    add(new CipherSerializerTestData(
+                        CipherCommandDataSessionSet.getInstance(),
+                        null,
+                        new ObjectWrapper<>(
+                            new StringBuilder().
+                                append(String.valueOf(CipherCommandType.CIPHER_SESSION_SET.getId())).
+                                append(CommandContext.C_SECTION_DIVIDER_CHAR).toString())
+                    ));
+
+                    // INCORRECT CIPHER COMMAND DATA:
+                    // not necessary. all CipherData obj. undergo a creation-time checking.
+                }
+            };
+
+        for (final CipherSerializerTestData cipherSerializerTestData :
+                serializingCipherCommandDataList)
+        {
+            ObjectWrapper<String> curSerializedCipherCommandDataWrapper =
+                    new ObjectWrapper<>();
+            Error curSerializingError =
+                    CipherCommandDataSerializer.
+                            serializeCipherCommandData(
+                                    cipherSerializerTestData.cipherCommandData,
+                                    curSerializedCipherCommandDataWrapper);
+
+            assertEquals(cipherSerializerTestData.error, curSerializingError);
+            assertEquals(
+                    cipherSerializerTestData.serializedCipherCommandDataWrapper,
+                    curSerializedCipherCommandDataWrapper);
+        }
+    }
+
     private static class CipherParserTestData {
         final public String cipherCommandString;
         final public Error error;
@@ -406,6 +499,22 @@ public class CipherCommandParsingTest {
             this.cipherCommandString = cipherCommandString;
             this.error = error;
             this.cipherCommandDataWrapper = cipherCommandDataWrapper;
+        }
+    }
+
+    private static class CipherSerializerTestData {
+        final public CipherCommandData cipherCommandData;
+        final public Error error;
+        final public ObjectWrapper<String> serializedCipherCommandDataWrapper;
+
+        public CipherSerializerTestData(
+                final CipherCommandData cipherCommandData,
+                final Error error,
+                final ObjectWrapper<String> serializedCipherCommandDataWrapper)
+        {
+            this.cipherCommandData = cipherCommandData;
+            this.error = error;
+            this.serializedCipherCommandDataWrapper = serializedCipherCommandDataWrapper;
         }
     }
 }

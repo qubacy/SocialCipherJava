@@ -196,11 +196,20 @@ public class CommandExecutorAsync
             final String commandBody)
     {
         CommandData commandData =
-                new CommandData(
+                CommandData.getInstance(
                         commandCategory,
                         chatId,
                         receiverPeerIdList,
                         commandBody);
+
+        if (commandData == null) {
+            ErrorBroadcastReceiver.
+                    broadcastError(
+                            new Error("Command Data obj. creation has been failed!", true),
+                            m_context);
+
+            return;
+        }
 
         ObjectWrapper<String> serializedCommandDataWrapper = new ObjectWrapper<>();
         Error serializationError =

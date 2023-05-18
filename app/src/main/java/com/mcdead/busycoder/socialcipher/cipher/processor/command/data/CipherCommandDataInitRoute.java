@@ -24,6 +24,20 @@ public class CipherCommandDataInitRoute extends CipherCommandData {
         if (sideIdRouteIdDataHashMap == null) return null;
         if (sideIdRouteIdDataHashMap.isEmpty()) return null;
 
+        for (final Map.Entry<Integer, Pair<Integer, byte[]>> sideIdRouteIdData :
+                sideIdRouteIdDataHashMap.entrySet())
+        {
+            if (sideIdRouteIdData.getKey() < 0 ||
+                sideIdRouteIdData.getValue().first == 0 ||
+                sideIdRouteIdData.getValue().second == null)
+            {
+                return null;
+            }
+
+            if (sideIdRouteIdData.getValue().second.length <= 0)
+                return null;
+        }
+
         return new CipherCommandDataInitRoute(sideIdRouteIdDataHashMap);
     }
 

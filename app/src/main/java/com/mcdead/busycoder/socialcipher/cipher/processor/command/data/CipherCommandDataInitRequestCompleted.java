@@ -4,6 +4,7 @@ import com.mcdead.busycoder.socialcipher.cipher.processor.command.CipherCommandT
 
 import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class CipherCommandDataInitRequestCompleted extends CipherCommandData {
@@ -22,13 +23,15 @@ public class CipherCommandDataInitRequestCompleted extends CipherCommandData {
             final HashMap<Long, Integer> peerIdSideIdHashMap,
             final PublicKey publicKey)
     {
-        if (peerIdSideIdHashMap == null
-         || publicKey == null)
-        {
+        if (peerIdSideIdHashMap == null || publicKey == null)
             return null;
+        if (peerIdSideIdHashMap.isEmpty()) return null;
+        if (peerIdSideIdHashMap.size() < 2) return null;
+
+        for (final Map.Entry<Long, Integer> peerIdSideId : peerIdSideIdHashMap.entrySet()) {
+            if (peerIdSideId.getKey() == 0 || peerIdSideId.getValue() < 0)
+                return null;
         }
-        if (peerIdSideIdHashMap.isEmpty())
-            return null;
 
         return new CipherCommandDataInitRequestCompleted(
                 peerIdSideIdHashMap,

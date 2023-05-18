@@ -12,7 +12,30 @@ public class CommandData {
 
     final private String m_specificCommandTypeData;
 
-    public CommandData(
+    public static CommandData getInstance(
+            final CommandCategory category,
+            final long chatId,
+            final List<Long> receiverPeerIdList,
+            final String specificCommandTypeData)
+    {
+        if (category == null || chatId == 0)
+            return null;
+
+        if (receiverPeerIdList != null) {
+            for (final Long receiverPeerId : receiverPeerIdList) {
+                if (receiverPeerId == null) return null;
+                if (receiverPeerId == 0) return null;
+            }
+        }
+
+        return new CommandData(
+                category,
+                chatId,
+                receiverPeerIdList,
+                specificCommandTypeData);
+    }
+
+    private CommandData(
             final CommandCategory category,
             final long chatId,
             final List<Long> receiverPeerIdList,

@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.command.processor.preparer.parser;
 
+import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.command.CommandCategory;
 import com.mcdead.busycoder.socialcipher.command.CommandContext;
@@ -74,11 +75,14 @@ public class CommandDataParser {
                     commandParts[1] : "");
 
         CommandData commandData =
-                new CommandData(
+                CommandData.getInstance(
                         commandCategoryWrapper.getValue(),
                         commandMessage.getPeerId(),
                         receiverPeerIdListWrapper.getValue(),
                         commandBody);
+
+        if (commandData == null)
+            return new Error("Command Data obj. creation has been failed!", true);
 
         commandDataWrapper.setValue(commandData);
 

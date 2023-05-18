@@ -1,6 +1,7 @@
 package com.mcdead.busycoder.socialcipher.cipher.processor.command.preparer.serializer;
 
-import android.util.Base64;
+import java.util.Base64;
+
 import androidx.core.util.Pair;
 
 import com.mcdead.busycoder.socialcipher.cipher.processor.command.data.CipherCommandData;
@@ -157,7 +158,7 @@ public class CipherCommandDataSerializer {
         serializedCipherCommandData.append(CommandContext.C_SECTION_DIVIDER_CHAR);
 
         byte[] publicKeyBytes = cipherCommandData.getPublicKey().getEncoded();
-        String publicKeyAsBase64String = Base64.encodeToString(publicKeyBytes, Base64.NO_WRAP);
+        String publicKeyAsBase64String = Base64.getEncoder().encodeToString(publicKeyBytes);
 
         if (publicKeyAsBase64String == null)
             return C_ERROR_HASH_MAP.get(ErrorType.FAILED_PUBLIC_KEY_ENCODING);
@@ -186,8 +187,8 @@ public class CipherCommandDataSerializer {
             serializedCipherCommandData.append(CommandContext.C_PAIR_DATA_DIVIDER_CHAR);
 
             String dataAsBase64String =
-                    Base64.encodeToString(
-                            (byte[]) sideIdRouteIdDataEntry.getValue().second, Base64.NO_WRAP);
+                    Base64.getEncoder().encodeToString(
+                            (byte[]) sideIdRouteIdDataEntry.getValue().second);
 
             if (dataAsBase64String == null)
                 return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ROUTE_DATA_ENCODING);
