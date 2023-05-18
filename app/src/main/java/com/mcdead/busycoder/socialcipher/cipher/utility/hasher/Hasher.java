@@ -16,9 +16,6 @@ public class Hasher {
     {
         if (sourceBytes == null) return null;
 
-//        if (sourceBytes.length != m_hashAlgorithm.m_dataSize)
-//            return null;
-
         byte[] outputBytes = null;
 
         try {
@@ -40,7 +37,7 @@ public class Hasher {
     }
 
     public enum HashAlgorithm {
-        SHA_256("SHA256", 256),
+        SHA_256("SHA-256", 256),
         MD_5("MD5", 128);
 
         final private String m_name;

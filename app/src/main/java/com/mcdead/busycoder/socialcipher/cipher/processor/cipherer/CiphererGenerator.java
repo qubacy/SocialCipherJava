@@ -29,7 +29,8 @@ public class CiphererGenerator {
         CipherLibrary library = settingsCipher.getLibrary();
 
         switch (library) {
-            case JAVAX: return generateCiphererJavax(cipherConfiguration, settingsCipher, cipherKey);
+            case JAVAX: return generateCiphererWithConfigurationJavax(
+                    cipherConfiguration, cipherKey);
         }
 
         return null;
@@ -56,15 +57,15 @@ public class CiphererGenerator {
                 CipherConfiguration.getInstance(algorithm, mode, padding, keySize);
 
         switch (library) {
-            case JAVAX: return generateCiphererJavax(cipherConfiguration, settingsCipher, cipherKey);
+            case JAVAX: return generateCiphererWithConfigurationJavax(
+                    cipherConfiguration, cipherKey);
         }
 
         return null;
     }
 
-    private static CiphererBaseJavax generateCiphererJavax(
+    public static CiphererBaseJavax generateCiphererWithConfigurationJavax(
             final CipherConfiguration cipherConfiguration,
-            final SettingsCipher settingsCipher,
             final CipherKey cipherKey)
     {
         if (cipherConfiguration == null)
