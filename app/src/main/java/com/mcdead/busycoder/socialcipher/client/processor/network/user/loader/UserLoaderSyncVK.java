@@ -9,9 +9,11 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.user.ResponseUserCon
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.user.ResponseUserItem;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.user.ResponseUserWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIProfile;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
 
@@ -71,7 +73,12 @@ public class UserLoaderSyncVK extends UserLoaderSyncBase {
         }
 
         String userName = userData.firstName + ' ' + userData.lastName;
-        UserEntity userEntity = new UserEntity(userData.id, userName);
+        UserEntity userEntity =
+                UserEntityGenerator.generateUserEntity(
+                        userData.id, userName);
+
+        if (userEntity == null)
+            return new Error("New User's creation process has been failed!", true);
 
         if (!usersStore.addUser(userEntity))
             return new Error("New user adding to storage operation has been failed!", true);
@@ -122,7 +129,11 @@ public class UserLoaderSyncVK extends UserLoaderSyncBase {
         }
 
         String userName = groupData.name;
-        UserEntity userEntity = new UserEntity(groupId, userName);
+        UserEntity userEntity =
+                UserEntityGenerator.generateUserEntity(groupId, userName);
+
+        if (userEntity == null)
+            return new Error("New User's creation process has been failed!", true);
 
         if (!usersStore.addUser(userEntity))
             return new Error("New group user adding to storage operation has been failed!", true);

@@ -3,7 +3,6 @@ package com.mcdead.busycoder.socialcipher.client.processor.chat.message.processo
 import android.util.Pair;
 import android.webkit.URLUtil;
 
-import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseMessageInterface;
@@ -24,8 +23,8 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoI
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentContext;
@@ -67,6 +66,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
     public Error processReceivedMessage(
             final ResponseMessageInterface message,
             final long peerId,
+            final UserEntity senderUser,
             ObjectWrapper<MessageEntity> resultMessage)
     {
         if (message == null)
@@ -84,7 +84,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 messageVK.id,
-                messageVK.fromId,
+                senderUser,
                 messageVK.text.replace("<br>", "\n"),
                 messageVK.timestamp,
                 false,
@@ -102,6 +102,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
     public Error processReceivedUpdateMessage(
             final ResponseUpdateItemInterface update,
             final long peerId,
+            final UserEntity senderUser,
             ObjectWrapper<MessageEntity> resultMessage)
     {
         if (update == null)
@@ -141,7 +142,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 updateVK.messageId,
-                updateVK.fromPeerId,
+                senderUser,
                 processedMessageText.replace("<br>", "\n"),
                 updateVK.timestamp,
                 isCiphered,

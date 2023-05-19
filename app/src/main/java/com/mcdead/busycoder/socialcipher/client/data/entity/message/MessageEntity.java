@@ -2,15 +2,15 @@ package com.mcdead.busycoder.socialcipher.client.data.entity.message;
 
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class MessageEntity {
     private long m_id = 0;
-    private long m_fromPeerId = 0;
+    private UserEntity m_senderUser = null;
     private String m_message = null;
     private long m_timestamp = 0;
     private boolean m_isCiphered = false;
@@ -20,14 +20,14 @@ public class MessageEntity {
 
     protected MessageEntity(
             final long id,
-            final long fromPeerId,
+            final UserEntity senderUser,
             final String message,
             final long timestamp,
             final boolean isCiphered,
             final List<ResponseAttachmentInterface> attachmentsToLoadList)
     {
         m_id = id;
-        m_fromPeerId = fromPeerId;
+        m_senderUser = senderUser;
         m_message = message;
         m_timestamp = timestamp;
         m_isCiphered = isCiphered;
@@ -40,8 +40,8 @@ public class MessageEntity {
         return m_id;
     }
 
-    public long getFromPeerId() {
-        return m_fromPeerId;
+    public UserEntity getSenderUser() {
+        return m_senderUser;
     }
 
     public String getMessage() {
@@ -101,7 +101,7 @@ public class MessageEntity {
         MessageEntity that = (MessageEntity) o;
 
         return m_id == that.m_id &&
-                m_fromPeerId == that.m_fromPeerId &&
+                Objects.equals(m_senderUser, that.m_senderUser) &&
                 m_timestamp == that.m_timestamp &&
                 m_isCiphered == that.m_isCiphered &&
                 Objects.equals(m_message, that.m_message) &&
@@ -111,6 +111,13 @@ public class MessageEntity {
 
     @Override
     public int hashCode() {
-        return Objects.hash(m_id, m_fromPeerId, m_message, m_timestamp, m_isCiphered, m_attachmentToLoadList, m_attachmentsList);
+        return Objects.hash(
+                m_id,
+                m_senderUser,
+                m_message,
+                m_timestamp,
+                m_isCiphered,
+                m_attachmentToLoadList,
+                m_attachmentsList);
     }
 }

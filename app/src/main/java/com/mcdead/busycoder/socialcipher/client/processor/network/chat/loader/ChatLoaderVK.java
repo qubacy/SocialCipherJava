@@ -9,18 +9,22 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataBody;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.ResponseChatContext;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataWrapper;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntityConversation;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import retrofit2.Response;
@@ -122,10 +126,19 @@ public class ChatLoaderVK extends ChatLoaderBase {
             return new Error(e.getMessage(), true);
         }
 
+        List<UserEntity> chatUserList = new LinkedList<>();
+
         for (final long userId : responseChatBody.userIdList) {
             Error userLoadingError = m_userLoader.loadUserById(userId);
 
             if (userLoadingError != null) return userLoadingError;
+
+            UserEntity addedUser = UsersStore.getInstance().getUserByPeerId(userId);
+
+            if (addedUser == null)
+                return new Error("Added User doesn't exist anymore!", true);
+
+            chatUserList.add(addedUser);
 
             SystemClock.sleep(VKAPIContext.C_REQUEST_TIMEOUT);
         }
@@ -135,7 +148,7 @@ public class ChatLoaderVK extends ChatLoaderBase {
 
         if (chatEntity == null)
             return new Error("Retrieved Chat Entity was null!", true);
-        if (!chatEntity.setUsersList(responseChatBody.userIdList))
+        if (!chatEntity.setUsersList(chatUserList))
             return new Error("List of Users setting process has been failed!", true);
 
         return null;

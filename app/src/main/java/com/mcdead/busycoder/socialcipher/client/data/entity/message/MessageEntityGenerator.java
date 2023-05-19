@@ -1,6 +1,9 @@
 package com.mcdead.busycoder.socialcipher.client.data.entity.message;
 
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseAttachmentInterface;
+import com.mcdead.busycoder.socialcipher.client.data.entity.message.id.MessageIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.message.id.MessageIdCheckerGenerator;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,13 +11,20 @@ import java.util.List;
 public class MessageEntityGenerator {
     public static MessageEntity generateMessage(
             final long id,
-            final long fromPeerId,
+            final UserEntity senderUser,
             final String message,
             final long timestamp,
             final boolean isCiphered,
             final List<ResponseAttachmentInterface> attachmentsToLoadList)
     {
-        if (id == 0 || fromPeerId == 0 || timestamp == 0)
+        if (senderUser == null || timestamp == 0)
+            return null;
+
+        MessageIdChecker messageIdChecker = MessageIdCheckerGenerator.generateMessageIdChecker();
+
+        if (messageIdChecker == null)
+            return null;
+        if (!messageIdChecker.isValid(id))
             return null;
 
         List<ResponseAttachmentInterface> attachmentToLoadListChecked =
@@ -34,7 +44,7 @@ public class MessageEntityGenerator {
 
         return new MessageEntity(
                 id,
-                fromPeerId,
+                senderUser,
                 message,
                 timestamp,
                 isCiphered,

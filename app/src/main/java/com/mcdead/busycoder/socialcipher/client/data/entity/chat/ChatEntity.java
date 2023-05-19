@@ -13,7 +13,7 @@ public abstract class ChatEntity {
     final private ChatType m_type;
     private volatile List<MessageEntity> m_messages = null;
 
-    public ChatEntity(final long peerId,
+    protected ChatEntity(final long peerId,
                       final ChatType type)
     {
         m_dialogId = peerId;

@@ -69,7 +69,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         ConstraintLayout.LayoutParams cipherIndicatorLayoutParams =
                 (ConstraintLayout.LayoutParams) m_cipherIndicator.getLayoutParams();
 
-        if (message.getFromPeerId() == localPeerId) {
+        if (message.getSenderUser().getPeerId() == localPeerId) {
             wrapperLayoutParams.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
             wrapperLayoutParams.leftToLeft = ConstraintLayout.LayoutParams.UNSET;
 

@@ -10,6 +10,7 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.user.ResponseUserWra
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIProfile;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.processor.network.tokenchecker.result.TokenCheckResult;
 import com.mcdead.busycoder.socialcipher.client.processor.network.tokenchecker.result.TokenCheckResultInterface;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
@@ -44,12 +45,19 @@ public class TokenCheckerVK extends TokenCheckerBase {
         if (rawLocalUser == null)
             return new Error("Gotten Local User is null!", true);
 
-        result.setValue(new TokenCheckResult(
-                            new UserEntity(
-                                    rawLocalUser.id,
-                                    rawLocalUser.firstName + " " + rawLocalUser.lastName),
-                            null,
-                            true));
+        UserEntity userEntity =
+                UserEntityGenerator.generateUserEntity(
+                    rawLocalUser.id,
+                    rawLocalUser.firstName + " " + rawLocalUser.lastName);
+
+        if (userEntity == null)
+            return new Error("New User's creation process has been failed!", true);
+
+        result.setValue(
+                new TokenCheckResult(
+                    userEntity,
+                    null,
+                    true));
 
         return null;
     }

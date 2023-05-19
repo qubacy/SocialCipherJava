@@ -24,6 +24,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.update.ResponseUpdateItemInterface;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerFactory;
@@ -31,6 +32,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDe
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.commandchecker.CommandMessageRetriever;
@@ -41,6 +43,8 @@ import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProces
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import retrofit2.Response;
@@ -118,25 +122,52 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
     private Error processNewMessageUpdate(
             final ResponseUpdateItem updateItem)
     {
-        MessageProcessorVK messageProcessor = (MessageProcessorVK) MessageProcessorStore.getProcessor();
+        ChatsStore chatsStore = ChatsStore.getInstance();
 
-        if (messageProcessor == null)
-            return new Error("Message processor has not been initialized yet!", true);
+        if (chatsStore == null)
+            return new Error("Chats' Store hasn't been initialized yet!", true);
 
-        ObjectWrapper<MessageEntity> newMessageWrapper = new ObjectWrapper<>();
-        Error error = messageProcessor.processReceivedUpdateMessage(
-                updateItem, updateItem.chatId, newMessageWrapper);
+        ChatEntity chatEntity = chatsStore.getChatByPeerId(updateItem.chatId);
 
-        if (error != null) return error;
-
-        ChatEntity dialogEntity = ChatsStore.getInstance().getChatByPeerId(updateItem.chatId);
-
-        if (dialogEntity == null) {
+        if (chatEntity == null) {
             Error newChatProcessingError = processNewChat(updateItem.chatId);
 
             if (newChatProcessingError != null)
                 return newChatProcessingError;
         }
+
+        UsersStore usersStore = UsersStore.getInstance();
+
+        if (usersStore == null)
+            return new Error("Users' Store hasn't been initialized yet!", true);
+
+        if (usersStore.getUserByPeerId(updateItem.fromPeerId) == null) {
+            Error userLoadingError = m_userLoader.loadUserById(updateItem.fromPeerId);
+
+            if (userLoadingError != null)
+                return userLoadingError;
+        }
+
+        UserEntity senderUser = usersStore.getUserByPeerId(updateItem.fromPeerId);
+
+        if (senderUser == null)
+            return new Error("Message's Sender hasn't been loaded!", true);
+
+        MessageProcessorVK messageProcessor =
+                (MessageProcessorVK) MessageProcessorStore.getProcessor();
+
+        if (messageProcessor == null)
+            return new Error("Message processor has not been initialized yet!", true);
+
+        ObjectWrapper<MessageEntity> newMessageWrapper = new ObjectWrapper<>();
+        Error error =
+                messageProcessor.processReceivedUpdateMessage(
+                        updateItem,
+                        updateItem.chatId,
+                        senderUser,
+                        newMessageWrapper);
+
+        if (error != null) return error;
 
         ObjectWrapper<Boolean> successFlagWrapper = new ObjectWrapper<>(false);
         Error retrievingCommandError =
@@ -181,7 +212,7 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         CommandMessageRetriever commandMessageRetriever =
                 CommandMessageRetriever.getInstance(
                         chatId,
-                        messageEntity.getFromPeerId(),
+                        messageEntity.getSenderUser().getPeerId(),
                         messageEntity.getId());
 
         if (commandMessageRetriever == null)
@@ -297,6 +328,7 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
             return new Error("Incorrect chatId has been provided!", true);
 
         ChatEntityConversation conversationEntity = null;
+        List<Long> userIdList = null;
 
         try {
             Response<ResponseChatDataWrapper> response =
@@ -311,16 +343,7 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
 
             ResponseChatDataBody responseChatBody = response.body().response;
 
-//            conversationEntity =
-//                    new ChatEntityConversation(
-//                            chatId,
-//                            responseChatBody.title,
-//                            responseChatBody.userIdList);
-
-            conversationEntity =
-                    (ChatEntityConversation) ChatEntityGenerator
-                            .generateChatByType(ChatType.CONVERSATION, chatId);
-            conversationEntity.setUsersList(responseChatBody.userIdList);
+            userIdList = responseChatBody.userIdList;
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -328,13 +351,27 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
             return new Error(e.getMessage(), true);
         }
 
-        for (final long userId : conversationEntity.getUsersList()) {
+        List<UserEntity> chatUserList = new LinkedList<>();
+
+        for (final long userId : userIdList) {
             Error userLoadingError = m_userLoader.loadUserById(userId);
 
             if (userLoadingError == null) continue;
 
+            UserEntity addedUser = UsersStore.getInstance().getUserByPeerId(userId);
+
+            if (addedUser == null)
+                return new Error("Added User doesn't exist anymore!", true);
+
+            chatUserList.add(addedUser);
+
             return userLoadingError;
         }
+
+        conversationEntity =
+                (ChatEntityConversation) ChatEntityGenerator.
+                        generateChatByType(ChatType.CONVERSATION, chatId);
+        conversationEntity.setUsersList(chatUserList);
 
         ChatsStore dialogsStore = ChatsStore.getInstance();
 

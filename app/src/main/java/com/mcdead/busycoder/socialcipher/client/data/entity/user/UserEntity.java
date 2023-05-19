@@ -4,8 +4,9 @@ public class UserEntity {
     private long m_peerId = 0;
     private String m_name = null;
 
-    public UserEntity(final long peerId,
-                      final String name)
+    protected UserEntity(
+            final long peerId,
+            final String name)
     {
         m_peerId = peerId;
         m_name = name;

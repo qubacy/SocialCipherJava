@@ -4,6 +4,9 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDe
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
+import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncBase;
+import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncFactory;
+import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
 
 public class ChatListLoaderFactory {
     public static ChatListLoaderBase generateDialogsLoader(
@@ -20,8 +23,12 @@ public class ChatListLoaderFactory {
 
         if (dialogTypeDefiner == null) return null;
 
+        UserLoaderSyncBase userLoader = UserLoaderSyncFactory.generateUserLoader();
+
+        if (userLoader == null) return null;
+
         switch (settingsNetwork.getAPIType()) {
-            case VK: return new ChatListLoaderVK(settingsNetwork.getToken(), (ChatTypeDefinerVK) dialogTypeDefiner, callback);
+            case VK: return new ChatListLoaderVK(settingsNetwork.getToken(), (ChatTypeDefinerVK) dialogTypeDefiner, callback, (UserLoaderSyncVK) userLoader);
         }
 
         return null;

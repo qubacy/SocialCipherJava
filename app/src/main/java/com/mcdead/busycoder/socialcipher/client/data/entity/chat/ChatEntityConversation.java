@@ -1,13 +1,14 @@
 package com.mcdead.busycoder.socialcipher.client.data.entity.chat;
 
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatEntityConversation extends ChatEntity {
     private String m_title = null;
-    private volatile List<Long> m_userIdList = null;
+    private volatile List<UserEntity> m_userList = null;
 
     protected ChatEntityConversation(final long peerId,
                                      final String title)
@@ -15,17 +16,17 @@ public class ChatEntityConversation extends ChatEntity {
         super(peerId, ChatType.CONVERSATION);
 
         m_title = title;
-        m_userIdList = new ArrayList<>();
+        m_userList = new ArrayList<>();
     }
 
     protected ChatEntityConversation(final long peerId,
                                      final String title,
-                                     final List<Long> userIdList)
+                                     final List<UserEntity> userList)
     {
         super(peerId, ChatType.CONVERSATION);
 
         m_title = title;
-        m_userIdList = userIdList;
+        m_userList = userList;
     }
 
 
@@ -42,19 +43,19 @@ public class ChatEntityConversation extends ChatEntity {
         return true;
     }
 
-    public List<Long> getUsersList() {
-        synchronized (m_userIdList) {
-            return new ArrayList<>(m_userIdList);
+    public List<UserEntity> getUsersList() {
+        synchronized (m_userList) {
+            return new ArrayList<>(m_userList);
         }
     }
 
-    public boolean setUsersList(final List<Long> userIdList) {
-        if (userIdList == null) return false;
+    public boolean setUsersList(final List<UserEntity> userList) {
+        if (userList == null) return false;
 
-        synchronized (m_userIdList) {
-            if (!m_userIdList.isEmpty()) return false;
+        synchronized (m_userList) {
+            if (!m_userList.isEmpty()) return false;
 
-            m_userIdList = userIdList;
+            m_userList = userList;
         }
 
         return true;
