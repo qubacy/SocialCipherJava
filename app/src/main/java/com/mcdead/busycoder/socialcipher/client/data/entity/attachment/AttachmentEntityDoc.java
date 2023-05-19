@@ -17,4 +17,9 @@ public class AttachmentEntityDoc extends AttachmentEntityBase {
     public AttachmentType getType() {
         return AttachmentType.DOC;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }

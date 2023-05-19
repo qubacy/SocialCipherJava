@@ -6,10 +6,11 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntit
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class ChatEntity {
-    private long m_dialogId = 0;
-    private ChatType m_type = null;
+    final private long m_dialogId;
+    final private ChatType m_type;
     private volatile List<MessageEntity> m_messages = null;
 
     public ChatEntity(final long peerId,
@@ -76,11 +77,13 @@ public abstract class ChatEntity {
         if (messageId == 0) return false;
 
         synchronized (m_messages) {
-            if (!m_messages.remove(messageId))
-                return false;
+            for (final MessageEntity message : m_messages) {
+                if (message.getId() == messageId)
+                    return m_messages.remove(message);
+            }
         }
 
-        return true;
+        return false;
     }
 
     public boolean areAttachmentsLoaded() {
@@ -90,5 +93,23 @@ public abstract class ChatEntity {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ChatEntity that = (ChatEntity) o;
+
+        return m_dialogId == that.m_dialogId &&
+                m_type == that.m_type &&
+                Objects.equals(m_messages, that.m_messages);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_dialogId, m_type, m_messages);
     }
 }

@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment;
 
+import java.util.Objects;
+
 /*
 *
 * attachmentID - an unique identificator used in getting attachment requests.
@@ -108,5 +110,25 @@ public class ResponseAttachmentStored extends ResponseAttachmentBase {
 
     public String getTypedFullAttachmentID() {
         return m_attachmentType + getFullAttachmentId();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        if (!super.equals(o)) return false;
+
+        ResponseAttachmentStored that = (ResponseAttachmentStored) o;
+
+        return m_attachmentId == that.m_attachmentId &&
+                m_attachmentOwnerId == that.m_attachmentOwnerId &&
+                Objects.equals(m_attachmentAccessKey, that.m_attachmentAccessKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), m_attachmentId, m_attachmentOwnerId, m_attachmentAccessKey);
     }
 }

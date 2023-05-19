@@ -17,4 +17,9 @@ public class AttachmentEntityImage extends AttachmentEntityBase {
     public AttachmentType getType() {
         return AttachmentType.IMAGE;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }

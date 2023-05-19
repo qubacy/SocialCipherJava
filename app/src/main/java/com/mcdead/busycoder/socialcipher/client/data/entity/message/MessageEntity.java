@@ -6,6 +6,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.Attachmen
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MessageEntity {
     private long m_id = 0;
@@ -89,5 +90,27 @@ public class MessageEntity {
         return (m_attachmentToLoadList == null
                 ? true
                 : m_attachmentToLoadList.isEmpty());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MessageEntity that = (MessageEntity) o;
+
+        return m_id == that.m_id &&
+                m_fromPeerId == that.m_fromPeerId &&
+                m_timestamp == that.m_timestamp &&
+                m_isCiphered == that.m_isCiphered &&
+                Objects.equals(m_message, that.m_message) &&
+                Objects.equals(m_attachmentToLoadList, that.m_attachmentToLoadList) &&
+                Objects.equals(m_attachmentsList, that.m_attachmentsList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_id, m_fromPeerId, m_message, m_timestamp, m_isCiphered, m_attachmentToLoadList, m_attachmentsList);
     }
 }

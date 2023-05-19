@@ -139,7 +139,7 @@ public class ChatsStore {
         synchronized (m_chatList) {
             for (final ChatEntity dialog : m_chatList)
                 if (dialog.getDialogId() == peerId)
-                    return m_chatList.remove(peerId);
+                    return m_chatList.remove(dialog);
         }
 
         return false;

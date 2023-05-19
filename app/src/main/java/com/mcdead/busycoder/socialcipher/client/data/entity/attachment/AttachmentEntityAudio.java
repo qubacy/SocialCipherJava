@@ -18,4 +18,9 @@ public class AttachmentEntityAudio extends AttachmentEntityBase {
     public AttachmentType getType() {
         return AttachmentType.AUDIO;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }

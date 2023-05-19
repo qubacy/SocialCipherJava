@@ -3,6 +3,8 @@ package com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class ResponseAttachmentLinked extends ResponseAttachmentStored {
     public static final String C_URL_PROP_NAME = "url";
@@ -19,15 +21,6 @@ public class ResponseAttachmentLinked extends ResponseAttachmentStored {
     public ResponseAttachmentType getResponseAttachmentType() {
         return ResponseAttachmentType.LINKED;
     }
-
-//    public ResponseAttachmentLinked(final String attachmentType,
-//                                    final String attachmentId,
-//                                    final String url)
-//    {
-//        super(attachmentType, attachmentId);
-//
-//        this.url = url;
-//    }
 
     public ResponseAttachmentLinked(final String attachmentType,
                                     final long attachmentId,
@@ -101,5 +94,30 @@ public class ResponseAttachmentLinked extends ResponseAttachmentStored {
 
     public HashMap<AttachmentSize, String> getSizeUrlHashMap() {
         return m_sizeUrlHashMap;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        if (!super.equals(o)) return false;
+
+        ResponseAttachmentLinked that = (ResponseAttachmentLinked) o;
+
+        for (final Map.Entry<AttachmentSize, String> entry : m_sizeUrlHashMap.entrySet()) {
+            if (!that.m_sizeUrlHashMap.containsKey(entry))
+                return false;
+            if (!that.m_sizeUrlHashMap.get(entry.getKey()).equals(entry.getValue()))
+                return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), m_sizeUrlHashMap);
     }
 }

@@ -17,4 +17,9 @@ public class AttachmentEntityVideo extends AttachmentEntityBase {
     public AttachmentType getType() {
         return AttachmentType.VIDEO;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }
