@@ -2,26 +2,30 @@ package com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader;
 
 import android.os.AsyncTask;
 
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefiner;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncBase;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorBase;
 
 public abstract class ChatListLoaderBase extends AsyncTask<Void, Void, Error> {
-    protected String m_token = null;
-    protected ChatTypeDefinerVK m_dialogTypeDefiner = null;
-    protected ChatListLoadingCallback m_callback = null;
+    final protected String m_token;
+    final protected ChatTypeDefiner m_chatTypeDefiner;
+    final protected ChatListLoadingCallback m_callback;
 
-    protected UserLoaderSyncBase m_userLoader = null;
+    final protected UserLoaderSyncBase m_userLoader;
+    final protected MessageProcessorBase m_messageProcessor;
 
-    public ChatListLoaderBase(
+    protected ChatListLoaderBase(
             final String token,
-            final ChatTypeDefinerVK dialogTypeDefiner,
+            final ChatTypeDefiner chatTypeDefiner,
             final ChatListLoadingCallback callback,
-            final UserLoaderSyncBase userLoader)
+            final UserLoaderSyncBase userLoader,
+            final MessageProcessorBase messageProcessor)
     {
         m_token = token;
-        m_dialogTypeDefiner = dialogTypeDefiner;
+        m_chatTypeDefiner = chatTypeDefiner;
         m_callback = callback;
         m_userLoader = userLoader;
+        m_messageProcessor = messageProcessor;
     }
 }

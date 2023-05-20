@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher;
+package com.mcdead.busycoder.socialcipher.data;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -11,6 +11,8 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntityGener
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 
 import org.junit.After;
@@ -129,10 +131,13 @@ public class ChatsStoreTest {
     @Test
     public void addingMessageToChatThenRemoving() {
         long messageId = 123;
+        UserEntity user =
+                UserEntityGenerator.generateUserEntity(1, "somebody");
+
         MessageEntity messageEntity =
                 MessageEntityGenerator.generateMessage(
                         messageId,
-                        1,
+                        user,
                         "someText",
                         System.currentTimeMillis(),
                         false,

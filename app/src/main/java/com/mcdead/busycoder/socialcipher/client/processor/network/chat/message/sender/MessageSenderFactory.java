@@ -1,6 +1,10 @@
 package com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender;
 
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
+import com.mcdead.busycoder.socialcipher.client.api.APIProvider;
+import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
+import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
+import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
@@ -22,16 +26,50 @@ public class MessageSenderFactory {
         if (settingsNetwork == null) return null;
         if (settingsNetwork.getAPIType() == null) return null;
 
+        APIProvider apiProvider = APIProviderGenerator.generateAPIProvider();
+
+        if (apiProvider == null)
+            return null;
+
         switch (settingsNetwork.getAPIType()) {
-            case VK: return new MessageSenderVK(
+            case VK: return generateMessageSenderVK(
                     settingsNetwork.getToken(),
                     peerId,
                     text,
                     uploadingAttachmentList,
                     attachmentUploader,
-                    callback);
+                    callback,
+                    apiProvider);
         }
 
         return null;
+    }
+
+    public static MessageSenderBase generateMessageSenderVK(
+            final String token,
+            final long peerId,
+            final String text,
+            final List<AttachmentData> uploadingAttachmentList,
+            final AttachmentUploaderSyncBase attachmentUploader,
+            final MessageSendingCallback callback,
+            final APIProvider apiProvider)
+    {
+        if (!(apiProvider instanceof VKAPIProvider))
+            return null;
+
+        VKAPIChat vkAPIChat = ((VKAPIProvider) apiProvider).generateChatAPI();
+
+        if (vkAPIChat == null)
+            return null;
+
+        return (MessageSenderBase) (new MessageSenderVK(
+                token,
+                peerId,
+                text,
+                uploadingAttachmentList,
+                attachmentUploader,
+                callback,
+                vkAPIChat
+        ));
     }
 }

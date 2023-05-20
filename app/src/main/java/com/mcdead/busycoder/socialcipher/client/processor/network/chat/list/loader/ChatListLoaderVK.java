@@ -5,8 +5,6 @@ import static com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIContext.C_REQ
 import android.os.Process;
 import android.os.SystemClock;
 
-import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
-import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIContext;
@@ -27,10 +25,9 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntityConversation;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -39,12 +36,19 @@ import java.util.List;
 import retrofit2.Response;
 
 public class ChatListLoaderVK extends ChatListLoaderBase {
-    public ChatListLoaderVK(final String token,
-                            final ChatTypeDefinerVK dialogTypeDefiner,
-                            final ChatListLoadingCallback callback,
-                            final UserLoaderSyncVK userLoader)
+    final protected VKAPIChat m_vkAPIChat;
+
+    protected ChatListLoaderVK(
+            final String token,
+            final ChatTypeDefinerVK chatTypeDefiner,
+            final ChatListLoadingCallback callback,
+            final UserLoaderSyncVK userLoader,
+            final MessageProcessorVK messageProcessor,
+            final VKAPIChat vkAPIChat)
     {
-        super(token, dialogTypeDefiner, callback, userLoader);
+        super(token, chatTypeDefiner, callback, userLoader, messageProcessor);
+
+        m_vkAPIChat = vkAPIChat;
     }
 
     private Error initUserData(final List<ResponseChatListItemUserProfile> usersData,
@@ -83,37 +87,36 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
     }
 
     private Error initChatsContent(
-            final VKAPIChat vkAPIChat,
-            final MessageProcessorVK messageProcessor,
-            final ResponseChatListBody dialogsResponse)
+            final ResponseChatListBody chatListResponse)
             throws IOException
     {
-        if (m_dialogTypeDefiner == null)
+        if (m_chatTypeDefiner == null)
             return new Error("Dialog type definer is not initialized!", true);
 
-        for (final ResponseChatListItem dialogItem : dialogsResponse.items) {
+        for (final ResponseChatListItem chatItem : chatListResponse.items) {
             SystemClock.sleep(C_REQUEST_TIMEOUT);
 
-            ChatEntity dialog = ChatEntityGenerator.generateChatByType(
-                    m_dialogTypeDefiner.getDialogType(dialogItem),
-                    dialogItem.conversation.peer.id);
+            ChatEntity chat =
+                    ChatEntityGenerator.generateChatByType(
+                        m_chatTypeDefiner.getDialogType(chatItem),
+                        chatItem.conversation.peer.id);
 
             Response<ResponseChatContentWrapper> messagesResponse =
-                    vkAPIChat.getChatContent(
-                        dialogItem.conversation.peer.id,
+                    m_vkAPIChat.getChatContent(
+                        chatItem.conversation.peer.id,
                         m_token).execute();
 
             if (!messagesResponse.isSuccessful())
                 return new Error(VKAPIContext.C_REQUEST_FAILED_MESSAGE, true);
             if (messagesResponse.body().error != null)
                 return new Error(messagesResponse.body().error.message, true);
-            if (!ChatsStore.getInstance().addChat(dialog))
+            if (!ChatsStore.getInstance().addChat(chat))
                 return new Error("Dialog init. error!", true);
 
-            if (dialog.getType() == ChatType.CONVERSATION) {
-                ChatEntityConversation chatConversation = (ChatEntityConversation) dialog;
+            if (chat.getType() == ChatType.CONVERSATION) {
+                ChatEntityConversation chatConversation = (ChatEntityConversation) chat;
 
-                chatConversation.setTitle(dialogItem.conversation.chatSettings.title);
+                chatConversation.setTitle(chatItem.conversation.chatSettings.title);
             }
 
             List<ResponseChatContentItem> messagesItems = messagesResponse.body().response.items;
@@ -126,12 +129,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
                 return new Error("Users' Store hasn't been initialized yet!", true);
 
             for (final ResponseChatContentItem messageItem : messagesItems) {
-                UserEntity senderUser = null;
-
-                if (messageItem.fromId == usersStore.getLocalUser().getPeerId())
-                    senderUser = usersStore.getLocalUser();
-                else
-                    senderUser = usersStore.getUserByPeerId(messageItem.fromId);
+                UserEntity senderUser = usersStore.getUserByPeerId(messageItem.fromId);
 
                 if (senderUser == null) {
                     SystemClock.sleep(C_REQUEST_TIMEOUT);
@@ -149,16 +147,16 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
 
                 ObjectWrapper<MessageEntity> newMessageWrapper = new ObjectWrapper<>();
                 Error error =
-                        messageProcessor.processReceivedMessage(
+                        m_messageProcessor.processReceivedMessage(
                             messageItem,
-                            dialog.getDialogId(),
+                            chat.getDialogId(),
                             senderUser,
                             newMessageWrapper);
 
                 if (error != null)
                     return error;
 
-                if (!dialog.addMessage(newMessageWrapper.getValue()))
+                if (!chat.addMessage(newMessageWrapper.getValue()))
                     return new Error("Dialog message init. error!", true);
             }
         }
@@ -171,16 +169,10 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 
         Error error = null;
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
 
         try {
-            Response<ResponseChatListWrapper> response = vkAPIChat.getChatList(m_token).execute();
+            Response<ResponseChatListWrapper> response =
+                    m_vkAPIChat.getChatList(m_token).execute();
 
             if (!response.isSuccessful())
                 return new Error(VKAPIContext.C_REQUEST_FAILED_MESSAGE, true);
@@ -193,13 +185,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
 
             if (error != null) return error;
 
-            MessageProcessorVK messageProcessor =
-                    (MessageProcessorVK) MessageProcessorStore.getProcessor();
-
-            if (messageProcessor == null)
-                return new Error("MessageProcessor obj. should be initialized first!", true);
-
-            error = initChatsContent(vkAPIChat, messageProcessor, response.body().response);
+            error = initChatsContent(response.body().response);
 
             if (error != null) return error;
 

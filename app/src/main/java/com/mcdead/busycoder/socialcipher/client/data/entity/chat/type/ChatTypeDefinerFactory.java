@@ -3,7 +3,7 @@ package com.mcdead.busycoder.socialcipher.client.data.entity.chat.type;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class ChatTypeDefinerFactory {
-    public static ChatTypeDefinerInterface generateDialogTypeDefiner() {
+    public static ChatTypeDefiner generateDialogTypeDefiner() {
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
         if (settingsNetwork == null) return null;
@@ -16,7 +16,7 @@ public class ChatTypeDefinerFactory {
         return null;
     }
 
-    private static ChatTypeDefinerVK generateDialogTypeDefinerVK() {
+    public static ChatTypeDefinerVK generateDialogTypeDefinerVK() {
         return new ChatTypeDefinerVK();
     }
 }

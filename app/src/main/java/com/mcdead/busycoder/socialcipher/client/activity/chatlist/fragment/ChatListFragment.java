@@ -169,7 +169,7 @@ public class ChatListFragment extends Fragment
     }
 
     private boolean launchDialogsLoader() {
-        m_loaderTask = ChatListLoaderFactory.generateDialogsLoader(this);
+        m_loaderTask = ChatListLoaderFactory.generateChatListLoader(this);
 
         if (m_loaderTask == null) {
             ErrorBroadcastReceiver.broadcastError(

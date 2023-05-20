@@ -52,19 +52,24 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
 
     private static final int C_TIMEOUT_SEC_VALUE = 30;
 
-    public UpdateCheckerAsyncVK(final String token,
-                                Context context)
+    final protected VKAPIAttachment m_vkAPIAttachment;
+
+    protected UpdateCheckerAsyncVK(
+            final String token,
+            final Context context,
+            final VKAPIAttachment vkAPIAttachment)
     {
         super(token, context);
+
+        m_vkAPIAttachment = vkAPIAttachment;
     }
 
     private Error initLongPollServer(
-            VKAPIAttachment vkAPIAttachment,
             LongPollServerRequestResult requestResult)
     {
         try {
             Response<ResponseLongPollServerWrapper> response =
-                    vkAPIAttachment.getLongPollServer(m_token).execute();
+                    m_vkAPIAttachment.getLongPollServer(m_token).execute();
 
             if (!response.isSuccessful())
                 return new Error("vkAPI object is null!", true);
@@ -83,16 +88,8 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
     }
 
     private Error execUpdateChecking() {
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIAttachment vkAPIAttachment = vkAPIProvider.generateAttachmentAPI();
-
         LongPollServerRequestResult longPollServerRequestResult = new LongPollServerRequestResult();
-        Error longPollServerRequestError = initLongPollServer(vkAPIAttachment, longPollServerRequestResult);
+        Error longPollServerRequestError = initLongPollServer(longPollServerRequestResult);
 
         if (longPollServerRequestError != null)
             return longPollServerRequestError;
@@ -199,16 +196,18 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
             final String rawJsonUpdate)
             throws JSONException
     {
-        Gson gson = new GsonBuilder().registerTypeAdapter(
+        Gson gson =
+            new GsonBuilder().registerTypeAdapter(
                 ResponseUpdateBody.class,
                 new UpdateDeserializer()).create();
 
         return gson.fromJson(rawJsonUpdate, ResponseUpdateBody.class);
     }
 
-    private String generateLongPollUrl(final String server,
-                                       final String key,
-                                       final long ts)
+    private String generateLongPollUrl(
+            final String server,
+            final String key,
+            final long ts)
     {
         return "https://" + server + '?'
              + C_ACT_PROP_NAME + '=' + C_ACT_PROP_VALUE + '&'

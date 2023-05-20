@@ -10,8 +10,9 @@ public abstract class TokenCheckerBase extends AsyncTask<Void, Void, TokenCheckR
     protected String m_token = null;
     protected TokenCheckResultInterface m_callback = null;
 
-    public TokenCheckerBase(final String token,
-                            TokenCheckResultInterface callback)
+    protected TokenCheckerBase(
+            final String token,
+            final TokenCheckResultInterface callback)
     {
         m_token = token;
         m_callback = callback;

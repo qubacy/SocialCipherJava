@@ -1,9 +1,6 @@
 package com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender;
 
-import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
-import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
-import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIUploadAttachment;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.message.send.ResponseSendMessageWrapper;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
@@ -18,13 +15,16 @@ import java.util.List;
 import retrofit2.Response;
 
 public class MessageSenderVK extends MessageSenderBase {
-    public MessageSenderVK(
+    final protected VKAPIChat m_vkAPIChat;
+
+    protected MessageSenderVK(
             final String token,
             final long peerId,
             final String text,
             final List<AttachmentData> uploadingAttachmentList,
             final AttachmentUploaderSyncBase attachmentUploader,
-            final MessageSendingCallback callback)
+            final MessageSendingCallback callback,
+            final VKAPIChat vkAPIChat)
     {
         super(
                 token,
@@ -33,20 +33,12 @@ public class MessageSenderVK extends MessageSenderBase {
                 uploadingAttachmentList,
                 attachmentUploader,
                 callback);
+
+        m_vkAPIChat = vkAPIChat;
     }
 
     @Override
     protected Error doInBackground(Void... voids) {
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIUploadAttachment vkAPIUploadAttachment =
-                vkAPIProvider.generateUploadAttachmentAPI();
-        VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
-
         try {
             ObjectWrapper<AttachmentUploadedResult> resultAttachmentListStringWrapper =
                     new ObjectWrapper<>();
@@ -54,7 +46,6 @@ public class MessageSenderVK extends MessageSenderBase {
             if (m_uploadingAttachmentList != null) {
                 Error uploadAttachmentsError =
                         m_attachmentUploader.uploadAttachments(
-                                vkAPIUploadAttachment,
                                 m_uploadingAttachmentList,
                                 resultAttachmentListStringWrapper);
 
@@ -70,7 +61,7 @@ public class MessageSenderVK extends MessageSenderBase {
                         : attachmentUploadedResult.getAttachmentListString());
 
             Response<ResponseSendMessageWrapper> response
-                    = vkAPIChat.sendMessage(
+                    = m_vkAPIChat.sendMessage(
                             m_token,
                             m_peerId,
                             m_text,

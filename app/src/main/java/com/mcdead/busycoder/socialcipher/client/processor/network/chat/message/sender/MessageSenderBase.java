@@ -17,7 +17,7 @@ public abstract class MessageSenderBase extends AsyncTask<Void, Void, Error> {
     protected AttachmentUploaderSyncBase m_attachmentUploader = null;
     protected MessageSendingCallback m_callback = null;
 
-    public MessageSenderBase(
+    protected MessageSenderBase(
             final String token,
             final long peerId,
             final String text,

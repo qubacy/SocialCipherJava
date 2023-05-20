@@ -99,7 +99,7 @@ public class UpdateDeserializer implements JsonDeserializer<ResponseUpdateBody> 
 
         if (localUserPeerId == 0) return null;
 
-        ChatType dialogType = (new ChatTypeDefinerVK()).getDialogTypeByPeerId(responseUpdateItem.chatId);
+        ChatType dialogType = (new ChatTypeDefinerVK()).getChatTypeByPeerId(responseUpdateItem.chatId);
 
         switch (dialogType) {
             case WITH_GROUP:

@@ -67,19 +67,6 @@ public class UpdateProcessorService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-//
-//    @Override
-//    public void onUpdatesReceived(List<ResponseUpdateItem> updateItemList) {
-//        // todo: processing incoming messages...
-//        // todo: adding modifications to DialogStore..
-//
-//        Log.d(getClass().getName(), updateItemList.toString());
-//    }
-//
-//    @Override
-//    public void onErrorOccurred(Error error) {
-//        // mb I should use broadcast or something else;
-//    }
 
     private boolean processStartUpdateChecker() {
         if (m_updateCheckerThread != null) return false;
@@ -105,9 +92,11 @@ public class UpdateProcessorService extends Service {
             m_messageProcessorThread.start();
         }
 
-        Bundle updatesWrapperBundle = data.getBundleExtra(ChatListBroadcastReceiver.C_UPDATES_WRAPPER_EXTRA_PROP_NAME);
+        Bundle updatesWrapperBundle =
+                data.getBundleExtra(ChatListBroadcastReceiver.C_UPDATES_WRAPPER_EXTRA_PROP_NAME);
         List<ResponseUpdateItemInterface> updates =
-                (List<ResponseUpdateItemInterface>) updatesWrapperBundle.getSerializable(ChatListBroadcastReceiver.C_UPDATES_LIST_EXTRA_PROP_NAME);
+                (List<ResponseUpdateItemInterface>) updatesWrapperBundle.
+                        getSerializable(ChatListBroadcastReceiver.C_UPDATES_LIST_EXTRA_PROP_NAME);
 
         try {
             for (final ResponseUpdateItemInterface update : updates)

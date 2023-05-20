@@ -405,7 +405,7 @@ public class ChatFragment extends Fragment
 
         if (!dialog.areAttachmentsLoaded()) {
             ChatLoaderBase dialogLoader
-                    = ChatLoaderFactory.generateDialogLoader(this, m_peerId);
+                    = ChatLoaderFactory.generateChatLoader(this, m_peerId);
 
             if (dialogLoader == null)
                 return new Error("Dialog loader hasn't been initialized!", true);

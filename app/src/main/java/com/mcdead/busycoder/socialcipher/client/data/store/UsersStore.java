@@ -23,6 +23,8 @@ public class UsersStore {
 
     public UserEntity getUserByPeerId(final long peerId) {
         if (peerId == 0) return null;
+        if (peerId == m_localUser.getPeerId())
+            return m_localUser;
 
         synchronized (m_users) {
             return m_users.get(peerId);

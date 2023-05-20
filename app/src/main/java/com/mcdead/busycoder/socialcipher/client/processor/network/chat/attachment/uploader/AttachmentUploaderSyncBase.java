@@ -15,7 +15,7 @@ public abstract class AttachmentUploaderSyncBase {
 
     protected ContentResolver m_contentResolver = null;
 
-    public AttachmentUploaderSyncBase(
+    protected AttachmentUploaderSyncBase(
             final String token,
             final long peerId,
             final ContentResolver contentResolver)
@@ -27,7 +27,6 @@ public abstract class AttachmentUploaderSyncBase {
     }
 
     public abstract Error uploadAttachments(
-            final Object apiObject,
             final List<AttachmentData> uploadingAttachmentList,
             ObjectWrapper<AttachmentUploadedResult> resultAttachmentListStringWrapper);
 }

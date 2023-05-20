@@ -1,7 +1,5 @@
 package com.mcdead.busycoder.socialcipher.client.processor.user.loader;
 
-import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
-import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.group.ResponseGroupBody;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.group.ResponseGroupContext;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.group.ResponseGroupWrapper;
@@ -13,18 +11,21 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntityGener
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
-import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
 
 import retrofit2.Response;
 
 public class UserLoaderSyncVK extends UserLoaderSyncBase {
+    final protected VKAPIProfile m_vkAPIProfile;
 
-    public UserLoaderSyncVK(
-            final String token)
+    protected UserLoaderSyncVK(
+            final String token,
+            final VKAPIProfile vkAPIProfile)
     {
         super(token);
+
+        m_vkAPIProfile = vkAPIProfile;
     }
 
     @Override
@@ -38,24 +39,14 @@ public class UserLoaderSyncVK extends UserLoaderSyncBase {
 
         if (usersStore == null)
             return new Error("Users Store hasn't been initialized!", true);
-        if (usersStore.getUserByPeerId(userId) != null
-         || usersStore.getLocalUser().getPeerId() == userId)
-        {
+        if (usersStore.getUserByPeerId(userId) != null)
             return null;
-        }
 
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIProfile vkAPIProfile = vkAPIProvider.generateProfileAPI();
         ResponseUserItem userData = null;
 
         try {
             Response<ResponseUserWrapper> userResponse =
-                    vkAPIProfile.getUser(userId, m_token).execute();
+                    m_vkAPIProfile.getUser(userId, m_token).execute();
 
             if (!userResponse.isSuccessful())
                 return new Error("User Getting Request has been failed!", true);
@@ -98,20 +89,13 @@ public class UserLoaderSyncVK extends UserLoaderSyncBase {
         if (usersStore.getUserByPeerId(groupId) != null)
             return null;
 
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIProfile vkAPIProfile = vkAPIProvider.generateProfileAPI();
         ResponseGroupBody groupData = null;
 
         try {
             long positiveGroupId = -groupId;
 
             Response<ResponseGroupWrapper> groupResponse =
-                    vkAPIProfile.getGroup(positiveGroupId, m_token).execute();
+                    m_vkAPIProfile.getGroup(positiveGroupId, m_token).execute();
 
             if (!groupResponse.isSuccessful())
                 return new Error("User Getting Request has been failed!", true);

@@ -5,7 +5,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 public abstract class UserLoaderSyncBase {
     protected String m_token = null;
 
-    public UserLoaderSyncBase(
+    protected UserLoaderSyncBase(
             final String token)
     {
         m_token = token;

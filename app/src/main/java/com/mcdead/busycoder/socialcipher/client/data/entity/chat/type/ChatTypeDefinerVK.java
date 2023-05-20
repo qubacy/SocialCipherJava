@@ -3,7 +3,7 @@ package com.mcdead.busycoder.socialcipher.client.data.entity.chat.type;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseChatListItemInterface;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.list.ResponseChatListItem;
 
-public class ChatTypeDefinerVK implements ChatTypeDefinerInterface {
+public class ChatTypeDefinerVK implements ChatTypeDefiner {
     public static final String C_USER_TYPE_NAME = "user";
     public static final String C_CHAT_TYPE_NAME = "chat";
     public static final String C_GROUP_TYPE_NAME = "group";
@@ -25,7 +25,7 @@ public class ChatTypeDefinerVK implements ChatTypeDefinerInterface {
         return null;
     }
 
-    public ChatType getDialogTypeByPeerId(final long peerId) {
+    public ChatType getChatTypeByPeerId(final long peerId) {
         if (peerId < 0)
             return ChatType.WITH_GROUP;
         if (peerId > C_CHAT_ID_SHIFT)

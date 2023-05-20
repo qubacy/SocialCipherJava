@@ -9,8 +9,6 @@ import android.os.SystemClock;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
-import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataBody;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.ResponseChatContext;
@@ -27,16 +25,13 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdat
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerFactory;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.commandchecker.CommandMessageRetriever;
-import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
 import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;
 import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
@@ -52,36 +47,33 @@ import retrofit2.Response;
 public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
     public static final long C_MESSAGE_PROCESS_TIMEOUT = 500;
 
-    private ChatTypeDefinerVK m_dialogTypeDefiner = null;
-    private UserLoaderSyncVK m_userLoader = null;
+    final private ChatTypeDefinerVK m_chatTypeDefiner;
+    final private UserLoaderSyncVK m_userLoader;
 
-    public UpdateProcessorAsyncVK(final String token,
-                                  Context context,
-                                  LinkedBlockingQueue<ResponseUpdateItemInterface> updateQueue)
+    final VKAPIChat m_vkAPIChat;
+    final MessageProcessorVK m_messageProcessor;
+
+    protected UpdateProcessorAsyncVK(
+            final String token,
+            final Context context,
+            final LinkedBlockingQueue<ResponseUpdateItemInterface> updateQueue,
+            final ChatTypeDefinerVK chatTypeDefiner,
+            final UserLoaderSyncVK userLoader,
+            final VKAPIChat vkAPIChat,
+            final MessageProcessorVK messageProcessor)
     {
         super(token, context, updateQueue);
-    }
 
-    private Error init() {
-        m_dialogTypeDefiner = (ChatTypeDefinerVK) ChatTypeDefinerFactory.generateDialogTypeDefiner();
-        m_userLoader = (UserLoaderSyncVK) UserLoaderSyncFactory.generateUserLoader();
+        m_chatTypeDefiner = chatTypeDefiner;
+        m_userLoader = userLoader;
 
-        if (m_dialogTypeDefiner == null)
-            return new Error("DialogTypeDefiner hasn't been initialized!", true);
-        if (m_userLoader == null)
-            return new Error("UserLoader hasn't been initialized!", true);
-
-        return null;
+        m_vkAPIChat = vkAPIChat;
+        m_messageProcessor = messageProcessor;
     }
 
     @Override
     public void run() {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-
-        Error initError = null;
-
-        if ((initError = init()) != null)
-            processError(initError);
 
         while (!Thread.interrupted()) {
             SystemClock.sleep(C_MESSAGE_PROCESS_TIMEOUT);
@@ -153,15 +145,9 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         if (senderUser == null)
             return new Error("Message's Sender hasn't been loaded!", true);
 
-        MessageProcessorVK messageProcessor =
-                (MessageProcessorVK) MessageProcessorStore.getProcessor();
-
-        if (messageProcessor == null)
-            return new Error("Message processor has not been initialized yet!", true);
-
         ObjectWrapper<MessageEntity> newMessageWrapper = new ObjectWrapper<>();
         Error error =
-                messageProcessor.processReceivedUpdateMessage(
+                m_messageProcessor.processReceivedUpdateMessage(
                         updateItem,
                         updateItem.chatId,
                         senderUser,
@@ -188,8 +174,9 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         if (!ChatsStore.getInstance().addNewMessage(newMessageWrapper.getValue(), updateItem.chatId))
             return new Error("New message addition error!", true);
 
-        Error attachmentsError = messageProcessor.processMessageAttachments(
-                newMessageWrapper.getValue(), updateItem.chatId);
+        Error attachmentsError =
+                m_messageProcessor.processMessageAttachments(
+                    newMessageWrapper.getValue(), updateItem.chatId);
 
         if (attachmentsError != null) return attachmentsError;
 
@@ -248,36 +235,26 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
     private Error processNewChat(
             final long chatId)
     {
-        ChatType dialogType = m_dialogTypeDefiner.getDialogTypeByPeerId(chatId);
+        ChatType chatType = m_chatTypeDefiner.getChatTypeByPeerId(chatId);
 
-        if (dialogType == null)
+        if (chatType == null)
             return new Error("Unknown dialog type!", true);
 
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
-
-        switch (dialogType) {
-            case DIALOG: return initChatUser(vkAPIChat, chatId);
-            case WITH_GROUP: return initChatGroup(vkAPIChat, chatId);
-            case CONVERSATION: return initChatConversation(vkAPIChat, chatId);
+        switch (chatType) {
+            case DIALOG: return initChatUser(chatId);
+            case WITH_GROUP: return initChatGroup(chatId);
+            case CONVERSATION: return initChatConversation(chatId);
         }
 
         return null;
     }
 
     private Error initChatUser(
-            final VKAPIChat vkAPIChat,
             final long chatId)
     {
         if (chatId == 0)
             return new Error("Incorrect chatId has been provided!", true);
 
-        //ChatEntityDialog chatUserEntity = new ChatEntityDialog(chatId);
         ChatEntityDialog chatUserEntity =
                 (ChatEntityDialog) ChatEntityGenerator.generateChatByType(ChatType.DIALOG, chatId);
         Error userLoadingError = m_userLoader.loadUserById(chatId);
@@ -296,15 +273,14 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
     }
 
     private Error initChatGroup(
-            final VKAPIChat vkAPIChat,
             final long chatId)
     {
         if (ResponseGroupContext.isChatGroupId(chatId))
             return new Error("Incorrect chatId has been provided!", true);
 
-        //ChatEntityWithGroup chatGroupEntity = new ChatEntityWithGroup(chatId);
         ChatEntityWithGroup chatGroupEntity =
-                (ChatEntityWithGroup) ChatEntityGenerator.generateChatByType(ChatType.WITH_GROUP, chatId);
+                (ChatEntityWithGroup) ChatEntityGenerator.
+                        generateChatByType(ChatType.WITH_GROUP, chatId);
         Error userLoadingError = m_userLoader.loadUserById(chatId);
 
         if (userLoadingError != null)
@@ -321,7 +297,6 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
     }
 
     private Error initChatConversation(
-            final VKAPIChat vkAPIChat,
             final long chatId)
     {
         if (!ResponseChatContext.isChatConversationId(chatId))
@@ -332,7 +307,7 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
 
         try {
             Response<ResponseChatDataWrapper> response =
-                    vkAPIChat.getChatData(
+                    m_vkAPIChat.getChatData(
                             ResponseChatContext.getLocalChatIdByPeerId(chatId),
                             m_token).execute();
 
@@ -373,11 +348,11 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
                         generateChatByType(ChatType.CONVERSATION, chatId);
         conversationEntity.setUsersList(chatUserList);
 
-        ChatsStore dialogsStore = ChatsStore.getInstance();
+        ChatsStore chatsStore = ChatsStore.getInstance();
 
-        if (dialogsStore == null)
+        if (chatsStore == null)
             return new Error("Dialogs Store hasn't been initialized!", true);
-        if (!dialogsStore.addChat(conversationEntity))
+        if (!chatsStore.addChat(conversationEntity))
             return new Error("New Chat adding operation has been failed!", true);
 
         return null;

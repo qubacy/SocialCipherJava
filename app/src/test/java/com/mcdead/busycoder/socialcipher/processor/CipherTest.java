@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher;
+package com.mcdead.busycoder.socialcipher.processor;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

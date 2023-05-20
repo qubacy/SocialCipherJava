@@ -20,18 +20,26 @@ import java.io.IOException;
 import retrofit2.Response;
 
 public class TokenCheckerVK extends TokenCheckerBase {
-    public TokenCheckerVK(final String token,
-                          TokenCheckResultInterface callback)
+    final protected VKAPIProfile m_vkAPIProfile;
+
+    protected TokenCheckerVK(
+            final String token,
+            final TokenCheckResultInterface callback,
+            final VKAPIProfile vkAPIProfile)
     {
         super(token, callback);
+
+        m_vkAPIProfile = vkAPIProfile;
     }
 
-    private Error getLocalUser(final VKAPIProfile vkAPIProfile,
-                               ObjectWrapper<TokenCheckResult> result) throws IOException
+    private Error getLocalUser(
+            ObjectWrapper<TokenCheckResult> result)
+            throws IOException
     {
-        Response<ResponseUserWrapper> response = vkAPIProfile
-                .getLocalUser(m_token)
-                .execute();
+        Response<ResponseUserWrapper> response =
+                m_vkAPIProfile.
+                        getLocalUser(m_token).
+                        execute();
 
         if (!response.isSuccessful())
             return new Error(VKAPIContext.C_REQUEST_FAILED_MESSAGE, true);
@@ -66,20 +74,10 @@ public class TokenCheckerVK extends TokenCheckerBase {
     protected TokenCheckResult doInBackground(Void... voids) {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new TokenCheckResult(
-                    null,
-                    new Error("API hasn't been initialized!", true),
-                    false);
-
-        VKAPIProfile vkAPIProfile = vkAPIProvider.generateProfileAPI();
         ObjectWrapper<TokenCheckResult> resultWrapper = new ObjectWrapper<>();
 
         try {
-           Error error = getLocalUser(vkAPIProfile, resultWrapper);
+           Error error = getLocalUser(resultWrapper);
 
            if (error != null)
                return new TokenCheckResult(

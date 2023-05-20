@@ -3,11 +3,12 @@ package com.mcdead.busycoder.socialcipher.client.processor.update.checker;
 import android.content.Context;
 
 public abstract class UpdateCheckerAsyncBase implements Runnable {
-    protected String m_token = null;
-    protected Context m_context = null;
+    final protected String m_token;
+    final protected Context m_context;
 
-    public UpdateCheckerAsyncBase(final String token,
-                                  Context context)
+    protected UpdateCheckerAsyncBase(
+            final String token,
+            final Context context)
     {
         m_token = token;
         m_context = context;

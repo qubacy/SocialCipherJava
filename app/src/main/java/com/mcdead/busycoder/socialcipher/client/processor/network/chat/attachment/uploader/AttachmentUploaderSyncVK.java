@@ -45,21 +45,25 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     private static final int C_MAX_ATTACHMENT_COUNT = 8;
     private static final long C_MAX_ATTACHMENT_SIZE_BYTES = 209715200;
 
-    public AttachmentUploaderSyncVK(
+    final protected VKAPIUploadAttachment m_vkAPIUploadAttachment;
+
+    protected AttachmentUploaderSyncVK(
             final String token,
             final long peerId,
-            final ContentResolver contentResolver)
+            final ContentResolver contentResolver,
+            final VKAPIUploadAttachment vkAPIUploadAttachment)
     {
         super(token, peerId, contentResolver);
+
+        m_vkAPIUploadAttachment = vkAPIUploadAttachment;
     }
 
     private Error getUploadingUrlForPhoto(
-            final VKAPIUploadAttachment vkAPIUploadAttachment,
             ObjectWrapper<ResponseAttachmentBaseUploadServerBody> resultUploadingServerDataWrapper)
             throws IOException
     {
         Response<ResponseAttachmentPhotoUploadServerWrapper> response =
-                vkAPIUploadAttachment.getPhotoUploadServer(m_token, m_peerId).execute();
+                m_vkAPIUploadAttachment.getPhotoUploadServer(m_token, m_peerId).execute();
 
         if (!response.isSuccessful())
             return new Error(
@@ -74,12 +78,11 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     private Error getUploadingUrlForDoc(
-            final VKAPIUploadAttachment vkAPIUploadAttachment,
             ObjectWrapper<ResponseAttachmentBaseUploadServerBody> resultUploadingServerDataWrapper)
             throws IOException
     {
         Response<ResponseAttachmentDocUploadServerWrapper> response =
-                vkAPIUploadAttachment.getDocUploadServer(m_token, m_peerId).execute();
+                m_vkAPIUploadAttachment.getDocUploadServer(m_token, m_peerId).execute();
 
         if (!response.isSuccessful())
             return new Error(
@@ -94,14 +97,13 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     private Error getAttachmentUploadingUrl(
-            final VKAPIUploadAttachment vkAPIUploadAttachment,
             final AttachmentData attachmentData,
             ObjectWrapper<ResponseAttachmentBaseUploadServerBody> resultUploadingServerDataWrapper)
             throws IOException
     {
         switch (attachmentData.getType()) {
-            case IMAGE: return getUploadingUrlForPhoto(vkAPIUploadAttachment, resultUploadingServerDataWrapper);
-            case DOC:   return getUploadingUrlForDoc(vkAPIUploadAttachment, resultUploadingServerDataWrapper);
+            case IMAGE: return getUploadingUrlForPhoto(resultUploadingServerDataWrapper);
+            case DOC:   return getUploadingUrlForDoc(resultUploadingServerDataWrapper);
         }
 
         return new Error(
@@ -278,14 +280,14 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     private Error saveSentPhotoAttachment(
-            final VKAPIUploadAttachment vkAPIUploadAttachment,
             final ResponseAttachmentPhotoUploadServerBody responseAttachmentPhotoUploadServerBody,
             final ResponseAttachmentPhotoUploaded responseAttachmentPhotoUploaded,
             ObjectWrapper<String> attachmentIdWrapper)
             throws IOException
     {
         Response<ResponseAttachmentPhotoSaveWrapper> response =
-                vkAPIUploadAttachment.saveUploadedPhoto(m_token,
+                m_vkAPIUploadAttachment.saveUploadedPhoto(
+                        m_token,
                         responseAttachmentPhotoUploadServerBody.albumId,
                         responseAttachmentPhotoUploaded.photo,
                         responseAttachmentPhotoUploaded.server,
@@ -331,14 +333,13 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     private Error saveSentDocAttachment(
-            final VKAPIUploadAttachment vkAPIUploadAttachment,
             final ResponseAttachmentDocUploadServerBody responseAttachmentDocUploadServerBody,
             final ResponseAttachmentDocUploaded responseAttachmentDocUploaded,
             ObjectWrapper<String> attachmentIdWrapper)
             throws IOException
     {
         Response<ResponseAttachmentDocSaveWrapper> response =
-                vkAPIUploadAttachment.saveUploadedDoc(
+                m_vkAPIUploadAttachment.saveUploadedDoc(
                         m_token,
                         responseAttachmentDocUploaded.file).execute();
 
@@ -361,7 +362,6 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     private Error saveSentAttachment(
-            final VKAPIUploadAttachment vkAPIUploadAttachment,
             final AttachmentData attachmentData,
             final ResponseAttachmentBaseUploadServerBody responseAttachmentUploadServerBody,
             final ResponseAttachmentUploaded responseAttachmentUploaded,
@@ -370,12 +370,10 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     {
         switch (attachmentData.getType()) {
             case IMAGE: return saveSentPhotoAttachment(
-                    vkAPIUploadAttachment,
                     (ResponseAttachmentPhotoUploadServerBody) responseAttachmentUploadServerBody,
                     (ResponseAttachmentPhotoUploaded) responseAttachmentUploaded,
                     attachmentIdWrapper);
             case DOC: return saveSentDocAttachment(
-                    vkAPIUploadAttachment,
                     (ResponseAttachmentDocUploadServerBody) responseAttachmentUploadServerBody,
                     (ResponseAttachmentDocUploaded) responseAttachmentUploaded,
                     attachmentIdWrapper);
@@ -387,20 +385,13 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     public Error uploadAttachments(
-            final Object apiObject,
             final List<AttachmentData> uploadingAttachmentList,
             ObjectWrapper<AttachmentUploadedResult> resultAttachmentListStringWrapper)
     {
-        if (apiObject == null)
-            return new Error("API hasn't been initialized!", true);
-        if (!(apiObject instanceof VKAPIUploadAttachment))
-            return new Error("Provided API had a wrong type!", true);
         if (uploadingAttachmentList == null)
             return null;
         if (uploadingAttachmentList.isEmpty())
             return null;
-
-        VKAPIUploadAttachment vkAPIUploadAttachment = (VKAPIUploadAttachment) apiObject;
 
         StringBuilder resultAttachmentListString = new StringBuilder();
 
@@ -421,7 +412,6 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
                         new ObjectWrapper<>();
 
                 error = getAttachmentUploadingUrl(
-                        vkAPIUploadAttachment,
                         uploadingAttachmentData,
                         responseUploadServerWrapper);
 
@@ -442,7 +432,6 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
                         new ObjectWrapper<>();
 
                 error = saveSentAttachment(
-                        vkAPIUploadAttachment,
                         uploadingAttachmentData,
                         responseUploadServerWrapper.getValue(),
                         responseUploadedWrapper.getValue(),

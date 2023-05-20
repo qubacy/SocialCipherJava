@@ -7,13 +7,14 @@ import com.mcdead.busycoder.socialcipher.client.api.common.gson.update.ResponseU
 import java.util.concurrent.LinkedBlockingQueue;
 
 public abstract class UpdateProcessorAsyncBase implements Runnable {
-    protected String m_token = null;
-    protected Context m_context = null;
-    protected LinkedBlockingQueue<ResponseUpdateItemInterface> m_updateQueue = null;
+    final protected String m_token;
+    final protected Context m_context;
+    final protected LinkedBlockingQueue<ResponseUpdateItemInterface> m_updateQueue;
 
-    public UpdateProcessorAsyncBase(final String token,
-                                    Context context,
-                                    LinkedBlockingQueue<ResponseUpdateItemInterface> updateQueue)
+    protected UpdateProcessorAsyncBase(
+            final String token,
+            Context context,
+            LinkedBlockingQueue<ResponseUpdateItemInterface> updateQueue)
     {
         m_token = token;
         m_context = context;

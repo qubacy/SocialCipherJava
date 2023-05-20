@@ -3,11 +3,9 @@ package com.mcdead.busycoder.socialcipher.client.processor.chat.message.processo
 import android.util.Pair;
 import android.webkit.URLUtil;
 
-import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseAttachmentInterface;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.chat.ResponseMessageInterface;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.update.ResponseUpdateItemInterface;
-import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIAttachment;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.ResponseAttachmentBase;
@@ -56,10 +54,19 @@ import okhttp3.Response;
 *
 */
 public class MessageProcessorVK extends MessageProcessorBase {
-    public MessageProcessorVK(AttachmentTypeDefinerInterface attachmentTypeDefiner,
-                              String token)
+    final protected VKAPIChat m_vkAPIChat;
+    final protected VKAPIAttachment m_vkAPIAttachment;
+
+    protected MessageProcessorVK(
+            final AttachmentTypeDefinerInterface attachmentTypeDefiner,
+            final String token,
+            final VKAPIChat vkAPIChat,
+            final VKAPIAttachment vkAPIAttachment)
     {
         super(attachmentTypeDefiner, token);
+
+        m_vkAPIChat = vkAPIChat;
+        m_vkAPIAttachment = vkAPIAttachment;
     }
 
     @Override
@@ -291,18 +298,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final AttachmentType attachmentType,
             ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
     {
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
-
         switch (attachmentType) {
             case IMAGE:
             case DOC: return prepareStoredAttachmentDefaultToDownload(
-                    vkAPIChat,
                     attachmentToPrepare,
                     chatId,
                     preparedAttachmentWrapper);
@@ -329,7 +327,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
     }
 
     private Error prepareStoredAttachmentDefaultToDownload(
-            final VKAPIChat vkAPIChat,
             final ResponseAttachmentStored attachmentToPrepare,
             final long chatId,
             ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
@@ -338,8 +335,10 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         try {
             retrofit2.Response<ResponseChatAttachmentListWrapper> response =
-                    vkAPIChat.getChatAttachmentList(chatId, attachmentToPrepare.getAttachmentType(), m_token)
-                            .execute();
+                    m_vkAPIChat.
+                            getChatAttachmentList(
+                                    chatId, attachmentToPrepare.getAttachmentType(), m_token).
+                            execute();
 
             if (!response.isSuccessful())
                 return new Error("Chat Attachments request has been failed!", true);
@@ -410,22 +409,12 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final AttachmentType attachmentType,
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
-        VKAPIProvider vkAPIProvider =
-                (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
-
-        if (vkAPIProvider == null)
-            return new Error("API hasn't been initialized!", true);
-
-        VKAPIAttachment vkAPIAttachment = vkAPIProvider.generateAttachmentAPI();
-
         switch (attachmentType) {
             case IMAGE: return downloadStoredAttachmentImage(
-                    vkAPIAttachment,
                     attachmentType,
                     attachmentToDownload,
                     attachmentEntityCipheredFlagWrapper);
             case DOC: return downloadStoredAttachmentDoc(
-                    vkAPIAttachment,
                     attachmentType,
                     attachmentToDownload,
                     attachmentEntityCipheredFlagWrapper);
@@ -437,7 +426,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
     }
 
     private Error downloadStoredAttachmentImage(
-            final VKAPIAttachment vkAPIAttachment,
             final AttachmentType attachmentType,
             final ResponseAttachmentStored attachmentToDownload,
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
@@ -445,10 +433,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
         ResponsePhotoItem responsePhotoItem = null;
 
         try {
-            retrofit2.Response<ResponsePhotoWrapper> responsePhotoWrapper
-                    = vkAPIAttachment.getPhoto(
-                            m_token,
-                            attachmentToDownload.getFullAttachmentId()).execute();
+            retrofit2.Response<ResponsePhotoWrapper> responsePhotoWrapper =
+                    m_vkAPIAttachment.
+                            getPhoto(m_token, attachmentToDownload.getFullAttachmentId()).execute();
 
             if (!responsePhotoWrapper.isSuccessful())
                 return new Error("Getting Photo Attachment Data response process has been failed!", true);
@@ -499,7 +486,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
     }
 
     private Error downloadStoredAttachmentDoc(
-            final VKAPIAttachment vkAPIAttachment,
             final AttachmentType attachmentType,
             final ResponseAttachmentStored attachmentToDownload,
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
@@ -508,7 +494,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         try {
             retrofit2.Response<ResponseDocumentWrapper> responseDocWrapper
-                    = vkAPIAttachment.getDocument(
+                    = m_vkAPIAttachment.getDocument(
                             m_token,
                             attachmentToDownload.getFullAttachmentId()).execute();
 
