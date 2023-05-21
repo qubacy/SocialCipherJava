@@ -17,11 +17,12 @@ import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 */
 
 public abstract class MessageProcessorBase {
-    protected AttachmentTypeDefinerInterface m_attachmentTypeDefiner = null;
-    protected String m_token = null;
+    final protected AttachmentTypeDefinerInterface m_attachmentTypeDefiner;
+    final protected String m_token;
 
-    public MessageProcessorBase(final AttachmentTypeDefinerInterface attachmentTypeDefiner,
-                                final String token)
+    public MessageProcessorBase(
+            final AttachmentTypeDefinerInterface attachmentTypeDefiner,
+            final String token)
     {
         m_attachmentTypeDefiner = attachmentTypeDefiner;
         m_token = token;

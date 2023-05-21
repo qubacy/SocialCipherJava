@@ -99,6 +99,8 @@ public class TokenCheckerVK extends TokenCheckerBase {
 
     @Override
     protected void onPostExecute(TokenCheckResult result) {
+        if (m_callback == null) return;
+
         if (result.isSucceeded())
             m_callback.onTokenCheckSuccess(result.getLocalUser());
         else

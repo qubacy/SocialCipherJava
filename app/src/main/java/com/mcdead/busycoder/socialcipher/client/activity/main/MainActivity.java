@@ -26,7 +26,7 @@ import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
 import com.mcdead.busycoder.socialcipher.setting.manager.SettingsManager;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
-import com.mcdead.busycoder.socialcipher.client.activity.signin.SignInWebViewActivity;
+import com.mcdead.busycoder.socialcipher.client.activity.signin.SignInActivity;
 import com.mcdead.busycoder.socialcipher.client.processor.network.tokenchecker.result.TokenCheckResultInterface;
 import com.mcdead.busycoder.socialcipher.client.processor.tokenchecker.TokenCheckerBase;
 import com.mcdead.busycoder.socialcipher.client.processor.tokenchecker.TokenCheckerFactory;
@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        Intent intent = new Intent(this, SignInWebViewActivity.class);
+        Intent intent = new Intent(this, SignInActivity.class);
 
         startActivity(intent);
     }

@@ -19,7 +19,7 @@
         android:theme="@style/Theme.SocialCipher"
         tools:targetApi="31">
         <activity
-            android:name=".client.activity.signin.SignInWebViewActivity"
+            android:name=".client.activity.signin.SignInActivity"
             android:exported="false" />
         <activity
             android:name=".client.activity.chatlist.ChatListActivity"

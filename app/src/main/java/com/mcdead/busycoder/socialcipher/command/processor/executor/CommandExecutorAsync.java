@@ -118,8 +118,6 @@ public class CommandExecutorAsync
                 continue;
             }
 
-            // todo: new session creating request..
-
             Long newSessionChatId = m_currentNewSessionChatIdShared.getValue();
 
             if (newSessionChatId != null) {
@@ -128,16 +126,12 @@ public class CommandExecutorAsync
                 initializeNewCipherSession(newSessionChatId);
             }
 
-            // todo: processing incoming command..
-
             CommandMessage commandMessage = m_pendingCommandMessageQueueShared.poll();
 
             if (commandMessage == null) continue;
 
             if (commandMessage.getInitializerPeerId() == m_localPeerId)
                 continue;
-
-            // todo: parsing incoming command..
 
             ObjectWrapper<CommandData> commandDataWrapper =
                     new ObjectWrapper<>();
@@ -150,8 +144,6 @@ public class CommandExecutorAsync
                 continue;
             }
 
-            // todo: checking for a receiver..
-
             if (commandDataWrapper.getValue().getReceiverPeerIdList() != null) {
                 List<Long> receiverPeerIdList = commandDataWrapper.getValue().getReceiverPeerIdList();
                 boolean isForLocalUser = false;
@@ -161,8 +153,6 @@ public class CommandExecutorAsync
 
                 if (!isForLocalUser) continue;
             }
-
-            // todo: conveying a command to processors..
 
             m_currentCommandMessage = commandMessage;
 

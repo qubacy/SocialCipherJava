@@ -19,7 +19,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.SignInT
 import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.SignInWebViewFragment;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
-public class SignInWebViewActivity extends AppCompatActivity
+public class SignInActivity extends AppCompatActivity
     implements SignInCallback
 {
     private LoginMode m_curLoginMode = null;
