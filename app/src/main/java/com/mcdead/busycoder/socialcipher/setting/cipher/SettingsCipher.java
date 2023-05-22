@@ -31,11 +31,6 @@ public class SettingsCipher extends SettingsBase {
 
     private CipherConfiguration m_configuration = null;
 
-//    private CipherAlgorithm m_algorithm = null;
-//    private CipherMode m_mode = null;
-//    private CipherPadding m_padding = null;
-//    private CipherKeySize m_keySize = null;
-
     private SettingsCipher() {
 
     }
@@ -182,16 +177,12 @@ public class SettingsCipher extends SettingsBase {
 
                         if (algo == null) return false;
 
-                        //m_algorithm = algo;
-
                         break;
                     }
                     case C_MODE_ID_PROP_NAME: {
                         mode = CipherMode.getModeById(reader.nextInt());
 
                         if (mode == null) return false;
-
-                        //m_mode = mode;
 
                         break;
                     }
@@ -200,16 +191,12 @@ public class SettingsCipher extends SettingsBase {
 
                         if (padding == null) return false;
 
-                        //m_padding = padding;
-
                         break;
                     }
                     case C_KEY_SIZE_ID_PROP_NAME: {
                         keySize = CipherKeySize.getCipherKeySizeById(reader.nextInt());
 
                         if (keySize == null) return false;
-
-                        //m_keySize = keySize;
 
                         break;
                     }
@@ -240,7 +227,6 @@ public class SettingsCipher extends SettingsBase {
 
     @Override
     public boolean store() {
-        String s = getFilePath();
         File fileSettings = new File(getFilePath());
 
         try (JsonWriter writer = new JsonWriter(new FileWriter(fileSettings))) {

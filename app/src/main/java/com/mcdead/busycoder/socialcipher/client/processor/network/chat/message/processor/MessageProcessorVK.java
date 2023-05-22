@@ -57,6 +57,75 @@ public class MessageProcessorVK extends MessageProcessorBase {
     final protected VKAPIChat m_vkAPIChat;
     final protected VKAPIAttachment m_vkAPIAttachment;
 
+    public static final HashMap<ErrorType, Error> C_ERROR_HASH_MAP =
+            new HashMap<ErrorType, Error>()
+            {
+                {
+                    put(ErrorType.NULL_LOADED_MESSAGE,
+                            new Error("Loaded message hasn't been initialized!", true));
+                    put(ErrorType.NULL_UPDATE_MESSAGE,
+                            new Error("Update Message hasn't been initialized!", true));
+                    put(ErrorType.INVALID_PEER_ID,
+                            new Error("Invalid Peer Id has been provided!", true));
+                    put(ErrorType.NULL_LOADED_MESSAGE_SENDER,
+                            new Error("Loaded Message Sender hasn't been initialized!", true));
+                    put(ErrorType.NULL_UPDATE_MESSAGE_SENDER,
+                            new Error("Update message Sender hasn't been initialized!", true));
+                    put(ErrorType.NULL_RESULT_MESSAGE_ENTITY_WRAPPER,
+                            new Error("Result Message Wrapper hasn't been initialized!", true));
+                    put(ErrorType.FAILED_MESSAGE_ENTITY_GENERATION,
+                            new Error("New message generation process went wrong!", true));
+                    put(ErrorType.NULL_MESSAGE_ENTITY,
+                            new Error("Message hasn't been initialized!", true));
+                    put(ErrorType.NULL_CHATS_STORE,
+                            new Error("Chats' Store hasn't been initialized!", true));
+                    put(ErrorType.FAILED_SETTING_ATTACHMENTS_TO_MESSAGE,
+                            new Error("Setting attachments to message process went wrong!", true));
+                    put(ErrorType.INVALID_RAW_ATTACHMENT_TYPE,
+                            new Error("Raw attachment had a wrong type!", true));
+                    put(ErrorType.INCORRECT_ATTACHMENT_TYPE_TO_LOAD,
+                            new Error("Provided Attachment wasn't an instance of Stored Attachment type!", true));
+                    put(ErrorType.NULL_ATTACHMENTS_STORE,
+                            new Error("Attachments' Store hasn't been initialized!", true));
+                    put(ErrorType.UNKNOWN_ATTACHMENT_TO_PREPARE_DOWNLOADING_ALLOCATION_TYPE,
+                            new Error("Preparing for a provided Attachment process cannot be executed on a provided attachment!", true));
+                    put(ErrorType.UNKNOWN_STORED_ATTACHMENT_TO_PREPARE_DOWNLOADING_TYPE,
+                            new Error("Preparing for a provided Stored Attachment process cannot be executed on a provided attachment!", true));
+                    put(ErrorType.FAILED_CHAT_ATTACHMENT_REQUEST,
+                            new Error("Chat Attachments request has been failed!", true));
+                    put(ErrorType.NULL_RETRIEVED_CHAT_ATTACHMENT_LIST,
+                            new Error("Retrieved Chat Attachments list was null!", true));
+                    put(ErrorType.UNKNOWN_ATTACHMENT_TO_DOWNLOAD_ALLOCATION_TYPE,
+                            new Error("Downloading Attachment operation cannot be executed on a provided attachment!", true));
+                    put(ErrorType.UNKNOWN_STORED_ATTACHMENT_TO_DOWNLOAD_TYPE,
+                            new Error("Downloading Stored Attachment operation cannot be executed on a provided attachment!", true));
+                }
+            };
+
+    public static enum ErrorType {
+        NULL_LOADED_MESSAGE,
+        NULL_UPDATE_MESSAGE,
+        INVALID_PEER_ID,
+        NULL_LOADED_MESSAGE_SENDER,
+        NULL_UPDATE_MESSAGE_SENDER,
+        NULL_RESULT_MESSAGE_ENTITY_WRAPPER,
+        FAILED_MESSAGE_ENTITY_GENERATION,
+        NULL_MESSAGE_ENTITY,
+        NULL_CHATS_STORE,
+        FAILED_SETTING_ATTACHMENTS_TO_MESSAGE,
+
+        INVALID_RAW_ATTACHMENT_TYPE,
+        INCORRECT_ATTACHMENT_TYPE_TO_LOAD,
+        NULL_ATTACHMENTS_STORE,
+        UNKNOWN_ATTACHMENT_TO_PREPARE_DOWNLOADING_ALLOCATION_TYPE,
+        UNKNOWN_STORED_ATTACHMENT_TO_PREPARE_DOWNLOADING_TYPE,
+        FAILED_CHAT_ATTACHMENT_REQUEST,
+        NULL_RETRIEVED_CHAT_ATTACHMENT_LIST,
+        UNKNOWN_ATTACHMENT_TO_DOWNLOAD_ALLOCATION_TYPE,
+        UNKNOWN_STORED_ATTACHMENT_TO_DOWNLOAD_TYPE,
+
+    };
+
     protected MessageProcessorVK(
             final AttachmentTypeDefinerInterface attachmentTypeDefiner,
             final String token,
@@ -77,11 +146,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
             ObjectWrapper<MessageEntity> resultMessage)
     {
         if (message == null)
-            return new Error("Update hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_LOADED_MESSAGE);
         if (peerId == 0)
-            return new Error("Invalid Peer Id has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_PEER_ID);
+        if (senderUser == null)
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_LOADED_MESSAGE_SENDER);
         if (resultMessage == null)
-            return new Error("Result Message Wrapper hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_RESULT_MESSAGE_ENTITY_WRAPPER);
 
         ResponseChatContentItem messageVK = (ResponseChatContentItem) message;
         List<ResponseAttachmentInterface> attachmentsToLoadList =
@@ -98,7 +169,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 attachmentsToLoadList);
 
         if (messageEntity == null)
-            return new Error("New message generation process went wrong!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_MESSAGE_ENTITY_GENERATION);
 
         resultMessage.setValue(messageEntity);
 
@@ -113,11 +184,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
             ObjectWrapper<MessageEntity> resultMessage)
     {
         if (update == null)
-            return new Error("Update hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_UPDATE_MESSAGE);
         if (peerId == 0)
-            return new Error("Invalid Peer Id has been provided!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_PEER_ID);
+        if (senderUser == null)
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_UPDATE_MESSAGE_SENDER);
         if (resultMessage == null)
-            return new Error("Result Message Wrapper hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_RESULT_MESSAGE_ENTITY_WRAPPER);
 
         ResponseUpdateItem updateVK = (ResponseUpdateItem) update;
         List<ResponseAttachmentInterface> attachmentsToLoadList =
@@ -156,7 +229,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 attachmentsToLoadList);
 
         if (messageEntity == null)
-            return new Error("New message generation process went wrong!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_MESSAGE_ENTITY_GENERATION);
 
         resultMessage.setValue(messageEntity);
 
@@ -169,7 +242,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final long chatId)
     {
         if (message == null)
-            return new Error("Message hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_MESSAGE_ENTITY);
         if (message.getAttachmentToLoad() == null)
             return null;
 
@@ -193,15 +266,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         if (loadedAttachments.isEmpty()) return null;
 
-        ChatsStore dialogsStore = ChatsStore.getInstance();
+        ChatsStore chatsStore = ChatsStore.getInstance();
 
-        if (dialogsStore == null)
-            return new Error("Dialogs Store hasn't been initialized!", true);
+        if (chatsStore == null)
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_CHATS_STORE);
 
-        if (!dialogsStore.setMessageAttachments(loadedAttachments, chatId, message.getId(), icCiphered))
-            return new Error(
-                "Setting attachments to message process went wrong!",
-                true);
+        if (!chatsStore.setMessageAttachments(loadedAttachments, chatId, message.getId(), icCiphered))
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_SETTING_ATTACHMENTS_TO_MESSAGE);
 
         return null;
     }
@@ -214,13 +285,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         ResponseAttachmentBase attachmentVK = (ResponseAttachmentBase) attachmentToLoad;
 
         if (attachmentVK == null)
-            return new Error("Raw attachment had a wrong type!", true);
-
-        AttachmentTypeDefinerVK attachmentTypeDefiner =
-                (AttachmentTypeDefinerVK) AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
-
-        if (attachmentTypeDefiner == null)
-            return new Error("AttachmentTypeDefiner hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_RAW_ATTACHMENT_TYPE);
 
         ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
         Error loadAttachmentError = loadAttachment(attachmentVK, attachmentEntityWrapper);
@@ -228,7 +293,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (loadAttachmentError != null)
             return loadAttachmentError;
         if (attachmentEntityWrapper.getValue() != null) {
-            attachmentEntityCipheredFlagWrapper.setValue(new Pair<>(attachmentEntityWrapper.getValue(), false));
+            attachmentEntityCipheredFlagWrapper.setValue(
+                    new Pair<>(attachmentEntityWrapper.getValue(), false));
 
             return null;
         }
@@ -257,13 +323,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
             ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper)
     {
         if (!(attachmentToDownload instanceof ResponseAttachmentStored))
-            return new Error("Provided Attachment wasn't an instance of Stored Attachment type!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INCORRECT_ATTACHMENT_TYPE_TO_LOAD);
 
         ResponseAttachmentStored attachmentStored = (ResponseAttachmentStored) attachmentToDownload;
         AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
 
         if (attachmentsStore == null)
-            return new Error("Attachment Store hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_ATTACHMENTS_STORE);
 
         AttachmentEntityBase attachmentEntity =
                 attachmentsStore.getAttachmentById(attachmentStored.getTypedShortAttachmentId());
@@ -289,7 +355,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
             case LINKED: return prepareLinkedAttachmentToDownload((ResponseAttachmentLinked) attachmentToPrepare, charId, attachmentType, preparedAttachmentWrapper);
         }
 
-        return new Error("Preparing for a provided Attachment process cannot be executed on a provided attachment!", true);
+        return C_ERROR_HASH_MAP.get(
+                ErrorType.UNKNOWN_ATTACHMENT_TO_PREPARE_DOWNLOADING_ALLOCATION_TYPE);
     }
 
     private Error prepareStoredAttachmentToDownload(
@@ -308,9 +375,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
 //            case VIDEO: return null;
         }
 
-        return new Error(
-                "Preparing for a provided Stored Attachment process cannot be executed on a provided attachment!",
-                true);
+        return C_ERROR_HASH_MAP.get(
+                ErrorType.UNKNOWN_STORED_ATTACHMENT_TO_PREPARE_DOWNLOADING_TYPE);
     }
 
     private Error prepareLinkedAttachmentToDownload(
@@ -341,7 +407,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             execute();
 
             if (!response.isSuccessful())
-                return new Error("Chat Attachments request has been failed!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_CHAT_ATTACHMENT_REQUEST);
             if (response.body().error != null)
                 return new Error(response.body().error.message, true);
 
@@ -354,7 +420,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         }
 
         if (attachmentItemList == null)
-            return new Error("Retrieved Chat Attachments list was null!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_RETRIEVED_CHAT_ATTACHMENT_LIST);
 
         for (final ResponseChatAttachmentListItem attachmentItem : attachmentItemList) {
             ResponseAttachmentStored attachmentItemData =
@@ -401,7 +467,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, chatId, attachmentEntityCipheredFlagWrapper);
         }
 
-        return new Error("Downloading Attachment operation cannot be executed on a provided attachment!", true);
+        return C_ERROR_HASH_MAP.get(ErrorType.UNKNOWN_ATTACHMENT_TO_DOWNLOAD_ALLOCATION_TYPE);
     }
 
     private Error downloadStoredAttachment(
@@ -422,7 +488,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             case VIDEO: return null;
         }
 
-        return new Error("Downloading Stored Attachment operation cannot be executed on a provided attachment!", true);
+        return C_ERROR_HASH_MAP.get(ErrorType.UNKNOWN_STORED_ATTACHMENT_TO_DOWNLOAD_TYPE);
     }
 
     private Error downloadStoredAttachmentImage(

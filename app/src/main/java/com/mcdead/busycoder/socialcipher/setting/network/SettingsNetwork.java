@@ -126,7 +126,6 @@ public class SettingsNetwork extends SettingsBase
 
     @Override
     public boolean store() {
-        String s = getFilePath();
         File fileSettings = new File(getFilePath());
 
         try (JsonWriter writer = new JsonWriter(new FileWriter(fileSettings))) {
