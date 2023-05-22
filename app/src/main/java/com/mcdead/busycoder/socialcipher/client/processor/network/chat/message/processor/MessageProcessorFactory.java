@@ -5,6 +5,8 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIAttachm
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerFactory;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerInterface;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class MessageProcessorFactory {
@@ -14,10 +16,21 @@ public class MessageProcessorFactory {
         if (settingsNetwork == null) return null;
         if (settingsNetwork.getAPIType() == null) return null;
 
-        AttachmentTypeDefinerInterface attachmentTypeDefiner = AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
+        AttachmentTypeDefinerInterface attachmentTypeDefiner =
+                AttachmentTypeDefinerFactory.generateAttachmentTypeDefiner();
+
+        if (attachmentTypeDefiner == null)
+            return null;
+
+        ChatIdChecker chatIdChecker =
+                ChatIdCheckerGenerator.generateChatIdChecker();
+
+        if (chatIdChecker == null)
+            return null;
 
         switch (settingsNetwork.getAPIType()) {
-            case VK: return generateMessageProcessorVK(attachmentTypeDefiner, settingsNetwork.getToken());
+            case VK: return generateMessageProcessorVK(
+                    attachmentTypeDefiner, settingsNetwork.getToken(), chatIdChecker);
         }
 
         return null;
@@ -25,7 +38,8 @@ public class MessageProcessorFactory {
 
     public static MessageProcessorBase generateMessageProcessorVK(
             final AttachmentTypeDefinerInterface attachmentTypeDefiner,
-            final String token)
+            final String token,
+            final ChatIdChecker chatIdChecker)
     {
         VKAPIProvider vkAPIProvider = new VKAPIProvider();
         VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
@@ -39,6 +53,6 @@ public class MessageProcessorFactory {
             return null;
 
         return (MessageProcessorBase)(new MessageProcessorVK(
-                attachmentTypeDefiner, token, vkAPIChat, vkAPIAttachment));
+                attachmentTypeDefiner, token, chatIdChecker, vkAPIChat, vkAPIAttachment));
     }
 }

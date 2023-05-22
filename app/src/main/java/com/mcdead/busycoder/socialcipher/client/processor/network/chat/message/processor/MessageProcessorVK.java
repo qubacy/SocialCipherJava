@@ -21,6 +21,7 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoI
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
@@ -29,9 +30,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.Attachmen
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentType;
-import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerFactory;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerInterface;
-import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.cipher.MessageCipherProcessor;
@@ -65,7 +64,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             new Error("Loaded message hasn't been initialized!", true));
                     put(ErrorType.NULL_UPDATE_MESSAGE,
                             new Error("Update Message hasn't been initialized!", true));
-                    put(ErrorType.INVALID_PEER_ID,
+                    put(ErrorType.INVALID_CHAT_ID,
                             new Error("Invalid Peer Id has been provided!", true));
                     put(ErrorType.NULL_LOADED_MESSAGE_SENDER,
                             new Error("Loaded Message Sender hasn't been initialized!", true));
@@ -99,40 +98,69 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             new Error("Downloading Attachment operation cannot be executed on a provided attachment!", true));
                     put(ErrorType.UNKNOWN_STORED_ATTACHMENT_TO_DOWNLOAD_TYPE,
                             new Error("Downloading Stored Attachment operation cannot be executed on a provided attachment!", true));
+                    put(ErrorType.FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS,
+                            new Error("Getting Photo Attachment Data response process has been failed!", true));
+                    put(ErrorType.INVALID_GETTING_STORED_PHOTO_LINKS_RESPONSE,
+                            new Error("Getting Photo Attachment Data response process ended with an invalid response!", true));
+                    put(ErrorType.INVALID_STORED_PHOTO_SIZES_LINK_ARRAY,
+                            new Error("Received array of photo sizes was invalid!", true));
+                    put(ErrorType.FAILED_GETTING_STORED_DOC_LINK,
+                            new Error("Requesting Doc Link process ended with a failed request!", true));
+                    put(ErrorType.INVALID_GETTING_STORED_DOC_LINK_RESPONSE,
+                            new Error("Requesting Doc Link process ended with an invalid response!", true));
+                    put(ErrorType.UNKNOWN_LINKED_ATTACHMENT_TO_DOWNLOAD_TYPE,
+                            new Error("Downloading cannot be processed on a provided attachment!", true));
+                    put(ErrorType.FAILED_ATTACHMENT_FILE_DOWNLOADING,
+                            new Error("Downloading Attachment process has been failed!", true));
+                    put(ErrorType.EMPTY_ATTACHMENT_FILE_EXTENSION,
+                            new Error("Attachment File Extension was empty!", true));
                 }
             };
 
     public static enum ErrorType {
         NULL_LOADED_MESSAGE,
         NULL_UPDATE_MESSAGE,
-        INVALID_PEER_ID,
         NULL_LOADED_MESSAGE_SENDER,
         NULL_UPDATE_MESSAGE_SENDER,
         NULL_RESULT_MESSAGE_ENTITY_WRAPPER,
-        FAILED_MESSAGE_ENTITY_GENERATION,
         NULL_MESSAGE_ENTITY,
         NULL_CHATS_STORE,
-        FAILED_SETTING_ATTACHMENTS_TO_MESSAGE,
-
-        INVALID_RAW_ATTACHMENT_TYPE,
-        INCORRECT_ATTACHMENT_TYPE_TO_LOAD,
         NULL_ATTACHMENTS_STORE,
+        NULL_RETRIEVED_CHAT_ATTACHMENT_LIST,
+
+        INVALID_CHAT_ID,
+        INVALID_RAW_ATTACHMENT_TYPE,
+        INVALID_GETTING_STORED_DOC_LINK_RESPONSE,
+        INVALID_GETTING_STORED_PHOTO_LINKS_RESPONSE,
+        INVALID_STORED_PHOTO_SIZES_LINK_ARRAY,
+
+        FAILED_MESSAGE_ENTITY_GENERATION,
+        FAILED_SETTING_ATTACHMENTS_TO_MESSAGE,
+        FAILED_CHAT_ATTACHMENT_REQUEST,
+        FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS,
+        FAILED_GETTING_STORED_DOC_LINK,
+        FAILED_ATTACHMENT_FILE_DOWNLOADING,
+
+        INCORRECT_ATTACHMENT_TYPE_TO_LOAD,
+
         UNKNOWN_ATTACHMENT_TO_PREPARE_DOWNLOADING_ALLOCATION_TYPE,
         UNKNOWN_STORED_ATTACHMENT_TO_PREPARE_DOWNLOADING_TYPE,
-        FAILED_CHAT_ATTACHMENT_REQUEST,
-        NULL_RETRIEVED_CHAT_ATTACHMENT_LIST,
         UNKNOWN_ATTACHMENT_TO_DOWNLOAD_ALLOCATION_TYPE,
         UNKNOWN_STORED_ATTACHMENT_TO_DOWNLOAD_TYPE,
+        UNKNOWN_LINKED_ATTACHMENT_TO_DOWNLOAD_TYPE,
 
+        EMPTY_DOWNLOADED_STORED_PHOTO_SIZES_ARRAY,
+        EMPTY_ATTACHMENT_FILE_EXTENSION,
     };
 
     protected MessageProcessorVK(
             final AttachmentTypeDefinerInterface attachmentTypeDefiner,
             final String token,
+            final ChatIdChecker chatIdChecker,
             final VKAPIChat vkAPIChat,
             final VKAPIAttachment vkAPIAttachment)
     {
-        super(attachmentTypeDefiner, token);
+        super(attachmentTypeDefiner, token, chatIdChecker);
 
         m_vkAPIChat = vkAPIChat;
         m_vkAPIAttachment = vkAPIAttachment;
@@ -141,14 +169,14 @@ public class MessageProcessorVK extends MessageProcessorBase {
     @Override
     public Error processReceivedMessage(
             final ResponseMessageInterface message,
-            final long peerId,
+            final long chatId,
             final UserEntity senderUser,
             ObjectWrapper<MessageEntity> resultMessage)
     {
         if (message == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_LOADED_MESSAGE);
-        if (peerId == 0)
-            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_PEER_ID);
+        if (!m_chatIdChecker.isValid(chatId))
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_CHAT_ID);
         if (senderUser == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_LOADED_MESSAGE_SENDER);
         if (resultMessage == null)
@@ -160,10 +188,15 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 ? null
                 : new ArrayList<ResponseAttachmentInterface>(messageVK.attachments));
 
+        String processedText =
+                (messageVK.text == null ?
+                        null :
+                        messageVK.text.replace("<br>", "\n"));
+
         MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 messageVK.id,
                 senderUser,
-                messageVK.text.replace("<br>", "\n"),
+                processedText,
                 messageVK.timestamp,
                 false,
                 attachmentsToLoadList);
@@ -179,14 +212,14 @@ public class MessageProcessorVK extends MessageProcessorBase {
     @Override
     public Error processReceivedUpdateMessage(
             final ResponseUpdateItemInterface update,
-            final long peerId,
+            final long chatId,
             final UserEntity senderUser,
             ObjectWrapper<MessageEntity> resultMessage)
     {
         if (update == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_UPDATE_MESSAGE);
-        if (peerId == 0)
-            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_PEER_ID);
+        if (!m_chatIdChecker.isValid(chatId))
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_CHAT_ID);
         if (senderUser == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_UPDATE_MESSAGE_SENDER);
         if (resultMessage == null)
@@ -199,15 +232,17 @@ public class MessageProcessorVK extends MessageProcessorBase {
                         : new ArrayList<ResponseAttachmentInterface>(updateVK.attachments));
 
         MessageCipherProcessor messageCipherProcessor =
-                MessageCipherProcessor.getInstance(peerId);
-        String processedMessageText = updateVK.text;
+                MessageCipherProcessor.getInstance(chatId);
+        String processedMessageText =
+                (updateVK.text == null ? null : updateVK.text.replace("<br>", "\n"));
         boolean isCiphered = false;
 
-        if (messageCipherProcessor != null) {
+        if (messageCipherProcessor != null && processedMessageText != null) {
             Error cipheringError;
 
             if (!updateVK.text.isEmpty()) {
-                ObjectWrapper<Pair<Boolean, String>> processedSuccessFlagText = new ObjectWrapper<>();
+                ObjectWrapper<Pair<Boolean, String>> processedSuccessFlagText =
+                        new ObjectWrapper<>();
                 cipheringError = messageCipherProcessor.processText(
                         updateVK.text, false, processedSuccessFlagText);
 
@@ -223,7 +258,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         MessageEntity messageEntity = MessageEntityGenerator.generateMessage(
                 updateVK.messageId,
                 senderUser,
-                processedMessageText.replace("<br>", "\n"),
+                processedMessageText,
                 updateVK.timestamp,
                 isCiphered,
                 attachmentsToLoadList);
@@ -243,6 +278,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
     {
         if (message == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_MESSAGE_ENTITY);
+        if (!m_chatIdChecker.isValid(chatId))
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_CHAT_ID);
         if (message.getAttachmentToLoad() == null)
             return null;
 
@@ -254,7 +291,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper =
                     new ObjectWrapper<>(new Pair<>(null, false));
-            Error err = processAttachment(attachmentToLoad, chatId, attachmentEntityCipheredFlagWrapper);
+            Error err =
+                    processAttachment(attachmentToLoad, chatId, attachmentEntityCipheredFlagWrapper);
 
             if (err != null) return err;
 
@@ -351,8 +389,16 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 attachmentToPrepare.getAttachmentType());
 
         switch (attachmentToPrepare.getResponseAttachmentType()) {
-            case STORED: return prepareStoredAttachmentToDownload((ResponseAttachmentStored) attachmentToPrepare, charId, attachmentType, preparedAttachmentWrapper);
-            case LINKED: return prepareLinkedAttachmentToDownload((ResponseAttachmentLinked) attachmentToPrepare, charId, attachmentType, preparedAttachmentWrapper);
+            case STORED: return prepareStoredAttachmentToDownload(
+                    (ResponseAttachmentStored) attachmentToPrepare,
+                    charId,
+                    attachmentType,
+                    preparedAttachmentWrapper);
+            case LINKED: return prepareLinkedAttachmentToDownload(
+                    (ResponseAttachmentLinked) attachmentToPrepare,
+                    charId,
+                    attachmentType,
+                    preparedAttachmentWrapper);
         }
 
         return C_ERROR_HASH_MAP.get(
@@ -463,8 +509,15 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 attachmentToDownload.getAttachmentType());
 
         switch (attachmentToDownload.getResponseAttachmentType()) {
-            case STORED: return downloadStoredAttachment((ResponseAttachmentStored) attachmentToDownload, attachmentType, attachmentEntityCipheredFlagWrapper);
-            case LINKED: return downloadLinkedAttachment((ResponseAttachmentLinked) attachmentToDownload, attachmentType, chatId, attachmentEntityCipheredFlagWrapper);
+            case STORED: return downloadStoredAttachment(
+                    (ResponseAttachmentStored) attachmentToDownload,
+                    attachmentType,
+                    attachmentEntityCipheredFlagWrapper);
+            case LINKED: return downloadLinkedAttachment(
+                    (ResponseAttachmentLinked) attachmentToDownload,
+                    attachmentType,
+                    chatId,
+                    attachmentEntityCipheredFlagWrapper);
         }
 
         return C_ERROR_HASH_MAP.get(ErrorType.UNKNOWN_ATTACHMENT_TO_DOWNLOAD_ALLOCATION_TYPE);
@@ -504,7 +557,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             getPhoto(m_token, attachmentToDownload.getFullAttachmentId()).execute();
 
             if (!responsePhotoWrapper.isSuccessful())
-                return new Error("Getting Photo Attachment Data response process has been failed!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS);
 
             // todo: reckon of this poor design sign:
 
@@ -512,9 +565,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 return new Error(responsePhotoWrapper.body().error.message, true);
 
             if (responsePhotoWrapper.body().response == null)
-                return new Error("Getting Photo Attachment Data response process ended with a null response body!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INVALID_GETTING_STORED_PHOTO_LINKS_RESPONSE);
             if (responsePhotoWrapper.body().response.isEmpty())
-                return new Error("Getting Photo Attachment Data response process ended with an empty response body!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INVALID_GETTING_STORED_PHOTO_LINKS_RESPONSE);
 
             responsePhotoItem = responsePhotoWrapper.body().response.get(0);
 
@@ -525,9 +578,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
         }
 
         if (responsePhotoItem.sizes == null)
-            return new Error("Received array of photo sizes was null!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_STORED_PHOTO_SIZES_LINK_ARRAY);
         if (responsePhotoItem.sizes.isEmpty())
-            return new Error("Received array of photo sizes was empty!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.INVALID_STORED_PHOTO_SIZES_LINK_ARRAY);
 
         HashMap<AttachmentSize, String> attachmentSizeUrlHashMap =
                 new HashMap<>();
@@ -565,7 +618,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             attachmentToDownload.getFullAttachmentId()).execute();
 
             if (!responseDocWrapper.isSuccessful())
-                return new Error("Requesting Doc Link process ended with a failed request!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_GETTING_STORED_DOC_LINK);
 
             // todo: reckon of this poor design sign:
 
@@ -573,9 +626,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
                 return new Error(responseDocWrapper.body().error.message, true);
 
             if (responseDocWrapper.body().response == null)
-                return new Error("Requesting Doc Link process ended with an empty response part!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INVALID_GETTING_STORED_DOC_LINK_RESPONSE);
             if (responseDocWrapper.body().response.isEmpty())
-                return new Error("Requesting Doc Link process ended with an empty response body!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.INVALID_GETTING_STORED_DOC_LINK_RESPONSE);
 
             responseDocItem = responseDocWrapper.body().response.get(0);
 
@@ -616,7 +669,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
             ResponseAttachmentDoc attachmentDoc = (ResponseAttachmentDoc) attachmentLink;
             ObjectWrapper<Boolean> successFlagWrapper = new ObjectWrapper<>();
 
-            if (attachmentDoc.getExtension().compareTo(MessageCipherProcessor.C_CIPHERED_ATTACHMENT_EXT) == 0) {
+            if (attachmentDoc.getExtension().compareTo(
+                    MessageCipherProcessor.C_CIPHERED_ATTACHMENT_EXT) == 0)
+            {
                 Error downloadingCipheredError =
                         downloadCipheredAttachment(
                             messageCipherProcessor,
@@ -634,14 +689,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         switch (attachmentType) {
             case IMAGE:
-            case DOC: return downloadLinkedAttachmentDefault(attachmentLink, attachmentType, attachmentEntityCipheredFlagWrapper);
+            case DOC: return downloadLinkedAttachmentDefault(
+                    attachmentLink, attachmentType, attachmentEntityCipheredFlagWrapper);
             case AUDIO: return null;
             case VIDEO: return null;
         }
 
-        return new Error(
-                "Downloading cannot be processed on a provided attachment!",
-                true);
+        return C_ERROR_HASH_MAP.get(ErrorType.UNKNOWN_LINKED_ATTACHMENT_TO_DOWNLOAD_TYPE);
     }
 
     private Error downloadCipheredAttachment(
@@ -665,8 +719,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         // todo: deciphering bytes...
 
-        ObjectWrapper<MessageCipherProcessor.AttachmentDecipheringResult> attachmentDecipheringResultWrapper =
-                new ObjectWrapper<>();
+        ObjectWrapper<MessageCipherProcessor.AttachmentDecipheringResult>
+                attachmentDecipheringResultWrapper = new ObjectWrapper<>();
         Error decipheringError =
                 decipherAttachment(
                         cipherProcessor,
@@ -722,7 +776,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
             if (downloadingError != null)
                 return downloadingError;
 
-            attachmentSizeBytesHashMap.put(attachmentSizeLink.getKey(), downloadedBytesWrapper.getValue());
+            attachmentSizeBytesHashMap.put(
+                    attachmentSizeLink.getKey(), downloadedBytesWrapper.getValue());
         }
 
         ObjectWrapper<HashMap<AttachmentSize, AttachmentData>> attachmentSizeDataHashMapWrapper =
@@ -764,7 +819,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             Response response = okHttpClient.newCall(request).execute();
 
             if (!response.isSuccessful())
-                return new Error("Downloading Attachment process has been failed!", true);
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_FILE_DOWNLOADING);
 
             downloadedBytesWrapper.setValue(response.body().bytes());
 
@@ -780,7 +835,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
     private Error decipherAttachment(
             final MessageCipherProcessor messageCipherProcessor,
             final byte[] sourceBytes,
-            ObjectWrapper<MessageCipherProcessor.AttachmentDecipheringResult> attachmentDecipheringResultWrapper)
+            ObjectWrapper<MessageCipherProcessor.AttachmentDecipheringResult>
+                    attachmentDecipheringResultWrapper)
     {
         return messageCipherProcessor.decipherAttachmentBytes(
                 sourceBytes, attachmentDecipheringResultWrapper);
@@ -811,10 +867,11 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final HashMap<AttachmentSize, byte[]> attachmentSizeBytesHashMap,
             ObjectWrapper<HashMap<AttachmentSize, AttachmentData>> attachmentSizeDataHashMapWrapper)
     {
-        String fileExtension = extractExtensionByUrl(attachmentLink.getUrlBySize(AttachmentSize.STANDARD));
+        String fileExtension =
+                extractExtensionByUrl(attachmentLink.getUrlBySize(AttachmentSize.STANDARD));
 
         if (fileExtension.isEmpty())
-            return new Error("Attachment File Extension was empty!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.EMPTY_ATTACHMENT_FILE_EXTENSION);
 
         HashMap<AttachmentSize, AttachmentData> attachmentSizeDataHashMap  = new HashMap<>();
 
@@ -865,7 +922,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
 
         if (attachmentsStore == null)
-            return new Error("Attachment Store hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_ATTACHMENTS_STORE);
 
         attachmentEntityWrapper.setValue(attachmentsStore.saveCachedAttachment(attachmentData));
 
@@ -879,7 +936,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         AttachmentsStore attachmentsStore = AttachmentsStore.getInstance();
 
         if (attachmentsStore == null)
-            return new Error("Attachment Store hasn't been initialized!", true);
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_ATTACHMENTS_STORE);
 
         attachmentEntityWrapper.setValue(attachmentsStore.saveAttachment(attachmentSizeDataHashMap));
 
