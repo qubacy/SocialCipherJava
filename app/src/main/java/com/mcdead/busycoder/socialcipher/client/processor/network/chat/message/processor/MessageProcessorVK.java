@@ -25,7 +25,6 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecke
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
-import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.data.AttachmentData;
@@ -34,6 +33,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.Atta
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.cipher.MessageCipherProcessor;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.data.AttachmentProcessingResult;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
@@ -78,8 +78,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             new Error("Message hasn't been initialized!", true));
                     put(ErrorType.NULL_CHATS_STORE,
                             new Error("Chats' Store hasn't been initialized!", true));
-                    put(ErrorType.FAILED_SETTING_ATTACHMENTS_TO_MESSAGE,
-                            new Error("Setting attachments to message process went wrong!", true));
                     put(ErrorType.INVALID_RAW_ATTACHMENT_TYPE,
                             new Error("Raw attachment had a wrong type!", true));
                     put(ErrorType.INCORRECT_ATTACHMENT_TYPE_TO_LOAD,
@@ -118,6 +116,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             new Error("Attachment Data generation has been failed!", true));
                     put(ErrorType.FAILED_ATTACHMENT_FILE_SAVING,
                             new Error("Attachment File saving went wrong!", true));
+                    put(ErrorType.NULL_ATTACHMENT_PROCESSING_RESULT_WRAPPER,
+                            new Error("Attachment Processing Result's wrapper was null!", true));
                 }
             };
 
@@ -131,6 +131,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
         NULL_CHATS_STORE,
         NULL_ATTACHMENTS_STORE,
         NULL_RETRIEVED_CHAT_ATTACHMENT_LIST,
+        NULL_ATTACHMENT_PROCESSING_RESULT_WRAPPER,
 
         INVALID_CHAT_ID,
         INVALID_RAW_ATTACHMENT_TYPE,
@@ -139,7 +140,6 @@ public class MessageProcessorVK extends MessageProcessorBase {
         INVALID_STORED_PHOTO_SIZES_LINK_ARRAY,
 
         FAILED_MESSAGE_ENTITY_GENERATION,
-        FAILED_SETTING_ATTACHMENTS_TO_MESSAGE,
         FAILED_CHAT_ATTACHMENT_REQUEST,
         FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS,
         FAILED_GETTING_STORED_DOC_LINK,
@@ -280,7 +280,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
     @Override
     public Error processMessageAttachments(
             final MessageEntity message,
-            final long chatId)
+            final long chatId,
+            ObjectWrapper<AttachmentProcessingResult> attachmentProcessingResultWrapper)
     {
         if (message == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_MESSAGE_ENTITY);
@@ -288,13 +289,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
             return C_ERROR_HASH_MAP.get(ErrorType.INVALID_CHAT_ID);
         if (message.getAttachmentToLoad() == null)
             return null;
+        if (attachmentProcessingResultWrapper == null)
+            return C_ERROR_HASH_MAP.get(ErrorType.NULL_ATTACHMENT_PROCESSING_RESULT_WRAPPER);
 
         List<AttachmentEntityBase> loadedAttachments = new ArrayList<>();
         boolean icCiphered = false;
 
         for (final ResponseAttachmentInterface attachmentToLoad : message.getAttachmentToLoad()) {
-            if (attachmentToLoad == null) continue;
-
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper =
                     new ObjectWrapper<>(new Pair<>(null, false));
             Error err =
@@ -310,13 +311,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         if (loadedAttachments.isEmpty()) return null;
 
-        ChatsStore chatsStore = ChatsStore.getInstance();
-
-        if (chatsStore == null)
-            return C_ERROR_HASH_MAP.get(ErrorType.NULL_CHATS_STORE);
-
-        if (!chatsStore.setMessageAttachments(loadedAttachments, chatId, message.getId(), icCiphered))
-            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_SETTING_ATTACHMENTS_TO_MESSAGE);
+        attachmentProcessingResultWrapper.setValue(
+                new AttachmentProcessingResult(loadedAttachments, icCiphered));
 
         return null;
     }
@@ -326,10 +322,10 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final long chatId,
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
-        ResponseAttachmentBase attachmentVK = (ResponseAttachmentBase) attachmentToLoad;
-
-        if (attachmentVK == null)
+        if (!(attachmentToLoad instanceof ResponseAttachmentBase))
             return C_ERROR_HASH_MAP.get(ErrorType.INVALID_RAW_ATTACHMENT_TYPE);
+
+        ResponseAttachmentBase attachmentVK = (ResponseAttachmentBase) attachmentToLoad;
 
         ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
         Error loadAttachmentError = loadAttachment(attachmentVK, attachmentEntityWrapper);

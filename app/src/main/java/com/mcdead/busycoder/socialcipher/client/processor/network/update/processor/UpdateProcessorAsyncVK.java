@@ -32,6 +32,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastrecei
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.commandchecker.CommandMessageRetriever;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.data.AttachmentProcessingResult;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
 import com.mcdead.busycoder.socialcipher.command.processor.data.CommandMessage;
 import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
@@ -174,11 +175,24 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         if (!ChatsStore.getInstance().addNewMessage(newMessageWrapper.getValue(), updateItem.chatId))
             return new Error("New message addition error!", true);
 
+        ObjectWrapper<AttachmentProcessingResult> attachmentProcessingResultWrapper =
+                new ObjectWrapper<>();
         Error attachmentsError =
                 m_messageProcessor.processMessageAttachments(
-                    newMessageWrapper.getValue(), updateItem.chatId);
+                        newMessageWrapper.getValue(),
+                        updateItem.chatId,
+                        attachmentProcessingResultWrapper);
 
         if (attachmentsError != null) return attachmentsError;
+
+        if (!chatsStore.setMessageAttachments(
+                attachmentProcessingResultWrapper.getValue().getLoadedAttachmentList(),
+                updateItem.chatId,
+                updateItem.messageId,
+                attachmentProcessingResultWrapper.getValue().isCiphered()))
+        {
+            return new Error("Setting attachments to message process went wrong!", true);
+        }
 
         Intent intent
                 = new Intent(m_context.getApplicationContext(), ChatListBroadcastReceiver.class)

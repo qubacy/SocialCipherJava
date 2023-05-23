@@ -66,11 +66,11 @@ public class ChatsStore {
         if (attachmentsList == null) return false;
 
         synchronized (m_chatList) {
-            ChatEntity dialog = getChatById(chatId);
+            ChatEntity chat = getChatById(chatId);
 
-            if (dialog == null) return false;
+            if (chat == null) return false;
 
-            MessageEntity message = dialog.getMessageById(messageId);
+            MessageEntity message = chat.getMessageById(messageId);
 
             if (message == null) return false;
 

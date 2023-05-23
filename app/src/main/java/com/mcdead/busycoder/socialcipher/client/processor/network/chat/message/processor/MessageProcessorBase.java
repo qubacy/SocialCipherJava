@@ -7,6 +7,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecke
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.data.AttachmentProcessingResult;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 /*
@@ -44,5 +45,6 @@ public abstract class MessageProcessorBase {
             ObjectWrapper<MessageEntity> resultMessage);
     public abstract Error processMessageAttachments(
             final MessageEntity message,
-            final long charId);
+            final long charId,
+            ObjectWrapper<AttachmentProcessingResult> attachmentProcessingResultWrapper);
 }

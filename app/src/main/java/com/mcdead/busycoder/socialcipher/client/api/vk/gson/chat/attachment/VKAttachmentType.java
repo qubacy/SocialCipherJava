@@ -3,7 +3,7 @@ package com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment;
 import java.util.Objects;
 
 public enum VKAttachmentType {
-    PHOTO("photo"), DOC("doc"), STICKER("sticker");
+    PHOTO("photo"), DOC("doc"); //, STICKER("sticker");
 
     private String m_type = null;
 

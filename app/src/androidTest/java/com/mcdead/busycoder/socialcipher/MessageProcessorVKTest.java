@@ -2,6 +2,7 @@ package com.mcdead.busycoder.socialcipher;
 
 import static com.mcdead.busycoder.socialcipher.setting.manager.SettingsManager.C_ATTACHMENT_DIR_NAME;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import android.content.Context;
 
@@ -19,17 +20,15 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.Attachmen
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerVK;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntityGenerator;
-import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
+import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.data.AttachmentProcessingResult;
 import com.mcdead.busycoder.socialcipher.client.processor.network.update.processor.UpdateProcessorAsyncVK;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorFactory;
@@ -47,9 +46,7 @@ import java.util.List;
 
 @RunWith(JUnit4.class)
 public class MessageProcessorVKTest {
-    private static final String C_VALID_TOKEN =
-            "";
-
+    private static final String C_VALID_TOKEN = "";
     private Context m_context = null;
     private MessageProcessorVK m_messageProcessor = null;
 
@@ -58,9 +55,12 @@ public class MessageProcessorVKTest {
     private UserEntity m_correctSender = null;
 
     private long m_correctTimestamp = 0;
+
+    private ResponseAttachmentStored m_responseAttachmentDoc = null;
+    private ResponseAttachmentStored m_responseAttachmentPhoto = null;
+
     private List<ResponseAttachmentInterface> m_correctAttachmentListAbstract = null;
     private List<ResponseAttachmentBase> m_correctAttachmentListVK = null;
-    private List<AttachmentEntityBase> m_correctAttachmentEntityList = null;
 
     private String generateAttachmentFilePath(
             final String dirPath,
@@ -76,7 +76,7 @@ public class MessageProcessorVKTest {
 
     @Before
     public void setUp() {
-        m_context = InstrumentationRegistry.getInstrumentation().getContext();
+        m_context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         String baseDir = m_context.getFilesDir().getAbsolutePath();
 
@@ -96,13 +96,13 @@ public class MessageProcessorVKTest {
         m_correctSender = UserEntityGenerator.generateUserEntity(180106935, "Somebody");
         m_correctTimestamp = System.currentTimeMillis();
 
-        ResponseAttachmentStored responseAttachmentDoc =
+        m_responseAttachmentDoc =
                 new ResponseAttachmentStored(
                     VKAttachmentType.DOC.getType(),
                     664209310,
                     180106935,
                     "");
-        ResponseAttachmentStored responseAttachmentPhoto =
+        m_responseAttachmentPhoto =
                 new ResponseAttachmentStored(
                         VKAttachmentType.PHOTO.getType(),
                         457252632,
@@ -111,62 +111,13 @@ public class MessageProcessorVKTest {
 
         m_correctAttachmentListVK = new ArrayList<ResponseAttachmentBase>() {
             {
-                add(responseAttachmentDoc);
-                add(responseAttachmentPhoto);
+                add(m_responseAttachmentDoc);
+                add(m_responseAttachmentPhoto);
             }
         };
         m_correctAttachmentListAbstract = new ArrayList<ResponseAttachmentInterface>() {
             {
                 addAll(m_correctAttachmentListVK);
-            }
-        };
-
-        String attachmentDir = SettingsSystem.getInstance().getAttachmentsDir();
-
-        HashMap<AttachmentSize, String> attachmentDocSizeFilePathHashMap =
-                new HashMap<>();
-
-        attachmentDocSizeFilePathHashMap.put(
-                AttachmentSize.STANDARD,
-                generateAttachmentFilePath(
-                        attachmentDir,
-                        responseAttachmentDoc.getShortAttachmentId(),
-                        AttachmentSize.STANDARD,
-                        "txt"));
-
-        HashMap<AttachmentSize, String> attachmentPhotoSizeFilePathHashMap =
-                new HashMap<>();
-
-        attachmentPhotoSizeFilePathHashMap.put(
-                AttachmentSize.STANDARD,
-                generateAttachmentFilePath(
-                        attachmentDir,
-                        responseAttachmentPhoto.getShortAttachmentId(),
-                        AttachmentSize.STANDARD,
-                        "jpg"));
-        attachmentPhotoSizeFilePathHashMap.put(
-                AttachmentSize.SMALL,
-                generateAttachmentFilePath(
-                        attachmentDir,
-                        responseAttachmentPhoto.getShortAttachmentId(),
-                        AttachmentSize.SMALL,
-                        "jpg"));
-
-        AttachmentEntityBase attachmentDocEntity =
-                AttachmentEntityGenerator.
-                        generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
-                                responseAttachmentDoc.getShortAttachmentId(),
-                                attachmentDocSizeFilePathHashMap);
-        AttachmentEntityBase attachmentPhotoEntity =
-                AttachmentEntityGenerator.
-                        generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
-                                responseAttachmentPhoto.getShortAttachmentId(),
-                                attachmentPhotoSizeFilePathHashMap);
-
-        m_correctAttachmentEntityList = new ArrayList<AttachmentEntityBase>() {
-            {
-                add(attachmentDocEntity);
-                add(attachmentPhotoEntity);
             }
         };
     }
@@ -502,48 +453,111 @@ public class MessageProcessorVKTest {
 
     @Test
     public void processingAttachmentsMatrix() {
+        assertNotNull(AttachmentsStore.getInstance());
+
+        String attachmentDir = SettingsSystem.getInstance().getAttachmentsDir();
+
+        HashMap<AttachmentSize, String> attachmentDocSizeFilePathHashMap =
+                new HashMap<>();
+
+        attachmentDocSizeFilePathHashMap.put(
+                AttachmentSize.STANDARD,
+                generateAttachmentFilePath(
+                        attachmentDir,
+                        m_responseAttachmentDoc.getTypedShortAttachmentId(),
+                        AttachmentSize.STANDARD,
+                        "txt"));
+
+        HashMap<AttachmentSize, String> attachmentPhotoSizeFilePathHashMap =
+                new HashMap<>();
+
+        attachmentPhotoSizeFilePathHashMap.put(
+                AttachmentSize.STANDARD,
+                generateAttachmentFilePath(
+                        attachmentDir,
+                        m_responseAttachmentPhoto.getTypedShortAttachmentId(),
+                        AttachmentSize.STANDARD,
+                        "jpg"));
+        attachmentPhotoSizeFilePathHashMap.put(
+                AttachmentSize.SMALL,
+                generateAttachmentFilePath(
+                        attachmentDir,
+                        m_responseAttachmentPhoto.getTypedShortAttachmentId(),
+                        AttachmentSize.SMALL,
+                        "jpg"));
+
+        AttachmentEntityBase attachmentDocEntity =
+                AttachmentEntityGenerator.
+                        generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
+                                m_responseAttachmentDoc.getTypedShortAttachmentId(),
+                                attachmentDocSizeFilePathHashMap);
+        AttachmentEntityBase attachmentPhotoEntity =
+                AttachmentEntityGenerator.
+                        generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
+                                m_responseAttachmentPhoto.getTypedShortAttachmentId(),
+                                attachmentPhotoSizeFilePathHashMap);
+
+        List<AttachmentEntityBase> correctAttachmentEntityList =
+                new ArrayList<AttachmentEntityBase>() {
+                    {
+                        add(attachmentDocEntity);
+                        add(attachmentPhotoEntity);
+                    }
+                };
+
         List<AttachmentTestData> attachmentTestDataList = new ArrayList<AttachmentTestData>() {
             {
-                ChatEntity chatEntity =
-                        ChatEntityGenerator.generateChatByType(ChatType.DIALOG, m_correctChatId);
-                MessageEntity messageEntity =
+                // CORRECT CASES:
+
+                add(new AttachmentTestData(
                         MessageEntityGenerator.generateMessage(
                                 m_correctMessageId,
                                 m_correctSender,
                                 "hi",
                                 m_correctTimestamp,
                                 false,
-                                m_correctAttachmentListAbstract);
-
-                chatEntity.addMessage(messageEntity);
-                ChatsStore.getInstance().addChat(chatEntity);
-
-                // CORRECT CASES:
-
-                add(new AttachmentTestData(
-                        messageEntity,
+                                m_correctAttachmentListAbstract),
                         m_correctChatId,
-                        m_correctAttachmentEntityList,
+                        new ObjectWrapper<AttachmentProcessingResult>(
+                                new AttachmentProcessingResult(
+                                        correctAttachmentEntityList,
+                                    false)),
+                        null
+                ));
+                add(new AttachmentTestData(
+                        MessageEntityGenerator.generateMessage(
+                                m_correctMessageId,
+                                m_correctSender,
+                                "hi",
+                                m_correctTimestamp,
+                                false,
+                                null),
+                        m_correctChatId,
+                        new ObjectWrapper<AttachmentProcessingResult>(),
                         null
                 ));
 
+                // INCORRECT CASES:
+                // There isn't any reason to include simple cases;
 
+                // todo: it would be nice to add some network-targeted failing tests with mock
+                // todo: API providers..
             }
         };
 
         for (final AttachmentTestData attachmentTestData : attachmentTestDataList) {
+            ObjectWrapper<AttachmentProcessingResult> attachmentProcessingResultWrapper =
+                    new ObjectWrapper<>();
             Error curError =
                     m_messageProcessor.processMessageAttachments(
                             attachmentTestData.message,
-                            attachmentTestData.chatId);
-            List<AttachmentEntityBase> curResultAttachmentList =
-                    ChatsStore.getInstance().
-                            getChatById(m_correctChatId).
-                            getMessageById(m_correctMessageId).
-                            getAttachments();
+                            attachmentTestData.chatId,
+                            attachmentProcessingResultWrapper);
 
             assertEquals(attachmentTestData.error, curError);
-            assertEquals(attachmentTestData.resultAttachmentList, curResultAttachmentList);
+            assertEquals(
+                    attachmentTestData.resultAttachmentProcessing,
+                    attachmentProcessingResultWrapper);
         }
     }
 
@@ -597,18 +611,18 @@ public class MessageProcessorVKTest {
         final public MessageEntity message;
         final public long chatId;
 
-        final public List<AttachmentEntityBase> resultAttachmentList;
+        final public ObjectWrapper<AttachmentProcessingResult> resultAttachmentProcessing;
         final public Error error;
 
         public AttachmentTestData(
                 final MessageEntity message,
                 final long chatId,
-                final List<AttachmentEntityBase> resultAttachmentList,
+                final ObjectWrapper<AttachmentProcessingResult> resultAttachmentProcessing,
                 final Error error)
         {
             this.message = message;
             this.chatId = chatId;
-            this.resultAttachmentList = resultAttachmentList;
+            this.resultAttachmentProcessing = resultAttachmentProcessing;
             this.error = error;
         }
     }

@@ -7,6 +7,7 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataBody;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.ResponseChatContext;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataWrapper;
+import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
@@ -16,7 +17,9 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntit
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.data.AttachmentProcessingResult;
 import com.mcdead.busycoder.socialcipher.client.processor.user.loader.UserLoaderSyncVK;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -62,9 +65,22 @@ public class ChatLoaderVK extends ChatLoaderBase {
         MessageProcessorVK messageProcessorVK = (MessageProcessorVK) m_messageProcessor;
 
         for (final MessageEntity message : messages) {
-            Error error = messageProcessorVK.processMessageAttachments(message, m_chatId);
+            ObjectWrapper<AttachmentProcessingResult> attachmentProcessingResultWrapper =
+                    new ObjectWrapper<>();
+            Error error =
+                    messageProcessorVK.processMessageAttachments(
+                            message, m_chatId, attachmentProcessingResultWrapper);
 
             if (error != null) return error;
+
+            if (!chatsStore.setMessageAttachments(
+                    attachmentProcessingResultWrapper.getValue().getLoadedAttachmentList(),
+                    m_chatId,
+                    message.getId(),
+                    attachmentProcessingResultWrapper.getValue().isCiphered()))
+            {
+                return new Error("Setting attachments to message process went wrong!", true);
+            }
         }
 
         if (chat.getType() == ChatType.CONVERSATION) {
