@@ -119,7 +119,7 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         if (chatsStore == null)
             return new Error("Chats' Store hasn't been initialized yet!", true);
 
-        ChatEntity chatEntity = chatsStore.getChatByPeerId(updateItem.chatId);
+        ChatEntity chatEntity = chatsStore.getChatById(updateItem.chatId);
 
         if (chatEntity == null) {
             Error newChatProcessingError = processNewChat(updateItem.chatId);
@@ -358,7 +358,7 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         return null;
     }
 
-    private enum EventType {
+    public enum EventType {
         NEW_MESSAGE(4);
 
         private int m_eventId = 0;

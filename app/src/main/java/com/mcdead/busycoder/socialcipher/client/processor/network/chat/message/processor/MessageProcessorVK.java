@@ -114,6 +114,10 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             new Error("Downloading Attachment process has been failed!", true));
                     put(ErrorType.EMPTY_ATTACHMENT_FILE_EXTENSION,
                             new Error("Attachment File Extension was empty!", true));
+                    put(ErrorType.FAILED_ATTACHMENT_DATA_GENERATION,
+                            new Error("Attachment Data generation has been failed!", true));
+                    put(ErrorType.FAILED_ATTACHMENT_FILE_SAVING,
+                            new Error("Attachment File saving went wrong!", true));
                 }
             };
 
@@ -140,6 +144,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
         FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS,
         FAILED_GETTING_STORED_DOC_LINK,
         FAILED_ATTACHMENT_FILE_DOWNLOADING,
+        FAILED_ATTACHMENT_DATA_GENERATION,
+        FAILED_ATTACHMENT_FILE_SAVING,
 
         INCORRECT_ATTACHMENT_TYPE_TO_LOAD,
 
@@ -738,20 +744,24 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         successFlagWrapper.setValue(true);
 
+        AttachmentData attachmentData =
+                AttachmentData.getInstance(
+                        attachmentDoc.getShortAttachmentId(),
+                        attachmentDecipheringResultWrapper.getValue().getFileExtension(),
+                        attachmentDecipheringResultWrapper.getValue().getBytes());
+
+        if (attachmentData == null)
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_DATA_GENERATION);
+
         ObjectWrapper<AttachmentEntityBase> attachmentEntityWrapper = new ObjectWrapper<>();
         Error generatingError =
-             generateDecipheredAttachmentEntity(
-                 new AttachmentData(
-                         attachmentDoc.getShortAttachmentId(),
-                         attachmentDecipheringResultWrapper.getValue().getFileExtension(),
-                         attachmentDecipheringResultWrapper.getValue().getBytes()),
-                     attachmentEntityWrapper);
+            generateDecipheredAttachmentEntity(attachmentData, attachmentEntityWrapper);
 
         if (generatingError != null)
             return generatingError;
 
         attachmentEntityCipheredFlagWrapper.setValue(
-                new Pair<>(attachmentEntityWrapper.getValue(), true));
+            new Pair<>(attachmentEntityWrapper.getValue(), true));
 
         return null;
     }
@@ -878,10 +888,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
         for (final Map.Entry<AttachmentSize, byte[]> attachmentSizeBytes :
                 attachmentSizeBytesHashMap.entrySet())
         {
-            AttachmentData attachmentSizeData = new AttachmentData(
+            AttachmentData attachmentSizeData = AttachmentData.getInstance(
                     attachmentLink.getTypedShortAttachmentId(),
                     fileExtension,
                     attachmentSizeBytes.getValue());
+
+            if (attachmentSizeData == null)
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_DATA_GENERATION);
 
             attachmentSizeDataHashMap.put(attachmentSizeBytes.getKey(), attachmentSizeData);
         }
@@ -902,10 +915,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
         for (final Map.Entry<AttachmentSize, byte[]> attachmentSizeBytes :
                 attachmentSizeBytesHashMap.entrySet())
         {
-            AttachmentData attachmentSizeData = new AttachmentData(
+            AttachmentData attachmentSizeData = AttachmentData.getInstance(
                     attachmentDoc.getTypedShortAttachmentId(),
                     attachmentDoc.getExtension(),
                     attachmentSizeBytes.getValue());
+
+            if (attachmentSizeData == null)
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_DATA_GENERATION);
 
             attachmentSizeDataHashMap.put(attachmentSizeBytes.getKey(), attachmentSizeData);
         }
@@ -938,7 +954,13 @@ public class MessageProcessorVK extends MessageProcessorBase {
         if (attachmentsStore == null)
             return C_ERROR_HASH_MAP.get(ErrorType.NULL_ATTACHMENTS_STORE);
 
-        attachmentEntityWrapper.setValue(attachmentsStore.saveAttachment(attachmentSizeDataHashMap));
+        AttachmentEntityBase savedAttachment =
+                attachmentsStore.saveAttachment(attachmentSizeDataHashMap);
+
+        if (savedAttachment == null)
+            return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_FILE_SAVING);
+
+        attachmentEntityWrapper.setValue(savedAttachment);
 
         return null;
     }

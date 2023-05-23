@@ -207,7 +207,7 @@ public class ChatFragment extends Fragment
 
     @Override
     public void onNewChatMessageReceived() {
-        ChatEntity dialog = ChatsStore.getInstance().getChatByPeerId(m_peerId);
+        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_peerId);
         List<MessageEntity> messageList = dialog.getMessages();
 
         if (!m_messagesAdapter.addNewMessage(messageList.get(messageList.size() - 1))) {
@@ -370,7 +370,7 @@ public class ChatFragment extends Fragment
     public void onDialogLoaded() {
         m_callback.onDialogLoaded();
 
-        ChatEntity dialog = ChatsStore.getInstance().getChatByPeerId(m_peerId);
+        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_peerId);
 
         if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {
             ErrorBroadcastReceiver.broadcastError(
@@ -398,7 +398,7 @@ public class ChatFragment extends Fragment
         if (dialogsStore == null)
             return new Error("Dialogs Store hasn't been initialized!", true);
 
-        ChatEntity dialog = dialogsStore.getChatByPeerId(m_peerId);
+        ChatEntity dialog = dialogsStore.getChatById(m_peerId);
 
         if (dialog == null)
             return new Error("Dialog hasn't been found!", true);

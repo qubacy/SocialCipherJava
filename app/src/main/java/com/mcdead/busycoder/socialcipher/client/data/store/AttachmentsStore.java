@@ -1,7 +1,5 @@
 package com.mcdead.busycoder.socialcipher.client.data.store;
 
-import android.net.Uri;
-
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityGenerator;
@@ -26,9 +24,38 @@ public class AttachmentsStore {
         m_attachmentsHash = new HashMap<>();
     }
 
+    private static boolean init() {
+        SettingsSystem settingsSystem = SettingsSystem.getInstance();
+
+        if (settingsSystem == null) return false;
+
+        String attachmentDir = settingsSystem.getAttachmentsDir();
+
+        if (attachmentDir == null) return false;
+
+        File attachmentDirFile = new File(attachmentDir);
+
+        if (!attachmentDirFile.exists())
+            if (!attachmentDirFile.mkdirs())
+                return false;
+
+        for (final AttachmentSize attachmentSize : AttachmentSize.values()) {
+            File curAttachmentSizeDirFile =
+                    new File(attachmentDirFile, String.valueOf(attachmentSize.getId()));
+
+            if (!curAttachmentSizeDirFile.exists())
+                if (!curAttachmentSizeDirFile.mkdir())
+                    return false;
+        }
+
+        s_instance = new AttachmentsStore();
+
+        return true;
+    }
+
     public static AttachmentsStore getInstance() {
         if (s_instance == null)
-            s_instance = new AttachmentsStore();
+            if (!init()) return null;
 
         return s_instance;
     }
@@ -37,7 +64,6 @@ public class AttachmentsStore {
             final AttachmentData attachmentData)
     {
         if (attachmentData == null) return null;
-        if (!attachmentData.isValid()) return null;
 
         synchronized (m_attachmentsHash) {
             if (m_attachmentsHash.containsKey(attachmentData.getName()))
@@ -77,12 +103,6 @@ public class AttachmentsStore {
 
         AttachmentData standardAttachmentData =
                 attachmentSizeDataHashMap.get(AttachmentSize.STANDARD);
-
-        for (final Map.Entry<AttachmentSize, AttachmentData> attachmentSizeData :
-                attachmentSizeDataHashMap.entrySet())
-        {
-            if (!attachmentSizeData.getValue().isValid()) return null;
-        }
 
         synchronized (m_attachmentsHash) {
             if (m_attachmentsHash.containsKey(standardAttachmentData.getName()))
@@ -151,16 +171,10 @@ public class AttachmentsStore {
         File newAttachmentFile = new File(newAttachmentFilePath);
 
         try {
-            if (!isCached) {
-                if (!newAttachmentFile.getParentFile().exists())
-                    if (!newAttachmentFile.getParentFile().mkdirs())
-                        return null;
-            }
-
             if (!newAttachmentFile.createNewFile())
                 return null;
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
 
             return null;

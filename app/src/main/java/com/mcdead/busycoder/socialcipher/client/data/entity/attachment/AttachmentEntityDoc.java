@@ -7,8 +7,9 @@ import java.net.URI;
 import java.util.HashMap;
 
 public class AttachmentEntityDoc extends AttachmentEntityBase {
-    public AttachmentEntityDoc(final String id,
-                               final HashMap<AttachmentSize, URI> sizeUriHashMap)
+    protected AttachmentEntityDoc(
+            final String id,
+            final HashMap<AttachmentSize, URI> sizeUriHashMap)
     {
         super(id, sizeUriHashMap);
     }

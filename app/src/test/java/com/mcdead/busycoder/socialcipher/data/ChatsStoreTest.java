@@ -62,7 +62,7 @@ public class ChatsStoreTest {
             @Override
             public void run() {
                 ChatEntity chatEntity =
-                        m_chatsStore.getChatByPeerId(m_chatEntity.getDialogId());
+                        m_chatsStore.getChatById(m_chatEntity.getDialogId());
 
                 assertNotNull(chatEntity);
             }
@@ -99,7 +99,7 @@ public class ChatsStoreTest {
                 }
 
                 ChatEntity chatEntity =
-                        m_chatsStore.getChatByPeerId(m_chatEntity.getDialogId());
+                        m_chatsStore.getChatById(m_chatEntity.getDialogId());
 
                 assertNull(chatEntity);
             }

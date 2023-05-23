@@ -49,7 +49,7 @@ public class ChatLoaderVK extends ChatLoaderBase {
         if (chatsStore == null)
             return new Error("DialogsStore hasn't been initialized!", true);
 
-        ChatEntity chat = chatsStore.getChatByPeerId(m_chatId);
+        ChatEntity chat = chatsStore.getChatById(m_chatId);
 
         if (chat == null)
             return new Error("DialogEntity hasn't been found!", true);
@@ -122,7 +122,7 @@ public class ChatLoaderVK extends ChatLoaderBase {
         }
 
         ChatEntityConversation chatEntity =
-                (ChatEntityConversation) chatsStore.getChatByPeerId(m_chatId);
+                (ChatEntityConversation) chatsStore.getChatById(m_chatId);
 
         if (chatEntity == null)
             return new Error("Retrieved Chat Entity was null!", true);

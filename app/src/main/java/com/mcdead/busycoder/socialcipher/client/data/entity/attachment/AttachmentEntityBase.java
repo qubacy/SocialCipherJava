@@ -10,11 +10,12 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class AttachmentEntityBase implements Serializable {
-    private String m_id = null;
-    private HashMap<AttachmentSize, URI> m_sizeUriHashMap = null;
+    final private String m_id;
+    final private HashMap<AttachmentSize, URI> m_sizeUriHashMap;
 
-    public AttachmentEntityBase(final String id,
-                                final HashMap<AttachmentSize, URI> sizeUriHashMap)
+    protected AttachmentEntityBase(
+            final String id,
+            final HashMap<AttachmentSize, URI> sizeUriHashMap)
     {
         m_id = id;
         m_sizeUriHashMap = sizeUriHashMap;

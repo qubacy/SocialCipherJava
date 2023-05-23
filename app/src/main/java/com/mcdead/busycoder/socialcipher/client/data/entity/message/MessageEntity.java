@@ -9,11 +9,12 @@ import java.util.List;
 import java.util.Objects;
 
 public class MessageEntity {
-    private long m_id = 0;
-    private UserEntity m_senderUser = null;
-    private String m_message = null;
-    private long m_timestamp = 0;
-    private boolean m_isCiphered = false;
+    final private long m_id;
+    final private UserEntity m_senderUser;
+    final private String m_message;
+    final private long m_timestamp;
+
+    private boolean m_isCiphered;
 
     private List<ResponseAttachmentInterface> m_attachmentToLoadList = null;
     private volatile List<AttachmentEntityBase> m_attachmentsList = null;
@@ -61,7 +62,8 @@ public class MessageEntity {
     }
 
     public boolean setAttachments(final List<AttachmentEntityBase> attachmentsList) {
-        if (attachmentsList == null) return false;
+        if (attachmentsList == null || m_attachmentToLoadList == null)
+            return false;
 
         synchronized (m_attachmentsList) {
             if (!m_attachmentsList.isEmpty()) return false;

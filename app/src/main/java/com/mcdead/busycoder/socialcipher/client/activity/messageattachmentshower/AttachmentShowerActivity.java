@@ -70,9 +70,9 @@ public class AttachmentShowerActivity extends AppCompatActivity
         if (intentArgs == null)
             return new Error("No Attachments have been provided!", true);
 
-        List<AttachmentEntityBase> attachmentList
-                = (List<AttachmentEntityBase>) intentArgs
-                .getSerializable(C_ATTACHMENT_LIST_PROP_NAME);
+        List<AttachmentEntityBase> attachmentList =
+                (List<AttachmentEntityBase>) (intentArgs
+                    .getSerializable(C_ATTACHMENT_LIST_PROP_NAME));
 
         if (attachmentList == null)
             return new Error("No Attachments have been provided!", true);

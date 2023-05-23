@@ -7,11 +7,13 @@ import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 import com.mcdead.busycoder.socialcipher.setting.system.SettingsSystem;
 
 public class SettingsManager {
+    public static final String C_ATTACHMENT_DIR_NAME = "attachments";
+
     public static boolean initializeSettings(
             final String dir,
             final Context context)
     {
-        if (!SettingsSystem.init(dir, dir + "/attachments", context))
+        if (!SettingsSystem.init(dir, dir + '/' + C_ATTACHMENT_DIR_NAME, context))
             return false;
 
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();

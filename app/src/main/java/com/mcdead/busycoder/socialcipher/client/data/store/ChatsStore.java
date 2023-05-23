@@ -38,11 +38,11 @@ public class ChatsStore {
         }
     }
 
-    public ChatEntity getChatByPeerId(final long peerId) {
-        if (peerId == 0) return null;
+    public ChatEntity getChatById(final long chatId) {
+        if (chatId == 0) return null;
 
         for (final ChatEntity dialog : m_chatList)
-            if (dialog.getDialogId() == peerId)
+            if (dialog.getDialogId() == chatId)
                 return dialog;
 
         return null;
@@ -66,7 +66,7 @@ public class ChatsStore {
         if (attachmentsList == null) return false;
 
         synchronized (m_chatList) {
-            ChatEntity dialog = getChatByPeerId(chatId);
+            ChatEntity dialog = getChatById(chatId);
 
             if (dialog == null) return false;
 
@@ -90,7 +90,7 @@ public class ChatsStore {
         if (message == null) return false;
 
         synchronized (m_chatList) {
-            ChatEntity dialog = getChatByPeerId(chatId);
+            ChatEntity dialog = getChatById(chatId);
 
             if (dialog == null) return false;
 
@@ -104,13 +104,14 @@ public class ChatsStore {
         return true;
     }
 
-    public boolean removeMessage(final long peerId,
-                                 final long messageId)
+    public boolean removeMessage(
+            final long chatId,
+            final long messageId)
     {
         if (messageId == 0) return false;
 
         synchronized (m_chatList) {
-            ChatEntity dialog = getChatByPeerId(peerId);
+            ChatEntity dialog = getChatById(chatId);
 
             if (dialog == null) return false;
 
@@ -123,22 +124,22 @@ public class ChatsStore {
         return true;
     }
 
-    public boolean addChat(final ChatEntity dialog) {
-        if (dialog == null) return false;
+    public boolean addChat(final ChatEntity chat) {
+        if (chat == null) return false;
 
         synchronized (m_chatList) {
-            m_chatList.add(dialog);
+            m_chatList.add(chat);
         }
 
         return true;
     }
 
-    public boolean removeChat(final long peerId) {
-        if (peerId == 0) return false;
+    public boolean removeChat(final long chatId) {
+        if (chatId == 0) return false;
 
         synchronized (m_chatList) {
             for (final ChatEntity dialog : m_chatList)
-                if (dialog.getDialogId() == peerId)
+                if (dialog.getDialogId() == chatId)
                     return m_chatList.remove(dialog);
         }
 

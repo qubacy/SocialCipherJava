@@ -110,7 +110,7 @@ public class ChatActivity extends AppCompatActivity
         if (dialogsStore == null)
             return new Error("Dialogs Store hasn't been initialized!", true);
 
-        ChatEntity chat = dialogsStore.getChatByPeerId(peerId);
+        ChatEntity chat = dialogsStore.getChatById(peerId);
 
         if (chat == null)
             return new Error("Dialog with provided Peer Id hasn't been found!", true);

@@ -8,8 +8,9 @@ import java.util.HashMap;
 
 public class AttachmentEntityAudio extends AttachmentEntityBase {
 
-    public AttachmentEntityAudio(final String id,
-                                 final HashMap<AttachmentSize, URI> sizeUriHashMap)
+    protected AttachmentEntityAudio(
+            final String id,
+            final HashMap<AttachmentSize, URI> sizeUriHashMap)
     {
         super(id, sizeUriHashMap);
     }

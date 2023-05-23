@@ -7,8 +7,9 @@ import java.net.URI;
 import java.util.HashMap;
 
 public class AttachmentEntityVideo extends AttachmentEntityBase {
-    public AttachmentEntityVideo(String id,
-                                 final HashMap<AttachmentSize, URI> sizeUriHashMap)
+    protected AttachmentEntityVideo(
+            final String id,
+            final HashMap<AttachmentSize, URI> sizeUriHashMap)
     {
         super(id, sizeUriHashMap);
     }
