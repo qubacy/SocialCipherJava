@@ -2,6 +2,8 @@ package com.mcdead.busycoder.socialcipher.client.processor.network.update.proces
 
 import android.content.Context;
 
+import com.mcdead.busycoder.socialcipher.client.api.APIProvider;
+import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.common.gson.update.ResponseUpdateItemInterface;
 import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
@@ -21,6 +23,9 @@ public class UpdateProcessorAsyncFactory {
             final Context context,
             final LinkedBlockingQueue<ResponseUpdateItemInterface> updateItemQueue)
     {
+        if (!checkCommonArgsValidity(context, updateItemQueue))
+            return null;
+
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
         if (settingsNetwork == null) return null;
@@ -31,20 +36,35 @@ public class UpdateProcessorAsyncFactory {
         if (messageProcessor == null)
             return null;
 
+        APIProvider apiProvider = APIProviderGenerator.generateAPIProvider();
+
+        if (apiProvider == null) return null;
+
         switch (settingsNetwork.getAPIType()) {
-            case VK: return generateUpdateProcessorVK(
-                    settingsNetwork.getToken(), context, updateItemQueue, messageProcessor);
+            case VK: return (UpdateProcessorAsyncBase) generateUpdateProcessorVK(
+                    settingsNetwork.getToken(),
+                    context,
+                    updateItemQueue,
+                    (MessageProcessorVK) messageProcessor,
+                    (VKAPIProvider) apiProvider);
         }
 
         return null;
     }
 
-    public static UpdateProcessorAsyncBase generateUpdateProcessorVK(
+    public static UpdateProcessorAsyncVK generateUpdateProcessorVK(
             final String token,
             final Context context,
             final LinkedBlockingQueue<ResponseUpdateItemInterface> updateItemQueue,
-            final MessageProcessorBase messageProcessor)
+            final MessageProcessorVK messageProcessorVK,
+            final VKAPIProvider vkAPIProvider)
     {
+        if (!checkCommonArgsValidityForImpl(token, context, updateItemQueue,
+                messageProcessorVK, vkAPIProvider))
+        {
+            return null;
+        }
+
         ChatTypeDefinerVK chatTypeDefiner =
                 (ChatTypeDefinerVK) ChatTypeDefinerFactory.generateDialogTypeDefiner();
 
@@ -57,19 +77,45 @@ public class UpdateProcessorAsyncFactory {
         if (userLoader == null)
             return null;
 
-        VKAPIProvider vkAPIProvider = new VKAPIProvider();
         VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
 
         if (vkAPIChat == null)
             return null;
 
-        return (UpdateProcessorAsyncBase)(new UpdateProcessorAsyncVK(
+        return new UpdateProcessorAsyncVK(
                 token,
                 context,
                 updateItemQueue,
                 chatTypeDefiner,
                 userLoader,
                 vkAPIChat,
-                (MessageProcessorVK) messageProcessor));
+                messageProcessorVK);
+    }
+
+    private static boolean checkCommonArgsValidity(
+            final Context context,
+            final LinkedBlockingQueue<ResponseUpdateItemInterface> updateItemQueue)
+    {
+        if (context == null || updateItemQueue == null)
+            return false;
+
+        return true;
+    }
+
+    private static boolean checkCommonArgsValidityForImpl(
+            final String token,
+            final Context context,
+            final LinkedBlockingQueue<ResponseUpdateItemInterface> updateItemQueue,
+            final MessageProcessorBase messageProcessor,
+            final APIProvider apiProvider)
+    {
+        if (!checkCommonArgsValidity(context, updateItemQueue) ||
+            token == null || messageProcessor == null || apiProvider == null)
+        {
+            return false;
+        }
+        if (token.isEmpty()) return false;
+
+        return true;
     }
 }

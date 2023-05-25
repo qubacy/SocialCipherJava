@@ -51,6 +51,25 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
         m_vkAPIChat = vkAPIChat;
     }
 
+    public static ChatListLoaderVK getInstance(
+            final String token,
+            final ChatTypeDefinerVK chatTypeDefiner,
+            final ChatListLoadingCallback callback,
+            final UserLoaderSyncVK userLoader,
+            final MessageProcessorVK messageProcessor,
+            final VKAPIChat vkAPIChat)
+    {
+        if (token == null || chatTypeDefiner == null || callback == null || userLoader == null ||
+            messageProcessor == null || vkAPIChat == null)
+        {
+            return null;
+        }
+        if (token.isEmpty()) return null;
+
+        return new ChatListLoaderVK(
+                token, chatTypeDefiner, callback, userLoader, messageProcessor, vkAPIChat);
+    }
+
     private Error initUserData(final List<ResponseChatListItemUserProfile> usersData,
                                final List<ResponseChatListItemGroup> groupsData)
     {

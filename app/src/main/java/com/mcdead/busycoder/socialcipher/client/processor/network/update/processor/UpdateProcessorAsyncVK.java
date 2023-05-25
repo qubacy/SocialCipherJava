@@ -72,6 +72,27 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
         m_messageProcessor = messageProcessor;
     }
 
+    public static UpdateProcessorAsyncVK getInstance(
+            final String token,
+            final Context context,
+            final LinkedBlockingQueue<ResponseUpdateItemInterface> updateQueue,
+            final ChatTypeDefinerVK chatTypeDefiner,
+            final UserLoaderSyncVK userLoader,
+            final VKAPIChat vkAPIChat,
+            final MessageProcessorVK messageProcessor)
+    {
+        if (token == null || context == null || updateQueue == null || chatTypeDefiner == null ||
+            userLoader == null || vkAPIChat == null || messageProcessor == null)
+        {
+            return null;
+        }
+        if (token.isEmpty()) return null;
+
+        return new UpdateProcessorAsyncVK(
+                token, context, updateQueue, chatTypeDefiner,
+                userLoader, vkAPIChat, messageProcessor);
+    }
+
     @Override
     public void run() {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);

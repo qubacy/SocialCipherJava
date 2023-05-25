@@ -22,6 +22,7 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoW
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
@@ -162,7 +163,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
     protected MessageProcessorVK(
             final AttachmentTypeDefinerInterface attachmentTypeDefiner,
             final String token,
-            final ChatIdChecker chatIdChecker,
+            final ChatIdCheckerVK chatIdChecker,
             final VKAPIChat vkAPIChat,
             final VKAPIAttachment vkAPIAttachment)
     {
@@ -170,6 +171,24 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         m_vkAPIChat = vkAPIChat;
         m_vkAPIAttachment = vkAPIAttachment;
+    }
+
+    public static MessageProcessorVK getInstance(
+            final AttachmentTypeDefinerInterface attachmentTypeDefiner,
+            final String token,
+            final ChatIdCheckerVK chatIdChecker,
+            final VKAPIChat vkAPIChat,
+            final VKAPIAttachment vkAPIAttachment)
+    {
+        if (attachmentTypeDefiner == null || token == null ||
+            chatIdChecker == null || vkAPIChat == null || vkAPIAttachment == null)
+        {
+            return null;
+        }
+        if (token.isEmpty()) return null;
+
+        return new MessageProcessorVK(
+                attachmentTypeDefiner, token, chatIdChecker, vkAPIChat, vkAPIAttachment);
     }
 
     @Override

@@ -2,9 +2,7 @@ package com.mcdead.busycoder.socialcipher.client.processor.tokenchecker;
 
 import android.os.Process;
 
-import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIContext;
-import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.user.ResponseUserItem;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.user.ResponseUserWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIProfile;
@@ -30,6 +28,17 @@ public class TokenCheckerVK extends TokenCheckerBase {
         super(token, callback);
 
         m_vkAPIProfile = vkAPIProfile;
+    }
+
+    public static TokenCheckerVK getInstance(
+            final String token,
+            final TokenCheckResultInterface callback,
+            final VKAPIProfile vkAPIProfile)
+    {
+        if (token == null || vkAPIProfile == null) return null;
+        if (token.isEmpty()) return null;
+
+        return new TokenCheckerVK(token, callback, vkAPIProfile);
     }
 
     private Error getLocalUser(

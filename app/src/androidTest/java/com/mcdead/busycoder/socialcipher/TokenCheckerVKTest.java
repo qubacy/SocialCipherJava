@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.mcdead.busycoder.socialcipher.client.api.APIType;
+import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.processor.network.tokenchecker.result.TokenCheckResult;
 import com.mcdead.busycoder.socialcipher.client.processor.tokenchecker.TokenCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.processor.tokenchecker.TokenCheckerFactory;
@@ -26,11 +27,15 @@ public class TokenCheckerVKTest {
     private static final String C_VALID_TOKEN =
             "YOUR_VALID_TOKEN";
 
+    private VKAPIProvider m_vkAPIProvider = null;
+
     @Before
     public void setUp() {
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
         settingsNetwork.setAPIType(APIType.VK);
+
+        m_vkAPIProvider = new VKAPIProvider();
     }
 
     @Test
@@ -47,8 +52,8 @@ public class TokenCheckerVKTest {
 
         for (final String invalidToken : invalidTokenList) {
             TokenCheckerVK tokenCheckerVK =
-                    (TokenCheckerVK) TokenCheckerFactory.
-                            generateTokenCheckerVK(invalidToken, null);
+                    TokenCheckerFactory.generateTokenCheckerVK(
+                            invalidToken, null, m_vkAPIProvider);
 
             tokenCheckerVK.execute();
 
@@ -67,8 +72,8 @@ public class TokenCheckerVKTest {
             throws ExecutionException, InterruptedException
     {
         TokenCheckerVK tokenCheckerVK =
-                (TokenCheckerVK) TokenCheckerFactory.
-                        generateTokenCheckerVK(C_VALID_TOKEN, null);
+                TokenCheckerFactory.generateTokenCheckerVK(
+                        C_VALID_TOKEN, null, m_vkAPIProvider);
 
         tokenCheckerVK.execute();
 

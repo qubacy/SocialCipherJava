@@ -17,7 +17,8 @@ public class ChatListLoaderFactory {
     public static ChatListLoaderBase generateChatListLoader(
             final ChatListLoadingCallback callback)
     {
-        if (callback == null) return null;
+        if (!checkCommonArgsValidity(callback))
+            return null;
 
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
@@ -36,37 +37,63 @@ public class ChatListLoaderFactory {
 
         switch (settingsNetwork.getAPIType()) {
             case VK: return generateChatListLoaderVK(
-                    settingsNetwork.getToken(), callback, messageProcessor, apiProvider);
+                    settingsNetwork.getToken(),
+                    callback,
+                    (MessageProcessorVK) messageProcessor,
+                    (VKAPIProvider) apiProvider);
         }
 
         return null;
     }
 
-    public static ChatListLoaderBase generateChatListLoaderVK(
+    public static ChatListLoaderVK generateChatListLoaderVK(
             final String token,
             final ChatListLoadingCallback callback,
-            final MessageProcessorBase messageProcessor,
-            final APIProvider apiProvider)
+            final MessageProcessorVK messageProcessorVK,
+            final VKAPIProvider vkAPIProvider)
     {
-        if (!(messageProcessor instanceof MessageProcessorVK) ||
-            !(apiProvider instanceof VKAPIProvider))
-        {
+        if (!checkCommonArgsValidityForImpl(token, callback, messageProcessorVK, vkAPIProvider))
             return null;
-        }
 
         ChatTypeDefinerVK chatTypeDefiner = ChatTypeDefinerFactory.generateDialogTypeDefinerVK();
 
         if (chatTypeDefiner == null)
             return null;
 
-        UserLoaderSyncVK userLoader = (UserLoaderSyncVK)UserLoaderSyncFactory.generateUserLoaderVK(token);
+        UserLoaderSyncVK userLoader =
+                (UserLoaderSyncVK)UserLoaderSyncFactory.
+                        generateUserLoaderVK(token, vkAPIProvider);
 
         if (userLoader == null)
             return null;
 
-        VKAPIChat vkAPIChat = ((VKAPIProvider)apiProvider).generateChatAPI();
+        VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
 
-        return (ChatListLoaderBase)(new ChatListLoaderVK(
-                token, chatTypeDefiner, callback, userLoader, (MessageProcessorVK)messageProcessor, vkAPIChat));
+        return new ChatListLoaderVK(
+                token, chatTypeDefiner, callback, userLoader, messageProcessorVK, vkAPIChat);
+    }
+
+    private static boolean checkCommonArgsValidityForImpl(
+            final String token,
+            final ChatListLoadingCallback callback,
+            final MessageProcessorVK messageProcessorVK,
+            final VKAPIProvider vkAPIProvider)
+    {
+        if (!(checkCommonArgsValidity(callback)) || token == null || messageProcessorVK == null ||
+            vkAPIProvider == null)
+        {
+            return false;
+        }
+        if (token.isEmpty()) return false;
+
+        return true;
+    }
+
+    private static boolean checkCommonArgsValidity(
+            final ChatListLoadingCallback callback)
+    {
+        if (callback == null) return false;
+
+        return true;
     }
 }

@@ -8,6 +8,7 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseCh
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.ResponseChatContext;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataWrapper;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
@@ -45,6 +46,28 @@ public class ChatLoaderVK extends ChatLoaderBase {
         m_vkAPIChat = vkAPIChat;
     }
 
+    public static ChatLoaderVK getInstance(
+            final String token,
+            final ChatLoadingCallback callback,
+            final long chatId,
+            final MessageProcessorVK messageProcessor,
+            final UserLoaderSyncVK userLoader,
+            final VKAPIChat vkAPIChat)
+    {
+        if (token == null || callback == null || messageProcessor == null || userLoader == null ||
+            vkAPIChat == null)
+        {
+            return null;
+        }
+
+        ChatIdCheckerVK chatIdCheckerVK = new ChatIdCheckerVK();
+
+        if (!chatIdCheckerVK.isValid(chatId) || token.isEmpty())
+            return null;
+
+        return new ChatLoaderVK(token, callback, chatId, messageProcessor, userLoader, vkAPIChat);
+    }
+
     @Override
     protected Error doInBackground(Void... voids) {
         ChatsStore chatsStore = ChatsStore.getInstance();
@@ -72,6 +95,8 @@ public class ChatLoaderVK extends ChatLoaderBase {
                             message, m_chatId, attachmentProcessingResultWrapper);
 
             if (error != null) return error;
+            if (attachmentProcessingResultWrapper.getValue() == null)
+                continue;
 
             if (!chatsStore.setMessageAttachments(
                     attachmentProcessingResultWrapper.getValue().getLoadedAttachmentList(),

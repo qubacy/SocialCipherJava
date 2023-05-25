@@ -64,6 +64,18 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
         m_vkAPIAttachment = vkAPIAttachment;
     }
 
+    public static UpdateCheckerAsyncVK getInstance(
+            final String token,
+            final Context context,
+            final VKAPIAttachment vkAPIAttachment)
+    {
+        if (token == null || context == null || vkAPIAttachment == null)
+            return null;
+        if (token.isEmpty()) return null;
+
+        return new UpdateCheckerAsyncVK(token, context, vkAPIAttachment);
+    }
+
     private Error initLongPollServer(
             LongPollServerRequestResult requestResult)
     {

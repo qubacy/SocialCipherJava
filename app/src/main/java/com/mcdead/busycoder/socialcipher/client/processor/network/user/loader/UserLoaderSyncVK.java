@@ -28,6 +28,16 @@ public class UserLoaderSyncVK extends UserLoaderSyncBase {
         m_vkAPIProfile = vkAPIProfile;
     }
 
+    public static UserLoaderSyncVK getInstance(
+            final String token,
+            final VKAPIProfile vkAPIProfile)
+    {
+        if (token == null || vkAPIProfile == null) return null;
+        if (token.isEmpty()) return null;
+
+        return new UserLoaderSyncVK(token, vkAPIProfile);
+    }
+
     @Override
     public Error loadUserById(
             final long userId)

@@ -16,16 +16,20 @@ public class UpdateCheckerAsyncFactory {
         if (settingsNetwork.getAPIType() == null) return null;
 
         switch (settingsNetwork.getAPIType()) {
-            case VK: return generateUpdateProcessorVK(settingsNetwork.getToken(), context);
+            case VK: return (UpdateCheckerAsyncBase)
+                    generateUpdateProcessorVK(settingsNetwork.getToken(), context);
         }
 
         return null;
     }
 
-    public static UpdateCheckerAsyncBase generateUpdateProcessorVK(
+    public static UpdateCheckerAsyncVK generateUpdateProcessorVK(
             final String token,
             final Context context)
     {
+        if (!checkCommonArgsValidityForImpl(token, context))
+            return null;
+
         VKAPIProvider vkAPIProvider =
                 (VKAPIProvider) APIProviderGenerator.generateAPIProvider();
 
@@ -33,7 +37,16 @@ public class UpdateCheckerAsyncFactory {
 
         VKAPIAttachment vkAPIAttachment = vkAPIProvider.generateAttachmentAPI();
 
-        return (UpdateCheckerAsyncBase)
-                (new UpdateCheckerAsyncVK(token, context, vkAPIAttachment));
+        return new UpdateCheckerAsyncVK(token, context, vkAPIAttachment);
+    }
+
+    private static boolean checkCommonArgsValidityForImpl(
+            final String token,
+            final Context context)
+    {
+        if (token == null || context == null) return false;
+        if (token.isEmpty()) return false;
+
+        return true;
     }
 }

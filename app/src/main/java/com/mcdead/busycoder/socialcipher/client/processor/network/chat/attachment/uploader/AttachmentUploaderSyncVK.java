@@ -23,6 +23,8 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.uplo
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.upload.uploaded.ResponseAttachmentUploaded;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIUploadAttachment;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerVK;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.result.AttachmentUploadedResult;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.result.AttachmentUploadedResultVK;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
@@ -49,13 +51,29 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
 
     protected AttachmentUploaderSyncVK(
             final String token,
-            final long peerId,
+            final long chatId,
             final ContentResolver contentResolver,
             final VKAPIUploadAttachment vkAPIUploadAttachment)
     {
-        super(token, peerId, contentResolver);
+        super(token, chatId, contentResolver);
 
         m_vkAPIUploadAttachment = vkAPIUploadAttachment;
+    }
+
+    public static AttachmentUploaderSyncVK getInstance(
+            final String token,
+            final long chatId,
+            final ContentResolver contentResolver,
+            final VKAPIUploadAttachment vkAPIUploadAttachment)
+    {
+        if (token == null || contentResolver == null || vkAPIUploadAttachment == null)
+            return null;
+
+        ChatIdCheckerVK chatIdCheckerVK = new ChatIdCheckerVK();
+
+        if (!chatIdCheckerVK.isValid(chatId) || token.isEmpty()) return null;
+
+        return new AttachmentUploaderSyncVK(token, chatId, contentResolver, vkAPIUploadAttachment);
     }
 
     private Error getUploadingUrlForPhoto(

@@ -4,6 +4,7 @@ import com.mcdead.busycoder.socialcipher.client.api.APIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorStore;
@@ -16,7 +17,8 @@ public class ChatLoaderFactory {
             final ChatLoadingCallback callback,
             final long chatId)
     {
-        if (callback == null || chatId == 0) return null;
+        if (!checkCommonArgsValidity(callback))
+            return null;
 
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
@@ -35,42 +37,73 @@ public class ChatLoaderFactory {
 
         switch (settingsNetwork.getAPIType()) {
             case VK: return generateChatLoaderVK(
-                    settingsNetwork.getToken(), callback, chatId, apiProvider, messageProcessor);
+                    settingsNetwork.getToken(),
+                    callback,
+                    chatId,
+                    (VKAPIProvider) apiProvider,
+                    (MessageProcessorVK) messageProcessor);
         }
 
         return null;
     }
 
-    public static ChatLoaderBase generateChatLoaderVK(
+    public static ChatLoaderVK generateChatLoaderVK(
             final String token,
             final ChatLoadingCallback callback,
             final long chatId,
-            final APIProvider apiProvider,
-            final MessageProcessorBase messageProcessor)
+            final VKAPIProvider vkAPIProvider,
+            final MessageProcessorVK messageProcessorVK)
     {
-        if (!(apiProvider instanceof VKAPIProvider) ||
-            !(messageProcessor instanceof MessageProcessorVK))
-        {
+        if (!checkCommonArgsValidityForImpl(token, callback, vkAPIProvider, messageProcessorVK))
             return null;
-        }
+
+        ChatIdCheckerVK chatIdCheckerVK = new ChatIdCheckerVK();
+
+        if (!chatIdCheckerVK.isValid(chatId))
+            return null;
 
         UserLoaderSyncVK userLoader =
-                (UserLoaderSyncVK) UserLoaderSyncFactory.generateUserLoaderVK(token);
+                (UserLoaderSyncVK) UserLoaderSyncFactory.
+                        generateUserLoaderVK(token, vkAPIProvider);
 
         if (userLoader == null)
             return null;
 
-        VKAPIChat vkAPIChat = ((VKAPIProvider) apiProvider).generateChatAPI();
+        VKAPIChat vkAPIChat = vkAPIProvider.generateChatAPI();
 
         if (vkAPIChat == null)
             return null;
 
-        return (ChatLoaderBase)(new ChatLoaderVK(
+        return new ChatLoaderVK(
                 token,
                 callback,
                 chatId,
-                (MessageProcessorVK) messageProcessor,
+                messageProcessorVK,
                 userLoader,
-                vkAPIChat));
+                vkAPIChat);
+    }
+
+    private static boolean checkCommonArgsValidityForImpl(
+            final String token,
+            final ChatLoadingCallback callback,
+            final APIProvider apiProvider,
+            final MessageProcessorBase messageProcessor)
+    {
+        if (!checkCommonArgsValidity(callback) || token == null || apiProvider == null ||
+            messageProcessor == null)
+        {
+            return false;
+        }
+        if (token.isEmpty()) return false;
+
+        return true;
+    }
+
+    private static boolean checkCommonArgsValidity(
+            final ChatLoadingCallback callback)
+    {
+        if (callback == null) return false;
+
+        return true;
     }
 }

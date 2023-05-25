@@ -37,6 +37,26 @@ public class MessageSenderVK extends MessageSenderBase {
         m_vkAPIChat = vkAPIChat;
     }
 
+    public static MessageSenderVK getInstance(
+            final String token,
+            final long peerId,
+            final String text,
+            final List<AttachmentData> uploadingAttachmentList,
+            final AttachmentUploaderSyncBase attachmentUploader,
+            final MessageSendingCallback callback,
+            final VKAPIChat vkAPIChat)
+    {
+        if (token == null || peerId == 0 || text == null ||
+            (uploadingAttachmentList != null && attachmentUploader == null) || vkAPIChat == null)
+        {
+            return null;
+        }
+
+        return new MessageSenderVK(
+                token, peerId, text, uploadingAttachmentList,
+                attachmentUploader, callback, vkAPIChat);
+    }
+
     @Override
     protected Error doInBackground(Void... voids) {
         try {
