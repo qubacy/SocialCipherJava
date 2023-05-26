@@ -21,7 +21,6 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoI
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
@@ -97,14 +96,12 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             new Error("Downloading Attachment operation cannot be executed on a provided attachment!", true));
                     put(ErrorType.UNKNOWN_STORED_ATTACHMENT_TO_DOWNLOAD_TYPE,
                             new Error("Downloading Stored Attachment operation cannot be executed on a provided attachment!", true));
-                    put(ErrorType.FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS,
-                            new Error("Getting Photo Attachment Data response process has been failed!", true));
                     put(ErrorType.INVALID_GETTING_STORED_PHOTO_LINKS_RESPONSE,
                             new Error("Getting Photo Attachment Data response process ended with an invalid response!", true));
                     put(ErrorType.INVALID_STORED_PHOTO_SIZES_LINK_ARRAY,
                             new Error("Received array of photo sizes was invalid!", true));
-                    put(ErrorType.FAILED_GETTING_STORED_DOC_LINK,
-                            new Error("Requesting Doc Link process ended with a failed request!", true));
+                    put(ErrorType.FAILED_GETTING_STORED_ATTACHMENT_LINK,
+                            new Error("Requesting Attachment Link process ended with a failed request!", true));
                     put(ErrorType.INVALID_GETTING_STORED_DOC_LINK_RESPONSE,
                             new Error("Requesting Doc Link process ended with an invalid response!", true));
                     put(ErrorType.UNKNOWN_LINKED_ATTACHMENT_TO_DOWNLOAD_TYPE,
@@ -142,8 +139,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         FAILED_MESSAGE_ENTITY_GENERATION,
         FAILED_CHAT_ATTACHMENT_REQUEST,
-        FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS,
-        FAILED_GETTING_STORED_DOC_LINK,
+        FAILED_GETTING_STORED_ATTACHMENT_LINK,
         FAILED_ATTACHMENT_FILE_DOWNLOADING,
         FAILED_ATTACHMENT_DATA_GENERATION,
         FAILED_ATTACHMENT_FILE_SAVING,
@@ -360,8 +356,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
 
         ObjectWrapper<ResponseAttachmentBase> preparedToDownloadAttachmentWrapper =
                 new ObjectWrapper<>();
-        Error prepareToDownloadError = prepareAttachmentToDownload(
-                attachmentVK, chatId, preparedToDownloadAttachmentWrapper);
+        Error prepareToDownloadError =
+                prepareAttachmentToDownload(
+                    attachmentVK, chatId, preparedToDownloadAttachmentWrapper);
 
         if (prepareToDownloadError != null)
             return prepareToDownloadError;
@@ -406,8 +403,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final long charId,
             ObjectWrapper<ResponseAttachmentBase> preparedAttachmentWrapper)
     {
-        AttachmentType attachmentType = m_attachmentTypeDefiner.defineAttachmentTypeByString(
-                attachmentToPrepare.getAttachmentType());
+        AttachmentType attachmentType =
+                m_attachmentTypeDefiner.defineAttachmentTypeByString(
+                    attachmentToPrepare.getAttachmentType());
 
         switch (attachmentToPrepare.getResponseAttachmentType()) {
             case STORED: return prepareStoredAttachmentToDownload(
@@ -526,8 +524,9 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final long chatId,
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
-        AttachmentType attachmentType = m_attachmentTypeDefiner.defineAttachmentTypeByString(
-                attachmentToDownload.getAttachmentType());
+        AttachmentType attachmentType =
+                m_attachmentTypeDefiner.defineAttachmentTypeByString(
+                    attachmentToDownload.getAttachmentType());
 
         switch (attachmentToDownload.getResponseAttachmentType()) {
             case STORED: return downloadStoredAttachment(
@@ -578,7 +577,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             getPhoto(m_token, attachmentToDownload.getFullAttachmentId()).execute();
 
             if (!responsePhotoWrapper.isSuccessful())
-                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_GETTING_STORED_PHOTO_ATTACHMENT_LINKS);
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_GETTING_STORED_ATTACHMENT_LINK);
 
             // todo: reckon of this poor design sign:
 
@@ -639,7 +638,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
                             attachmentToDownload.getFullAttachmentId()).execute();
 
             if (!responseDocWrapper.isSuccessful())
-                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_GETTING_STORED_DOC_LINK);
+                return C_ERROR_HASH_MAP.get(ErrorType.FAILED_GETTING_STORED_ATTACHMENT_LINK);
 
             // todo: reckon of this poor design sign:
 
@@ -786,8 +785,7 @@ public class MessageProcessorVK extends MessageProcessorBase {
             final AttachmentType attachmentType,
             ObjectWrapper<Pair<AttachmentEntityBase, Boolean>> attachmentEntityCipheredFlagWrapper)
     {
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .build();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
         HashMap<AttachmentSize, byte[]> attachmentSizeBytesHashMap = new HashMap<>();
 
         for (final Map.Entry<AttachmentSize, String> attachmentSizeLink :

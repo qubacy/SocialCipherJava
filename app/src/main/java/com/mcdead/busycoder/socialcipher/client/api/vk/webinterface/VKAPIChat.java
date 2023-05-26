@@ -27,13 +27,13 @@ public interface VKAPIChat {
 
     @GET("messages.getHistory?v=" + C_API_VERSION)
     Call<ResponseChatContentWrapper> getChatContent(
-            @Query("peer_id") long peerId,
+            @Query("peer_id") long chatId,
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
     );
 
     @GET("messages.getHistoryAttachments?v=" + C_API_VERSION)
     Call<ResponseChatAttachmentListWrapper> getChatAttachmentList(
-            @Query("peer_id") long peerId,
+            @Query("peer_id") long chatId,
             @Query("media_type") String attachmentType,
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token
     );
@@ -41,7 +41,7 @@ public interface VKAPIChat {
     @GET("messages.send?random_id=0&v=" + C_API_VERSION)
     Call<ResponseSendMessageWrapper> sendMessage(
             @Query(VKAPIContext.C_ACCESS_TOKEN_PROP_NAME) String token,
-            @Query("peer_id") long peerId,
+            @Query("peer_id") long chatId,
             @Query("message") String messageText,
             @Query("attachment") String attachments
     );

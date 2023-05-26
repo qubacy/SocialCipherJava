@@ -18,7 +18,7 @@ import java.util.Objects;
 public class AttachmentsStore {
     private static AttachmentsStore s_instance = null;
 
-    private HashMap<String, AttachmentEntityBase> m_attachmentsHash = null;
+    final private HashMap<String, AttachmentEntityBase> m_attachmentsHash;
 
     private AttachmentsStore() {
         m_attachmentsHash = new HashMap<>();
@@ -71,19 +71,21 @@ public class AttachmentsStore {
 
             HashMap<AttachmentSize, String> attachmentSizeFilePathHashMap = new HashMap<>();
 
-            String savedFilePath = saveAttachmentToFile(
-                    attachmentData.getName(),
-                    AttachmentSize.STANDARD,
-                    attachmentData,
-                    true);
+            String savedFilePath =
+                    saveAttachmentToFile(
+                        attachmentData.getName(),
+                        AttachmentSize.STANDARD,
+                        attachmentData,
+                        true);
 
             if (savedFilePath == null) return null;
 
             attachmentSizeFilePathHashMap.put(AttachmentSize.STANDARD, savedFilePath);
 
-            AttachmentEntityBase attachmentEntity = AttachmentEntityGenerator
-                    .generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
-                            attachmentData.getName(), attachmentSizeFilePathHashMap);
+            AttachmentEntityBase attachmentEntity =
+                    AttachmentEntityGenerator
+                        .generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
+                                attachmentData.getName(), attachmentSizeFilePathHashMap);
 
             if (attachmentEntity == null) return null;
 
@@ -113,20 +115,22 @@ public class AttachmentsStore {
             for (final Map.Entry<AttachmentSize, AttachmentData> attachmentSizeData :
                     attachmentSizeDataHashMap.entrySet())
             {
-                String savedFilePath = saveAttachmentToFile(
-                        standardAttachmentData.getName(),
-                        attachmentSizeData.getKey(),
-                        attachmentSizeData.getValue(),
-                        false);
+                String savedFilePath =
+                        saveAttachmentToFile(
+                            standardAttachmentData.getName(),
+                            attachmentSizeData.getKey(),
+                            attachmentSizeData.getValue(),
+                            false);
 
                 if (savedFilePath == null) return null;
 
                 attachmentSizeFilePathHashMap.put(attachmentSizeData.getKey(), savedFilePath);
             }
 
-            AttachmentEntityBase attachmentEntity = AttachmentEntityGenerator
-                    .generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
-                            standardAttachmentData.getName(), attachmentSizeFilePathHashMap);
+            AttachmentEntityBase attachmentEntity =
+                    AttachmentEntityGenerator
+                        .generateAttachmentByIdAndAttachmentSizeFilePathHashMap(
+                                standardAttachmentData.getName(), attachmentSizeFilePathHashMap);
 
             if (attachmentEntity == null) return null;
 
@@ -147,9 +151,10 @@ public class AttachmentsStore {
         if (settingsSystem == null) return null;
         if (settingsSystem.getAttachmentsDir() == null) return null;
 
-        String attachmentDir = (isCached ?
-                settingsSystem.getCacheDir().getAbsolutePath() :
-                settingsSystem.getAttachmentsDir());
+        String attachmentDir =
+                (isCached ?
+                    settingsSystem.getCacheDir().getAbsolutePath() :
+                    settingsSystem.getAttachmentsDir());
         String newAttachmentFilePath = null;
 
         if (isCached) {
@@ -271,5 +276,34 @@ public class AttachmentsStore {
         synchronized (m_attachmentsHash) {
             m_attachmentsHash.clear();
         }
+    }
+
+    public boolean cleanAllFiles() {
+        SettingsSystem settingsSystem = SettingsSystem.getInstance();
+
+        if (settingsSystem == null) return false;
+        if (settingsSystem.getAttachmentsDir() == null) return false;
+
+        File attachmentDir = new File(settingsSystem.getAttachmentsDir());
+
+        if (!attachmentDir.exists()) return true;
+
+        synchronized (m_attachmentsHash) {
+            for (final AttachmentSize attachmentSize : AttachmentSize.values()) {
+                File curAttachmentSizeDir =
+                        new File(attachmentDir, String.valueOf(attachmentSize.getId()));
+
+                if (!curAttachmentSizeDir.exists()) continue;
+
+                File[] attachmentArray = curAttachmentSizeDir.listFiles();
+
+                if (attachmentArray == null) continue;
+
+                for (final File attachment : attachmentArray)
+                    if (!attachment.delete()) return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.messageprocessor;
 import static com.mcdead.busycoder.socialcipher.setting.manager.SettingsManager.C_ATTACHMENT_DIR_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import android.content.Context;
 
@@ -14,9 +15,13 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.ResponseAttachmentBase;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.ResponseAttachmentStored;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.VKAttachmentType;
+import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.list.ResponseChatAttachmentListWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.content.ResponseChatContentItem;
+import com.mcdead.busycoder.socialcipher.client.api.vk.gson.document.ResponseDocumentWrapper;
+import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIAttachment;
+import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
@@ -47,14 +52,23 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
+import okhttp3.internal.http.RealResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 @RunWith(JUnit4.class)
 public class MessageProcessorVKTest {
     private static final String C_VALID_TOKEN =
-            "vk1.a.LzIN0oJe7pfK4pbl1-0vyDh_yKtgEfGPRmZlZ1LPzCd8RgC_Wp4GhrmLE0gaLouqSx9c4FJHm1c1QD2QLFZYb0cGeUXySP5Tu5-qAMDXqxzTeXmGKizv57zA7Y9Dabsuu7OUsSfankCD78O-e_BbUy4I9QWVkS6odCArRxR3FbKqM8Rlj_5CnKIdipOZyE2c";
+            "";
 
     private Context m_context = null;
     private MessageProcessorVK m_messageProcessor = null;
@@ -105,7 +119,8 @@ public class MessageProcessorVKTest {
         m_messageProcessor =
                 (MessageProcessorVK) MessageProcessorFactory.
                         generateMessageProcessorVK(
-                                attachmentTypeDefiner, C_VALID_TOKEN, chatIdChecker, vkapiProvider);
+                                m_attachmentTypeDefiner,
+                                C_VALID_TOKEN, m_chatIdChecker, vkapiProvider);
 
         m_correctChatId = 180106935;
 
@@ -118,13 +133,13 @@ public class MessageProcessorVKTest {
                     VKAttachmentType.DOC.getType(),
                     664209310,
                     180106935,
-                    "uWrZvJezGfEyK2vzNrEUUceVpE91ODM3TFsGtit5cjo");
+                    "");
         m_responseAttachmentPhoto =
                 new ResponseAttachmentStored(
                         VKAttachmentType.PHOTO.getType(),
                         457252632,
                         180106935,
-                        "1c4ece21a7b47fd315");
+                        "");
 
         m_correctAttachmentListVK = new ArrayList<ResponseAttachmentBase>() {
             {
@@ -521,119 +536,115 @@ public class MessageProcessorVKTest {
     }
 
     @Test
-    public void processingAttachmentsMatrixWithWorkingNetwork() {
-        List<AttachmentTestData> attachmentTestDataList = new ArrayList<AttachmentTestData>() {
-            {
-                // CORRECT CASES:
-
-                add(new AttachmentTestData(
-                        MessageEntityGenerator.generateMessage(
-                                m_correctMessageId,
-                                m_correctSender,
-                                "hi",
-                                m_correctTimestamp,
-                                false,
-                                m_correctAttachmentListAbstract),
-                        m_correctChatId,
-                        new ObjectWrapper<AttachmentProcessingResult>(
-                                new AttachmentProcessingResult(
-                                    m_correctAttachmentEntityList,
-                                    false)),
-                        null
-                ));
-                add(new AttachmentTestData(
-                        MessageEntityGenerator.generateMessage(
-                                m_correctMessageId,
-                                m_correctSender,
-                                "hi",
-                                m_correctTimestamp,
-                                false,
-                                null),
-                        m_correctChatId,
-                        new ObjectWrapper<AttachmentProcessingResult>(),
-                        null
-                ));
-
-                // INCORRECT CASES:
-                // There isn't any reason to include simple cases;
-
-            }
-        };
-
-        for (final AttachmentTestData attachmentTestData : attachmentTestDataList) {
-            ObjectWrapper<AttachmentProcessingResult> attachmentProcessingResultWrapper =
-                    new ObjectWrapper<>();
-            Error curError =
-                    m_messageProcessor.processMessageAttachments(
-                            attachmentTestData.message,
-                            attachmentTestData.chatId,
-                            attachmentProcessingResultWrapper);
-
-            assertEquals(attachmentTestData.error, curError);
-            assertEquals(
-                    attachmentTestData.resultAttachmentProcessing,
-                    attachmentProcessingResultWrapper);
-        }
-    }
-
-    @Test
-    public void processAttachmentMatrixWithFailingNetwork() {
+    public void processingAttachmentsMatrix() throws IOException {
         MockitoAnnotations.openMocks(this);
 
-        VKAPIProvider vkAPIProviderMock = Mockito.spy(VKAPIProvider.class);
+        // CASES' CREATION:
 
-        Mockito.when(vkAPIProviderMock.generateAttachmentAPI()).thenReturn(new VKAPIAttachmentFailing());
+        List<AttachmentWithCustomProcessorTestData> attachmentTestDataList =
+                new ArrayList<AttachmentWithCustomProcessorTestData>() {
+                    {
+                        add(new AttachmentWithCustomProcessorTestData(
+                                m_messageProcessor,
+                                MessageEntityGenerator.generateMessage(
+                                        m_correctMessageId,
+                                        m_correctSender,
+                                        "hi",
+                                        m_correctTimestamp,
+                                        false,
+                                        m_correctAttachmentListAbstract),
+                                m_correctChatId,
+                                new ObjectWrapper<AttachmentProcessingResult>(
+                                        new AttachmentProcessingResult(
+                                                m_correctAttachmentEntityList,
+                                                false)),
+                                null
+                        ));
+                        add(new AttachmentWithCustomProcessorTestData(
+                                m_messageProcessor,
+                                MessageEntityGenerator.generateMessage(
+                                        m_correctMessageId,
+                                        m_correctSender,
+                                        "hi",
+                                        m_correctTimestamp,
+                                        false,
+                                        null),
+                                m_correctChatId,
+                                new ObjectWrapper<AttachmentProcessingResult>(),
+                                null
+                        ));
 
-        MessageProcessorVK messageProcessorVKFailing =
-                MessageProcessorFactory.generateMessageProcessorVK(
-                        m_attachmentTypeDefiner, C_VALID_TOKEN, m_chatIdChecker, vkAPIProviderMock);
+                        // INCORRECT CASES:
+                        // There isn't any reason to include simple cases;
 
-        List<AttachmentTestData> attachmentTestDataList = new ArrayList<AttachmentTestData>() {
-            {
-                add(new AttachmentTestData(
-                        MessageEntityGenerator.generateMessage(
-                                m_correctMessageId,
-                                m_correctSender,
-                                "hi",
-                                m_correctTimestamp,
-                                false,
-                                m_correctAttachmentListAbstract),
-                        m_correctChatId,
-                        new ObjectWrapper<AttachmentProcessingResult>(
-                                new AttachmentProcessingResult(
-                                        m_correctAttachmentEntityList,
-                                        false)),
-                        null
-                ));
-                add(new AttachmentTestData(
-                        MessageEntityGenerator.generateMessage(
-                                m_correctMessageId,
-                                m_correctSender,
-                                "hi",
-                                m_correctTimestamp,
-                                false,
-                                null),
-                        m_correctChatId,
-                        new ObjectWrapper<AttachmentProcessingResult>(),
-                        null
-                ));
+                        // API MOCKING:
 
-            }
-        };
+                        VKAPIAttachment vkAPIAttachment = new VKAPIProvider().generateAttachmentAPI();
 
-        for (final AttachmentTestData attachmentTestData : attachmentTestDataList) {
-            ObjectWrapper<AttachmentProcessingResult> attachmentProcessingResultWrapper =
+                        VKAPIChat vkAPIChatMock = Mockito.spy(VKAPIChat.class);
+
+                        Call<ResponseChatAttachmentListWrapper> chatAttachmentListWrapperCall =
+                                Mockito.spy(Call.class);
+
+                        ResponseBody responseErrorBody =
+                                ResponseBody.create(
+                                    MediaType.parse("text/plain"),
+                                    "something about the error..");
+
+                        Mockito.when(chatAttachmentListWrapperCall.execute()).
+                                thenReturn(
+                                        Response.<ResponseChatAttachmentListWrapper>error(
+                                                500, responseErrorBody));
+
+                        Mockito.when(
+                                vkAPIChatMock.getChatAttachmentList(
+                                        Mockito.anyLong(), Mockito.any(), Mockito.any())).
+                                thenReturn(chatAttachmentListWrapperCall);
+
+                        MessageProcessorVK messageProcessorVKFailingNoResponse =
+                                MessageProcessorVK.getInstance(
+                                        m_attachmentTypeDefiner,
+                                        C_VALID_TOKEN,
+                                        m_chatIdChecker,
+                                        vkAPIChatMock,
+                                        vkAPIAttachment);
+
+                        add(new AttachmentWithCustomProcessorTestData(
+                                messageProcessorVKFailingNoResponse,
+                                MessageEntityGenerator.generateMessage(
+                                        m_correctMessageId,
+                                        m_correctSender,
+                                        "hi",
+                                        m_correctTimestamp,
+                                        false,
+                                        m_correctAttachmentListAbstract),
+                                m_correctChatId,
+                                new ObjectWrapper<>(),
+                                MessageProcessorVK.C_ERROR_HASH_MAP.get(
+                                        MessageProcessorVK.ErrorType.FAILED_CHAT_ATTACHMENT_REQUEST)
+                        ));
+
+                    }
+                };
+
+        for (final AttachmentWithCustomProcessorTestData attachmentTestData :
+                attachmentTestDataList)
+        {
+            ObjectWrapper<AttachmentProcessingResult> processingResultWrapper =
                     new ObjectWrapper<>();
-            Error curError =
-                    m_messageProcessor.processMessageAttachments(
-                            attachmentTestData.message,
-                            attachmentTestData.chatId,
-                            attachmentProcessingResultWrapper);
+            Error processingError =
+                    attachmentTestData.messageProcessorVK.
+                        processMessageAttachments(
+                                attachmentTestData.message,
+                                attachmentTestData.chatId,
+                                processingResultWrapper);
 
-            assertEquals(attachmentTestData.error, curError);
+            assertEquals(attachmentTestData.error, processingError);
             assertEquals(
                     attachmentTestData.resultAttachmentProcessing,
-                    attachmentProcessingResultWrapper);
+                    processingResultWrapper);
+
+            AttachmentsStore.getInstance().cleanAllFiles();
         }
     }
 
@@ -683,19 +694,23 @@ public class MessageProcessorVKTest {
         }
     }
 
-    private static class AttachmentTestData {
+    private static class AttachmentWithCustomProcessorTestData {
+        final public MessageProcessorVK messageProcessorVK;
+
         final public MessageEntity message;
         final public long chatId;
 
         final public ObjectWrapper<AttachmentProcessingResult> resultAttachmentProcessing;
         final public Error error;
 
-        public AttachmentTestData(
+        public AttachmentWithCustomProcessorTestData(
+                final MessageProcessorVK messageProcessorVK,
                 final MessageEntity message,
                 final long chatId,
                 final ObjectWrapper<AttachmentProcessingResult> resultAttachmentProcessing,
                 final Error error)
         {
+            this.messageProcessorVK = messageProcessorVK;
             this.message = message;
             this.chatId = chatId;
             this.resultAttachmentProcessing = resultAttachmentProcessing;
