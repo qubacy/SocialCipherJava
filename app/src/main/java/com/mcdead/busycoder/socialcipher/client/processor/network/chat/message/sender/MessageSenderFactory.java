@@ -1,6 +1,5 @@
 package com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender;
 
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.api.APIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
@@ -9,21 +8,16 @@ import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.upload
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncVK;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
-import java.util.List;
+import java.util.concurrent.Executor;
 
 public class MessageSenderFactory {
     public static MessageSenderBase generateMessageSender(
-            final long peerId,
-            final String text,
-            final List<AttachmentData> uploadingAttachmentList,
             final AttachmentUploaderSyncBase attachmentUploader,
-            final MessageSendingCallback callback)
+            final MessageSendingCallback callback,
+            final Executor executor)
     {
-        if (!checkCommonArgsValidity(
-                peerId, text, uploadingAttachmentList, attachmentUploader, callback))
-        {
+        if (!checkCommonArgsValidity(attachmentUploader, callback, executor))
             return null;
-        }
 
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
@@ -38,11 +32,9 @@ public class MessageSenderFactory {
         switch (settingsNetwork.getAPIType()) {
             case VK: return generateMessageSenderVK(
                     settingsNetwork.getToken(),
-                    peerId,
-                    text,
-                    uploadingAttachmentList,
                     (AttachmentUploaderSyncVK) attachmentUploader,
                     callback,
+                    executor,
                     (VKAPIProvider) apiProvider);
         }
 
@@ -51,16 +43,14 @@ public class MessageSenderFactory {
 
     public static MessageSenderVK generateMessageSenderVK(
             final String token,
-            final long peerId,
-            final String text,
-            final List<AttachmentData> uploadingAttachmentList,
             final AttachmentUploaderSyncVK attachmentUploaderVK,
             final MessageSendingCallback callback,
+            final Executor executor,
             final VKAPIProvider apiProvider)
     {
         if (!checkCommonArgsValidityForImpl(
-                token, peerId, text, uploadingAttachmentList,
-                (AttachmentUploaderSyncBase) attachmentUploaderVK, callback, apiProvider))
+                token, (AttachmentUploaderSyncBase) attachmentUploaderVK,
+                callback, executor, apiProvider))
         {
             return null;
         }
@@ -72,26 +62,21 @@ public class MessageSenderFactory {
 
         return new MessageSenderVK(
                 token,
-                peerId,
-                text,
-                uploadingAttachmentList,
                 attachmentUploaderVK,
                 callback,
+                executor,
                 vkAPIChat);
     }
 
     private static boolean checkCommonArgsValidityForImpl(
             final String token,
-            final long peerId,
-            final String text,
-            final List<AttachmentData> uploadingAttachmentList,
             final AttachmentUploaderSyncBase attachmentUploader,
             final MessageSendingCallback callback,
+            final Executor executor,
             final APIProvider apiProvider)
     {
-        if (!checkCommonArgsValidity(
-                peerId, text, uploadingAttachmentList, attachmentUploader, callback) ||
-                apiProvider == null || token == null)
+        if (!checkCommonArgsValidity(attachmentUploader, callback, executor) ||
+            apiProvider == null || token == null)
         {
             return false;
         }
@@ -101,17 +86,12 @@ public class MessageSenderFactory {
     }
 
     private static boolean checkCommonArgsValidity(
-            final long peerId,
-            final String text,
-            final List<AttachmentData> uploadingAttachmentList,
             final AttachmentUploaderSyncBase attachmentUploader,
-            final MessageSendingCallback callback)
+            final MessageSendingCallback callback,
+            final Executor executor)
     {
-        if (peerId == 0 || text == null ||
-                (uploadingAttachmentList != null && attachmentUploader == null))
-        {
+        if (attachmentUploader == null || executor == null)
             return false;
-        }
 
         return true;
     }

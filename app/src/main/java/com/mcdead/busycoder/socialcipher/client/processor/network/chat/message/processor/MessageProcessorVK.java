@@ -46,12 +46,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-/*
-*
-* NOTE: should be used ONLY in BACKGROUND!
-* generates MessageEntities from raw responses;
-*
-*/
 public class MessageProcessorVK extends MessageProcessorBase {
     final protected VKAPIChat m_vkAPIChat;
     final protected VKAPIAttachment m_vkAPIAttachment;

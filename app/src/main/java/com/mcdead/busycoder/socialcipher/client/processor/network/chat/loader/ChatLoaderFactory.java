@@ -14,12 +14,9 @@ import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor
 
 public class ChatLoaderFactory {
     public static ChatLoaderBase generateChatLoader(
-            final ChatLoadingCallback callback,
-            final long chatId)
+            final long chatId,
+            final ChatLoadingCallback callback)
     {
-        if (!checkCommonArgsValidity(callback))
-            return null;
-
         SettingsNetwork settingsNetwork = SettingsNetwork.getInstance();
 
         if (settingsNetwork == null) return null;
@@ -54,7 +51,7 @@ public class ChatLoaderFactory {
             final VKAPIProvider vkAPIProvider,
             final MessageProcessorVK messageProcessorVK)
     {
-        if (!checkCommonArgsValidityForImpl(token, callback, vkAPIProvider, messageProcessorVK))
+        if (!checkCommonArgsValidityForImpl(token, vkAPIProvider, messageProcessorVK))
             return null;
 
         ChatIdCheckerVK chatIdCheckerVK = new ChatIdCheckerVK();
@@ -85,24 +82,12 @@ public class ChatLoaderFactory {
 
     private static boolean checkCommonArgsValidityForImpl(
             final String token,
-            final ChatLoadingCallback callback,
             final APIProvider apiProvider,
             final MessageProcessorBase messageProcessor)
     {
-        if (!checkCommonArgsValidity(callback) || token == null || apiProvider == null ||
-            messageProcessor == null)
-        {
+        if (token == null || apiProvider == null || messageProcessor == null)
             return false;
-        }
         if (token.isEmpty()) return false;
-
-        return true;
-    }
-
-    private static boolean checkCommonArgsValidity(
-            final ChatLoadingCallback callback)
-    {
-        if (callback == null) return false;
 
         return true;
     }

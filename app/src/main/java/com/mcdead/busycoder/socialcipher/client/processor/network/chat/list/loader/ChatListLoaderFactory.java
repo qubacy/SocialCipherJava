@@ -92,8 +92,6 @@ public class ChatListLoaderFactory {
     private static boolean checkCommonArgsValidity(
             final ChatListLoadingCallback callback)
     {
-        if (callback == null) return false;
-
         return true;
     }
 }

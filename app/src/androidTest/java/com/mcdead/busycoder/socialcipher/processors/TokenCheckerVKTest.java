@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher;
+package com.mcdead.busycoder.socialcipher.processors;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

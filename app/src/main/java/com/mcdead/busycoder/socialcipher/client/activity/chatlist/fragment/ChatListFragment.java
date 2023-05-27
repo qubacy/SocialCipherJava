@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -22,6 +24,8 @@ import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapt
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListAdapterCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListItemCallback;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoaderBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoaderFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoadingCallback;
@@ -30,6 +34,10 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderFactory;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncFactory;
 
 import java.util.List;
 
@@ -40,32 +48,86 @@ public class ChatListFragment extends Fragment
         NewMessageReceivedCallback,
         CommandSendingCallback
 {
-    private ChatListFragmentCallback m_callback = null;
+    final private ChatListFragmentCallback m_callback;
+    final private ChatListLoaderBase m_chatListLoader;
+    final private ChatListBroadcastReceiver m_chatChangeBroadcastReceiver;
 
-    private ChatListViewModel m_dialogsViewModel = null;
-
-    private ChatListLoaderBase m_loaderTask = null;
+    private ChatListViewModel m_chatListViewModel = null;
 
     private RecyclerView m_dialogsListRecyclerView = null;
     private ChatListAdapter m_dialogsListAdapter = null;
 
-    private ChatListBroadcastReceiver m_dialogChangeBroadcastReceiver = null;
-
-    public ChatListFragment(
-            ChatListFragmentCallback callback)
+    protected ChatListFragment(
+            final ChatListFragmentCallback callback,
+            final ChatListLoaderBase chatListLoader,
+            final ChatListBroadcastReceiver chatListBroadcastReceiver)
     {
+        super();
+
         m_callback = callback;
+        m_chatListLoader = chatListLoader;
+        m_chatChangeBroadcastReceiver = chatListBroadcastReceiver;
+    }
+
+    public static ChatListFragment getInstance(
+            final ChatListFragmentCallback callback,
+            final Context context)
+    {
+        if (callback == null || context == null)
+            return null;
+
+        ChatListLoaderBase chatListLoader =
+                ChatListLoaderFactory.generateChatListLoader(null);
+
+        if (chatListLoader == null) return null;
+
+        AttachmentUploaderSyncBase attachmentUploader =
+                AttachmentUploaderSyncFactory.generateAttachmentUploader(null);
+
+        if (attachmentUploader == null) return null;
+
+        MessageSenderBase messageSender =
+                MessageSenderFactory.generateMessageSender(
+                        attachmentUploader, null, ContextCompat.getMainExecutor(context));
+
+        if (messageSender == null) return null;
+
+        ChatIdChecker chatIdChecker = ChatIdCheckerGenerator.generateChatIdChecker();
+
+        if (chatIdChecker == null) return null;
+
+        ChatListBroadcastReceiver chatListBroadcastReceiver =
+                ChatListBroadcastReceiver.getInstance(
+                        null, null, chatIdChecker, messageSender);
+
+        if (chatListBroadcastReceiver == null)
+            return null;
+
+        return new ChatListFragment(callback, chatListLoader, chatListBroadcastReceiver);
+    }
+
+    public static ChatListFragment getInstance(
+            final ChatListFragmentCallback callback,
+            final ChatListLoaderBase chatListLoader,
+            final ChatListBroadcastReceiver chatListBroadcastReceiver)
+    {
+        if (callback == null || chatListLoader == null || chatListBroadcastReceiver == null)
+            return null;
+
+        return new ChatListFragment(callback, chatListLoader, chatListBroadcastReceiver);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (!launchDialogsLoader()) return;
+        if (!launchChatsLoader()) return;
 
-        m_dialogsViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
+        m_chatListViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
 
-        m_dialogChangeBroadcastReceiver = new ChatListBroadcastReceiver(this, this);
+        m_chatChangeBroadcastReceiver.setNewMessageReceivedCallback(this);
+        m_chatChangeBroadcastReceiver.setCommandSendingCallback(this);
+        m_chatListLoader.setCallback(this);
 
         IntentFilter intentFilter =  new IntentFilter(ChatListBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
@@ -75,7 +137,7 @@ public class ChatListFragment extends Fragment
         LocalBroadcastManager.
                 getInstance(getActivity().getApplicationContext()).
                 registerReceiver(
-                    m_dialogChangeBroadcastReceiver,
+                        m_chatChangeBroadcastReceiver,
                     intentFilter);
     }
 
@@ -91,11 +153,11 @@ public class ChatListFragment extends Fragment
 
     @Override
     public void onDestroy() {
-        if (m_loaderTask != null)
-            m_loaderTask.cancel(true);
+        if (m_chatListLoader != null)
+            m_chatListLoader.cancel(true);
 
         LocalBroadcastManager.getInstance(getActivity().getApplicationContext())
-                .unregisterReceiver(m_dialogChangeBroadcastReceiver);
+                .unregisterReceiver(m_chatChangeBroadcastReceiver);
 
         super.onDestroy();
     }
@@ -159,7 +221,7 @@ public class ChatListFragment extends Fragment
 
     @Override
     public void onDialogItemClick(long peerId) {
-        m_dialogsViewModel.setCurrentChatId(peerId);
+        m_chatListViewModel.setCurrentChatId(peerId);
 
         Intent intent = new Intent(getActivity(), ChatActivity.class);
 
@@ -168,19 +230,8 @@ public class ChatListFragment extends Fragment
         startActivity(intent);
     }
 
-    private boolean launchDialogsLoader() {
-        m_loaderTask = ChatListLoaderFactory.generateChatListLoader(this);
-
-        if (m_loaderTask == null) {
-            ErrorBroadcastReceiver.broadcastError(
-                    new Error("Dialogs loader hasn't been launched!", true),
-                    getActivity().getApplicationContext()
-            );
-
-            return false;
-        }
-
-        m_loaderTask.execute();
+    private boolean launchChatsLoader() {
+        m_chatListLoader.execute();
 
         return true;
     }
@@ -189,7 +240,7 @@ public class ChatListFragment extends Fragment
     public void onNewMessageReceived(long chatId) {
         onDialogsLoaded();
 
-        if (m_dialogsViewModel.getCurrentChatId() != chatId)
+        if (m_chatListViewModel.getCurrentChatId() != chatId)
             return;
 
         Intent newMessagesIntent = new Intent(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);

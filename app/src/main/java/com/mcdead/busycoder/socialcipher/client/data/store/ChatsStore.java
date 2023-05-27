@@ -90,15 +90,15 @@ public class ChatsStore {
         if (message == null) return false;
 
         synchronized (m_chatList) {
-            ChatEntity dialog = getChatById(chatId);
+            ChatEntity chat = getChatById(chatId);
 
-            if (dialog == null) return false;
+            if (chat == null) return false;
 
-            if (!dialog.addMessage(message))
+            if (!chat.addMessage(message))
                 return false;
 
-            m_chatList.remove(dialog);
-            m_chatList.add(0, dialog);
+            m_chatList.remove(chat);
+            m_chatList.add(0, chat);
         }
 
         return true;

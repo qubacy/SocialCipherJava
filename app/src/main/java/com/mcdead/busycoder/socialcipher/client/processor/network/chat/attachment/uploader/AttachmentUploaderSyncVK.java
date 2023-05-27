@@ -23,7 +23,6 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.uplo
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.upload.uploaded.ResponseAttachmentUploaded;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIUploadAttachment;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerVK;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.result.AttachmentUploadedResult;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.result.AttachmentUploadedResultVK;
@@ -51,37 +50,33 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
 
     protected AttachmentUploaderSyncVK(
             final String token,
-            final long chatId,
             final ContentResolver contentResolver,
             final VKAPIUploadAttachment vkAPIUploadAttachment)
     {
-        super(token, chatId, contentResolver);
+        super(token, contentResolver);
 
         m_vkAPIUploadAttachment = vkAPIUploadAttachment;
     }
 
     public static AttachmentUploaderSyncVK getInstance(
             final String token,
-            final long chatId,
             final ContentResolver contentResolver,
             final VKAPIUploadAttachment vkAPIUploadAttachment)
     {
-        if (token == null || contentResolver == null || vkAPIUploadAttachment == null)
+        if (token == null || vkAPIUploadAttachment == null)
             return null;
+        if (token.isEmpty()) return null;
 
-        ChatIdCheckerVK chatIdCheckerVK = new ChatIdCheckerVK();
-
-        if (!chatIdCheckerVK.isValid(chatId) || token.isEmpty()) return null;
-
-        return new AttachmentUploaderSyncVK(token, chatId, contentResolver, vkAPIUploadAttachment);
+        return new AttachmentUploaderSyncVK(token, contentResolver, vkAPIUploadAttachment);
     }
 
     private Error getUploadingUrlForPhoto(
+            final long chatId,
             ObjectWrapper<ResponseAttachmentBaseUploadServerBody> resultUploadingServerDataWrapper)
             throws IOException
     {
         Response<ResponseAttachmentPhotoUploadServerWrapper> response =
-                m_vkAPIUploadAttachment.getPhotoUploadServer(m_token, m_peerId).execute();
+                m_vkAPIUploadAttachment.getPhotoUploadServer(m_token, chatId).execute();
 
         if (!response.isSuccessful())
             return new Error(
@@ -96,11 +91,12 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     private Error getUploadingUrlForDoc(
+            final long chatId,
             ObjectWrapper<ResponseAttachmentBaseUploadServerBody> resultUploadingServerDataWrapper)
             throws IOException
     {
         Response<ResponseAttachmentDocUploadServerWrapper> response =
-                m_vkAPIUploadAttachment.getDocUploadServer(m_token, m_peerId).execute();
+                m_vkAPIUploadAttachment.getDocUploadServer(m_token, chatId).execute();
 
         if (!response.isSuccessful())
             return new Error(
@@ -115,13 +111,14 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     private Error getAttachmentUploadingUrl(
+            final long chatId,
             final AttachmentData attachmentData,
             ObjectWrapper<ResponseAttachmentBaseUploadServerBody> resultUploadingServerDataWrapper)
             throws IOException
     {
         switch (attachmentData.getType()) {
-            case IMAGE: return getUploadingUrlForPhoto(resultUploadingServerDataWrapper);
-            case DOC:   return getUploadingUrlForDoc(resultUploadingServerDataWrapper);
+            case IMAGE: return getUploadingUrlForPhoto(chatId, resultUploadingServerDataWrapper);
+            case DOC:   return getUploadingUrlForDoc(chatId, resultUploadingServerDataWrapper);
         }
 
         return new Error(
@@ -403,6 +400,7 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
     }
 
     public Error uploadAttachments(
+            final long chatId,
             final List<AttachmentData> uploadingAttachmentList,
             ObjectWrapper<AttachmentUploadedResult> resultAttachmentListStringWrapper)
     {
@@ -429,9 +427,9 @@ public class AttachmentUploaderSyncVK extends AttachmentUploaderSyncBase {
                 ObjectWrapper<ResponseAttachmentBaseUploadServerBody> responseUploadServerWrapper =
                         new ObjectWrapper<>();
 
-                error = getAttachmentUploadingUrl(
-                        uploadingAttachmentData,
-                        responseUploadServerWrapper);
+                error =
+                        getAttachmentUploadingUrl(
+                                chatId, uploadingAttachmentData, responseUploadServerWrapper);
 
                 if (error != null) return error;
 

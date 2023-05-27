@@ -9,17 +9,21 @@ import android.content.Intent;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.CommandSendingCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.NewMessageReceivedCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.sender.data.MessageToSendData;
 import com.mcdead.busycoder.socialcipher.client.processor.update.service.UpdateProcessorService;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSendingCallback;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderFactory;
 
 public class ChatListBroadcastReceiver extends BroadcastReceiver
     implements MessageSendingCallback
 {
-    public static final String C_NEW_MESSAGE_ADDED = "com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver.NEW_MESSAGES_ADDED";
-    public static final String C_UPDATES_RECEIVED = "com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver.UPDATES_RECEIVED";
-    public static final String C_SEND_COMMAND_MESSAGE = "com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver.SEND_COMMAND_MESSAGE";
+    public static final String C_NEW_MESSAGE_ADDED =
+            "com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver.NEW_MESSAGES_ADDED";
+    public static final String C_UPDATES_RECEIVED =
+            "com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver.UPDATES_RECEIVED";
+    public static final String C_SEND_COMMAND_MESSAGE =
+            "com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver.SEND_COMMAND_MESSAGE";
 
     public static final String C_UPDATES_WRAPPER_EXTRA_PROP_NAME = "updatesWrapper";
     public static final String C_UPDATES_LIST_EXTRA_PROP_NAME = "updatesList";
@@ -29,32 +33,87 @@ public class ChatListBroadcastReceiver extends BroadcastReceiver
     public static final String C_SEND_COMMAND_CHAT_ID_PROP_NAME = "chatId";
     public static final String C_SEND_COMMAND_TEXT_PROP_NAME = "commandText";
 
-    private NewMessageReceivedCallback m_callback = null;
+    private NewMessageReceivedCallback m_newMessageReceivedCallback = null;
     private CommandSendingCallback m_commandSendingCallback = null;
 
-    public ChatListBroadcastReceiver(
+    final private ChatIdChecker m_chatIdChecker;
+    final private MessageSenderBase m_messageSender;
+
+    protected ChatListBroadcastReceiver(
             final NewMessageReceivedCallback callback,
-            final CommandSendingCallback commandSendingCallback)
+            final CommandSendingCallback commandSendingCallback,
+            final ChatIdChecker chatIdChecker,
+            final MessageSenderBase messageSender)
     {
         super();
 
-        m_callback = callback;
+        m_newMessageReceivedCallback = callback;
         m_commandSendingCallback = commandSendingCallback;
+        m_chatIdChecker = chatIdChecker;
+        m_messageSender = messageSender;
+    }
+
+    public static ChatListBroadcastReceiver getInstance(
+            final NewMessageReceivedCallback callback,
+            final CommandSendingCallback commandSendingCallback,
+            final ChatIdChecker chatIdChecker,
+            final MessageSenderBase messageSender)
+    {
+        if (chatIdChecker == null || messageSender == null)
+            return null;
+
+        return new ChatListBroadcastReceiver(
+                callback, commandSendingCallback, chatIdChecker, messageSender);
+    }
+
+    public boolean setCommandSendingCallback(
+            final CommandSendingCallback commandSendingCallback)
+    {
+        if (commandSendingCallback == null)
+            return false;
+
+        m_commandSendingCallback = commandSendingCallback;
+
+        return true;
+    }
+
+    public boolean setNewMessageReceivedCallback(
+            final NewMessageReceivedCallback newMessageReceivedCallback)
+    {
+        if (newMessageReceivedCallback == null)
+            return false;
+
+        m_newMessageReceivedCallback = newMessageReceivedCallback;
+
+        return true;
     }
 
     @Override
-    public void onReceive(Context context,
-                          Intent intent)
+    public void onReceive(
+            final Context context,
+            final Intent intent)
+    {
+        Error processingError = processBroadcast(context, intent);
+
+        if (processingError != null)
+            m_newMessageReceivedCallback.onNewMessageReceivingError(processingError);
+    }
+
+    private Error processBroadcast(
+            final Context context,
+            final Intent intent)
     {
         switch (intent.getAction()) {
-            case C_UPDATES_RECEIVED: processUpdatesReceivedAction(context, intent); break;
-            case C_NEW_MESSAGE_ADDED: processNewMessagesAddedAction(intent); break;
-            case C_SEND_COMMAND_MESSAGE: processSendCommandMessage(intent); break;
+            case C_UPDATES_RECEIVED: return processUpdatesReceivedAction(context, intent);
+            case C_NEW_MESSAGE_ADDED: return processNewMessagesAddedAction(intent);
+            case C_SEND_COMMAND_MESSAGE: return processSendCommandMessage(intent);
         }
+
+        return null;
     }
 
     private Error processSendCommandMessage(
-            Intent intent)
+            final Intent intent)
     {
         long chatId = intent.getLongExtra(C_SEND_COMMAND_CHAT_ID_PROP_NAME, 0);
         String commandText = intent.getStringExtra(C_SEND_COMMAND_TEXT_PROP_NAME);
@@ -64,22 +123,21 @@ public class ChatListBroadcastReceiver extends BroadcastReceiver
         if (commandText.isEmpty())
             return new Error("Incorrect command text has been provided!", true);
 
-        MessageSenderBase messageSender =
-                MessageSenderFactory.generateMessageSender(
-                        chatId,
-                        commandText,
-                        null,
-                        null,
-                        null);
+        MessageToSendData messageToSendData =
+                MessageToSendData.getInstance(
+                        chatId, commandText, null);
 
-        messageSender.execute();
+        if (messageToSendData == null)
+            return new Error("Message To Send can't be generated!", true);
+
+        m_messageSender.execute(messageToSendData);
 
         return null;
     }
 
-    private void processUpdatesReceivedAction(
-            Context context,
-            Intent intent)
+    private Error processUpdatesReceivedAction(
+            final Context context,
+            final Intent intent)
     {
         Intent serviceIntent = new Intent(
                 context.getApplicationContext(),
@@ -91,19 +149,21 @@ public class ChatListBroadcastReceiver extends BroadcastReceiver
                 UpdateProcessorService.OperationType.PROCESS_RECEIVED_UPDATES.getId());
 
         context.getApplicationContext().startService(serviceIntent);
+
+        return null;
     }
 
-    private void processNewMessagesAddedAction(
-            Intent intent)
+    private Error processNewMessagesAddedAction(
+            final Intent intent)
     {
         long chatId = intent.getLongExtra(C_NEW_MESSAGE_CHAT_ID_PROP_NAME, 0);
 
-        if (chatId != 0)
-            m_callback.onNewMessageReceived(chatId);
-        else
-            m_callback.onNewMessageReceivingError(
-                    new Error("No Chat Id was provided!", true)
-            );
+        if (!m_chatIdChecker.isValid(chatId))
+            return new Error("No Chat Id was provided!", true);
+
+        m_newMessageReceivedCallback.onNewMessageReceived(chatId);
+
+        return null;
     }
 
     @Override

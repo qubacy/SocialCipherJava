@@ -53,7 +53,7 @@ public class TokenCheckerVK extends TokenCheckerBase {
         if (!response.isSuccessful())
             return new Error(VKAPIContext.C_REQUEST_FAILED_MESSAGE, true);
         if (response.body().error != null)
-            return new Error(response.body().error.message, true);
+            return new Error(response.body().error.message, false);
         if (response.body().response.isEmpty())
             return new Error("Local User has not been gotten", true);
 

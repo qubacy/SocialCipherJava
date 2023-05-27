@@ -104,7 +104,7 @@ public class SignInActivity extends AppCompatActivity
     }
 
     public static class SettingsSaver implements Runnable {
-        private SettingsNetwork m_settings = null;
+        final private SettingsNetwork m_settings;
 
         public SettingsSaver(final SettingsNetwork settings) {
             m_settings = settings;

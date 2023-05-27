@@ -1,9 +1,8 @@
-package com.mcdead.busycoder.socialcipher.messageprocessor;
+package com.mcdead.busycoder.socialcipher.processors;
 
 import static com.mcdead.busycoder.socialcipher.setting.manager.SettingsManager.C_ATTACHMENT_DIR_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import android.content.Context;
 
@@ -17,17 +16,13 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.Resp
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.VKAttachmentType;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.attachment.list.ResponseChatAttachmentListWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.content.ResponseChatContentItem;
-import com.mcdead.busycoder.socialcipher.client.api.vk.gson.document.ResponseDocumentWrapper;
-import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIAttachment;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
-import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerInterface;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentTypeDefinerVK;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
@@ -38,7 +33,6 @@ import com.mcdead.busycoder.socialcipher.client.data.store.AttachmentsStore;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorVK;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.processor.data.AttachmentProcessingResult;
 import com.mcdead.busycoder.socialcipher.client.processor.network.update.processor.UpdateProcessorAsyncVK;
-import com.mcdead.busycoder.socialcipher.messageprocessor.data.VKAPIAttachmentFailing;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor.MessageProcessorFactory;
 import com.mcdead.busycoder.socialcipher.setting.system.SettingsSystem;
@@ -48,7 +42,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
@@ -58,11 +51,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import okhttp3.MediaType;
-import okhttp3.Request;
 import okhttp3.ResponseBody;
-import okhttp3.internal.http.RealResponseBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 @RunWith(JUnit4.class)
@@ -577,9 +567,9 @@ public class MessageProcessorVKTest {
                         // INCORRECT CASES:
                         // There isn't any reason to include simple cases;
 
-                        // API MOCKING:
-
                         VKAPIAttachment vkAPIAttachment = new VKAPIProvider().generateAttachmentAPI();
+
+                        // API MOCKING:
 
                         VKAPIChat vkAPIChatMock = Mockito.spy(VKAPIChat.class);
 

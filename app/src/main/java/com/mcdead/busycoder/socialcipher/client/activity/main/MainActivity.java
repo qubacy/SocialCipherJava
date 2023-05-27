@@ -7,8 +7,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Process;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.mcdead.busycoder.socialcipher.R;
@@ -31,9 +33,6 @@ import com.mcdead.busycoder.socialcipher.client.processor.network.tokenchecker.r
 import com.mcdead.busycoder.socialcipher.client.processor.tokenchecker.TokenCheckerBase;
 import com.mcdead.busycoder.socialcipher.client.processor.tokenchecker.TokenCheckerFactory;
 
-// Initial activity;
-// It has a mission to check whether the user is Signed In or not;
-
 public class MainActivity extends AppCompatActivity
     implements
         TokenCheckResultInterface,
@@ -47,6 +46,8 @@ public class MainActivity extends AppCompatActivity
 
     private ErrorBroadcastReceiver m_errorBroadcastReceiver = null;
 
+    private Button m_vkButton = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +60,8 @@ public class MainActivity extends AppCompatActivity
         checkIsClosing();
 
         setContentView(R.layout.activity_main);
+
+        m_vkButton = findViewById(R.id.main_activity_sign_in_vk_button);
 
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
@@ -77,12 +80,14 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (m_isSignedIn) {
+            m_vkButton.setEnabled(false);
+
             String token = SettingsNetwork.getInstance().getToken();
 
             launchTokenCheck(token);
         }
 
-        findViewById(R.id.main_activity_sign_in_vk_button).setOnClickListener(new View.OnClickListener() {
+        m_vkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 processSignIn();
@@ -92,6 +97,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+//        new Thread(new SettingsSaver()).start();
+
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(m_errorBroadcastReceiver);
 
@@ -101,6 +108,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
+
+        setLoginButtonsEnabled(true);
     }
 
     @Override
@@ -109,12 +118,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private Error init() {
-        if (!SettingsManager.initializeSettings(
-                getFilesDir().getAbsolutePath(), getApplicationContext()))
-        {
-            Toast.makeText(this, "Settings loading error!", Toast.LENGTH_LONG)
-                    .show();
-        }
+        Error loadingError =
+                SettingsManager.initializeSettings(
+                    getFilesDir().getAbsolutePath(), getApplicationContext());
+
+        if (loadingError != null) processError(loadingError);
 
         String token = SettingsNetwork.getInstance().getToken();
 
@@ -140,7 +148,7 @@ public class MainActivity extends AppCompatActivity
         else
             processError(
                     new Error("TokenCheckerFactory couldn't produce a checker object!",
-                            true));
+                              true));
     }
 
     private void processSignIn() {
@@ -158,10 +166,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private Error resetStorages() {
-        if (ChatsStore.getInstance() == null
-         || AttachmentsStore.getInstance() == null
-         || UsersStore.getInstance() == null
-         || CipherSessionStore.getInstance() == null)
+        if (ChatsStore.getInstance() == null ||
+            AttachmentsStore.getInstance() == null ||
+            UsersStore.getInstance() == null ||
+            CipherSessionStore.getInstance() == null)
         {
             return new Error("Stores haven't been initialized!", true);
         }
@@ -174,14 +182,20 @@ public class MainActivity extends AppCompatActivity
         return null;
     }
 
-    private void showDialogs() {
+    private void showChats() {
         Intent intent = new Intent(this, ChatListActivity.class);
 
         startActivity(intent);
     }
 
+    private void setLoginButtonsEnabled(
+            final boolean isEnabled)
+    {
+        m_vkButton.setEnabled(isEnabled);
+    }
+
     @Override
-    public void onTokenCheckSuccess(UserEntity localUser) {
+    public void onTokenCheckSuccess(final UserEntity localUser) {
         UsersStore.getInstance().setLocalUser(localUser);
 
         if (!MessageProcessorStore.init(MessageProcessorFactory.generateMessageProcessor())) {
@@ -190,11 +204,11 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        showDialogs();
+        showChats();
     }
 
     @Override
-    public void onTokenCheckFailure(Error error) {
+    public void onTokenCheckFailure(final Error error) {
         processError(error);
     }
 
@@ -208,7 +222,17 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
 
         } else {
+            Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
             Log.d(getClass().getName(), "Error: " + error.getMessage());
+        }
+    }
+
+    public static class SettingsSaver implements Runnable {
+        @Override
+        public void run() {
+            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+
+            SettingsManager.saveSettings();
         }
     }
 }

@@ -2,6 +2,7 @@ package com.mcdead.busycoder.socialcipher.client.activity.chat.fragment;
 
 import static com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragment.C_FRAGMENT_TAG;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -36,10 +38,15 @@ import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestan
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.AttachmentShowerActivity;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSide;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSideDefiner;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSideDefinerFactory;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.id.UserIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.user.id.UserIdCheckerGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
@@ -58,6 +65,7 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.cipher.MessageCipherProcessor;
+import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.sender.data.MessageToSendData;
 import com.mcdead.busycoder.socialcipher.command.processor.service.CommandProcessorServiceBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswer;
 import com.mcdead.busycoder.socialcipher.command.processor.service.data.RequestAnswerType;
@@ -78,10 +86,13 @@ public class ChatFragment extends Fragment
         AttachmentPickerCallback,
         RequestAnswerDialogFragmentCallback
 {
-    private ChatFragmentCallback m_callback = null;
+    final private long m_chatId;
+    final private long m_localPeerId;
+    final private ChatFragmentCallback m_callback;
 
-    private long m_peerId = 0;
-    private long m_localPeerId = 0;
+    final private ChatLoaderBase m_chatLoader;
+    final private AttachmentUploaderSyncBase m_attachmentUploader;
+    final private MessageSenderBase m_messageSender;
 
     private ChatBroadcastReceiver m_broadcastReceiver = null;
 
@@ -93,17 +104,95 @@ public class ChatFragment extends Fragment
 
     private AppCompatImageButton m_cipherButton = null;
 
-    public ChatFragment(
-            final long peerId,
-            ChatFragmentCallback callback)
+    protected ChatFragment(
+            final long chatId,
+            final long localPeerId,
+            final ChatFragmentCallback callback,
+            final ChatLoaderBase chatLoader,
+            final AttachmentUploaderSyncBase attachmentUploader,
+            final MessageSenderBase messageSender)
     {
         super();
 
-        m_peerId = peerId;
-        m_localPeerId = UsersStore.getInstance().getLocalUser().getPeerId();
+        m_chatId = chatId;
+        m_localPeerId = localPeerId;
         m_callback = callback;
 
+        m_chatLoader = chatLoader;
+        m_attachmentUploader = attachmentUploader;
+        m_messageSender = messageSender;
+
         m_uploadingAttachmentList = new ArrayList<>();
+    }
+
+    public static ChatFragment getInstance(
+            final long chatId,
+            final ChatFragmentCallback callback,
+            final Context context)
+    {
+        if (callback == null || context == null)
+            return null;
+
+        ChatIdChecker chatIdChecker = ChatIdCheckerGenerator.generateChatIdChecker();
+        UserEntity localUser = UsersStore.getInstance().getLocalUser();
+
+        if (chatIdChecker == null || localUser == null)
+            return null;
+        if (!chatIdChecker.isValid(chatId))
+            return null;
+
+        ChatLoaderBase chatLoader =
+                ChatLoaderFactory.generateChatLoader(chatId, null);
+        AttachmentUploaderSyncBase attachmentUploader =
+                AttachmentUploaderSyncFactory.generateAttachmentUploader(null);
+        MessageSenderBase messageSender =
+                MessageSenderFactory.generateMessageSender(
+                        attachmentUploader, null, ContextCompat.getMainExecutor(context));
+
+        if (chatLoader == null || attachmentUploader == null || messageSender == null)
+            return null;
+
+        return new ChatFragment(
+                chatId, localUser.getPeerId(), callback,
+                chatLoader, attachmentUploader, messageSender);
+    }
+
+    public static ChatFragment getInstance(
+            final long chatId,
+            final long localPeerId,
+            final ChatFragmentCallback callback,
+            final Context context)
+    {
+        UserIdChecker userIdChecker = UserIdCheckerGenerator.generateUserIdChecker();
+
+        if (userIdChecker == null) return null;
+        if (!userIdChecker.isValid(chatId)) return null;
+
+        return getInstance(chatId, localPeerId, callback, context);
+    }
+
+    public static ChatFragment getInstance(
+            final long chatId,
+            final long localPeerId,
+            final ChatFragmentCallback callback,
+            final ChatLoaderBase chatLoader,
+            final AttachmentUploaderSyncBase attachmentUploader,
+            final MessageSenderBase messageSender)
+    {
+        if (chatLoader == null || attachmentUploader == null ||
+            messageSender == null || callback == null)
+        {
+            return null;
+        }
+
+        ChatIdChecker chatIdChecker = ChatIdCheckerGenerator.generateChatIdChecker();
+        UserIdChecker userIdChecker = UserIdCheckerGenerator.generateUserIdChecker();
+
+        if (userIdChecker == null || chatIdChecker == null) return null;
+        if (!userIdChecker.isValid(chatId) || !chatIdChecker.isValid(localPeerId)) return null;
+
+        return new ChatFragment(
+                chatId, localPeerId, callback, chatLoader, attachmentUploader, messageSender);
     }
 
     @Override
@@ -115,6 +204,10 @@ public class ChatFragment extends Fragment
                 getActivity(),
                 this,
                 m_localPeerId);
+
+        m_messageSender.setCallback(this);
+        m_chatLoader.setCallback(this);
+        m_attachmentUploader.setContentResolver(getContext().getContentResolver());
 
         IntentFilter intentFilter = new IntentFilter(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
@@ -207,7 +300,7 @@ public class ChatFragment extends Fragment
 
     @Override
     public void onNewChatMessageReceived() {
-        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_peerId);
+        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_chatId);
         List<MessageEntity> messageList = dialog.getMessages();
 
         if (!m_messagesAdapter.addNewMessage(messageList.get(messageList.size() - 1))) {
@@ -236,7 +329,7 @@ public class ChatFragment extends Fragment
             final long initializerPeerId,
             final long messageId)
     {
-        if (chatId != m_peerId) {
+        if (chatId != m_chatId) {
             onRequestAnswerDialogResultGotten(new CipherRequestAnswerSettingSession(messageId,false));
 
             return;
@@ -278,7 +371,7 @@ public class ChatFragment extends Fragment
             final long chatId,
             final boolean isCipherSessionSet)
     {
-        if (chatId != m_peerId) return;
+        if (chatId != m_chatId) return;
 
         // todo: enabling some identification showing current chat ciphering state..
 
@@ -292,26 +385,21 @@ public class ChatFragment extends Fragment
             long chatId,
             String messageText)
     {
-        if (chatId != m_peerId) return;
+        if (chatId != m_chatId) return;
 
-        MessageSenderBase messageSender =
-                MessageSenderFactory.generateMessageSender(
-                    chatId,
-                    messageText,
-                    null,
-                    null,
-                    null);
+        MessageToSendData messageToSendData =
+                MessageToSendData.getInstance(chatId, messageText, null);
 
-        if (messageSender == null) {
+        if (messageToSendData == null) {
             ErrorBroadcastReceiver
                     .broadcastError(
-                            new Error("Message Sender hasn't been initialized!", true),
+                            new Error("Message Can't be sent!", false),
                             getActivity().getApplicationContext());
 
             return;
         }
 
-        messageSender.execute();
+        m_messageSender.execute(messageToSendData);
     }
 
     @Override
@@ -367,10 +455,10 @@ public class ChatFragment extends Fragment
     }
 
     @Override
-    public void onDialogLoaded() {
+    public void onChatLoaded() {
         m_callback.onDialogLoaded();
 
-        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_peerId);
+        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_chatId);
 
         if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {
             ErrorBroadcastReceiver.broadcastError(
@@ -385,7 +473,7 @@ public class ChatFragment extends Fragment
     }
 
     @Override
-    public void onDialogLoadingError(Error error) {
+    public void onChatLoadingError(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
                 getContext().getApplicationContext()
@@ -393,27 +481,21 @@ public class ChatFragment extends Fragment
     }
 
     private Error initChat() {
-        ChatsStore dialogsStore = ChatsStore.getInstance();
+        ChatsStore chatsStore = ChatsStore.getInstance();
 
-        if (dialogsStore == null)
+        if (chatsStore == null)
             return new Error("Dialogs Store hasn't been initialized!", true);
 
-        ChatEntity dialog = dialogsStore.getChatById(m_peerId);
+        ChatEntity chat = chatsStore.getChatById(m_chatId);
 
-        if (dialog == null)
+        if (chat == null)
             return new Error("Dialog hasn't been found!", true);
 
-        if (!dialog.areAttachmentsLoaded()) {
-            ChatLoaderBase dialogLoader
-                    = ChatLoaderFactory.generateChatLoader(this, m_peerId);
-
-            if (dialogLoader == null)
-                return new Error("Dialog loader hasn't been initialized!", true);
-
-            dialogLoader.execute();
+        if (!chat.areAttachmentsLoaded()) {
+            m_chatLoader.execute();
 
         } else {
-            onDialogLoaded();
+            onChatLoaded();
         }
 
         return null;
@@ -432,7 +514,7 @@ public class ChatFragment extends Fragment
             return;
         }
 
-        ChatSide chatSide = chatSideDefiner.defineChatSide(m_peerId);
+        ChatSide chatSide = chatSideDefiner.defineChatSide(m_chatId);
 
         if (chatSide == ChatSide.LOCAL)
             return;
@@ -445,7 +527,7 @@ public class ChatFragment extends Fragment
                 new Intent(
                         CommandProcessorServiceBroadcastReceiver.C_INITIALIZE_NEW_CIPHERING_SESSION);
 
-        intent.putExtra(CommandProcessorServiceBroadcastReceiver.C_CHAT_ID_PROP_NAME, m_peerId);
+        intent.putExtra(CommandProcessorServiceBroadcastReceiver.C_CHAT_ID_PROP_NAME, m_chatId);
 
         LocalBroadcastManager.
                 getInstance(getContext().getApplicationContext()).
@@ -479,7 +561,7 @@ public class ChatFragment extends Fragment
         }
 
         MessageCipherProcessor messageCipherProcessor =
-                MessageCipherProcessor.getInstance(m_peerId);
+                MessageCipherProcessor.getInstance(m_chatId);
 
         if (messageCipherProcessor != null) {
             Error cipheringError;
@@ -524,32 +606,16 @@ public class ChatFragment extends Fragment
             }
         }
 
-        AttachmentUploaderSyncBase attachmentUploader =
-                AttachmentUploaderSyncFactory.generateAttachmentUploader(
-                        m_peerId,
-                        getContext().getContentResolver());
-
-        if (attachmentUploader == null) {
-            ErrorBroadcastReceiver
-                    .broadcastError(
-                            new Error("Attachment Uploader hasn't been initialized!", true),
-                            getActivity().getApplicationContext());
-
-            return;
-        }
-
-        MessageSenderBase messageSender =
-                MessageSenderFactory.generateMessageSender(
-                        m_peerId,
+        MessageToSendData messageToSendData =
+                MessageToSendData.getInstance(
+                        m_chatId,
                         text,
-                        attachmentDataList,
-                        attachmentUploader,
-                        this);
+                        attachmentDataList);
 
-        if (messageSender == null) {
+        if (messageToSendData == null) {
             ErrorBroadcastReceiver
                     .broadcastError(
-                            new Error("Message Sender hasn't been initialized!", true),
+                            new Error("Message to send can't be generated!", true),
                             getActivity().getApplicationContext());
 
             return;
@@ -558,7 +624,7 @@ public class ChatFragment extends Fragment
         m_sendingMessageText.getText().clear();
         m_uploadingAttachmentList.clear();
 
-        messageSender.execute();
+        m_messageSender.execute(messageToSendData);
     }
 
     @Override

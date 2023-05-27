@@ -49,9 +49,21 @@ public class ChatListActivity extends AppCompatActivity
         }
 
         if (getSupportFragmentManager().findFragmentById(R.id.dialogs_list_fragment_frame) == null) {
+            ChatListFragment chatListFragment =
+                    ChatListFragment.getInstance(this, this);
+
+            if (chatListFragment == null) {
+                ErrorBroadcastReceiver.broadcastError(
+                        new Error(
+                            "Chat List Activity can't be initialized!", true),
+                            getApplicationContext());
+
+                return;
+            }
+
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.dialogs_list_fragment_frame, new ChatListFragment(this))
+                    .add(R.id.dialogs_list_fragment_frame, chatListFragment)
                     .commit();
         }
 

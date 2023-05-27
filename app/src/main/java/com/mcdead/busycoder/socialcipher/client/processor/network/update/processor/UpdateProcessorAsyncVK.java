@@ -206,13 +206,14 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
 
         if (attachmentsError != null) return attachmentsError;
 
-        if (!chatsStore.setMessageAttachments(
-                attachmentProcessingResultWrapper.getValue().getLoadedAttachmentList(),
-                updateItem.chatId,
-                updateItem.messageId,
-                attachmentProcessingResultWrapper.getValue().isCiphered()))
-        {
-            return new Error("Setting attachments to message process went wrong!", true);
+        if (attachmentProcessingResultWrapper.getValue() != null) {
+            if (!chatsStore.setMessageAttachments(
+                    attachmentProcessingResultWrapper.getValue().getLoadedAttachmentList(),
+                    updateItem.chatId,
+                    updateItem.messageId,
+                    attachmentProcessingResultWrapper.getValue().isCiphered())) {
+                return new Error("Setting attachments to message process went wrong!", true);
+            }
         }
 
         Intent intent

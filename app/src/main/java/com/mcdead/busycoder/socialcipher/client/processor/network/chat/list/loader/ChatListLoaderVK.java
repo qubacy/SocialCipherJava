@@ -219,6 +219,8 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
 
     @Override
     protected void onPostExecute(Error error) {
+        if (m_callback == null) return;
+
         if (error == null)
             m_callback.onDialogsLoaded();
         else

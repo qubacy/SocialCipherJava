@@ -10,10 +10,11 @@ import com.mcdead.busycoder.socialcipher.client.processor.chat.message.processor
 public abstract class ChatListLoaderBase extends AsyncTask<Void, Void, Error> {
     final protected String m_token;
     final protected ChatTypeDefiner m_chatTypeDefiner;
-    final protected ChatListLoadingCallback m_callback;
 
     final protected UserLoaderSyncBase m_userLoader;
     final protected MessageProcessorBase m_messageProcessor;
+
+    protected ChatListLoadingCallback m_callback;
 
     protected ChatListLoaderBase(
             final String token,
@@ -27,5 +28,15 @@ public abstract class ChatListLoaderBase extends AsyncTask<Void, Void, Error> {
         m_callback = callback;
         m_userLoader = userLoader;
         m_messageProcessor = messageProcessor;
+    }
+
+    public boolean setCallback(
+            final ChatListLoadingCallback callback)
+    {
+        if (callback == null) return false;
+
+        m_callback = callback;
+
+        return true;
     }
 }

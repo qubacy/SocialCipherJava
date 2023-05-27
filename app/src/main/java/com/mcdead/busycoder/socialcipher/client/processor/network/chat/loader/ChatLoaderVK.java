@@ -7,7 +7,6 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIChat;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataBody;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.ResponseChatContext;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.chat.data.ResponseChatDataWrapper;
-import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
@@ -54,11 +53,8 @@ public class ChatLoaderVK extends ChatLoaderBase {
             final UserLoaderSyncVK userLoader,
             final VKAPIChat vkAPIChat)
     {
-        if (token == null || callback == null || messageProcessor == null || userLoader == null ||
-            vkAPIChat == null)
-        {
+        if (token == null || messageProcessor == null || userLoader == null || vkAPIChat == null)
             return null;
-        }
 
         ChatIdCheckerVK chatIdCheckerVK = new ChatIdCheckerVK();
 
@@ -174,10 +170,12 @@ public class ChatLoaderVK extends ChatLoaderBase {
     }
 
     @Override
-    protected void onPostExecute(Error error) {
+    protected void onPostExecute(final Error error) {
+        if (m_callback == null) return;
+
         if (error == null)
-            m_callback.onDialogLoaded();
+            m_callback.onChatLoaded();
         else
-            m_callback.onDialogLoadingError(error);
+            m_callback.onChatLoadingError(error);
     }
 }

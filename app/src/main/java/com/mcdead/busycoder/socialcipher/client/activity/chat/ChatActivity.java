@@ -28,12 +28,12 @@ public class ChatActivity extends AppCompatActivity
 
     public static final String C_DEFAULT_CHAT_NAME = "My Chat";
 
-    private ChatFragment m_dialogFragment = null;
+    private ChatFragment m_chatFragment = null;
 
     private ActivityResultLauncher<Void> m_attachmentPickerLauncher = null;
 
     private LoadingPopUpWindow m_loadingPopUpWindow = null;
-    private boolean m_isDialogLoaded = false;
+    private boolean m_isChatLoaded = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,22 +62,31 @@ public class ChatActivity extends AppCompatActivity
             actionBar.setTitle(titleWrapper.getValue());
         }
 
-        m_dialogFragment = (ChatFragment) getSupportFragmentManager()
+        m_chatFragment = (ChatFragment) getSupportFragmentManager()
                 .findFragmentById(android.R.id.content);
 
-        if (m_dialogFragment == null) {
-            m_dialogFragment = new ChatFragment(peerIdWrapper.getValue(), this);
+        if (m_chatFragment == null) {
+            ChatFragment chatFragment =
+                    ChatFragment.getInstance(peerIdWrapper.getValue(), this, this);
+
+            if (chatFragment == null) {
+                finishWithError(new Error("Chat Fragment can't be generated!", true));
+
+                return;
+            }
+
+            m_chatFragment = chatFragment;
 
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, m_dialogFragment)
+                    .add(android.R.id.content, m_chatFragment)
                     .commit();
         }
 
         m_attachmentPickerLauncher =
                 registerForActivityResult(
                     new AttachmentPickerActivityContract(),
-                    new AttachmentPickerActivityCallback(m_dialogFragment));
+                    new AttachmentPickerActivityCallback(m_chatFragment));
     }
 
     private Error retrievePeerIdFromIntent(ObjectWrapper<Long> peerIdWrapper) {
@@ -102,18 +111,18 @@ public class ChatActivity extends AppCompatActivity
     }
 
     private Error getChatTitleByPeerId(
-            final long peerId,
+            final long chatId,
             ObjectWrapper<String> chatTitleWrapper)
     {
-        ChatsStore dialogsStore = ChatsStore.getInstance();
+        ChatsStore chatsStore = ChatsStore.getInstance();
 
-        if (dialogsStore == null)
-            return new Error("Dialogs Store hasn't been initialized!", true);
+        if (chatsStore == null)
+            return new Error("Chats' Store hasn't been initialized!", true);
 
-        ChatEntity chat = dialogsStore.getChatById(peerId);
+        ChatEntity chat = chatsStore.getChatById(chatId);
 
         if (chat == null)
-            return new Error("Dialog with provided Peer Id hasn't been found!", true);
+            return new Error("Chat with provided Id hasn't been found!", true);
 
         String title = ChatTitleExtractor.getTitleByDialog(chat);
 
@@ -129,7 +138,7 @@ public class ChatActivity extends AppCompatActivity
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        if (m_isDialogLoaded) return;
+        if (m_isChatLoaded) return;
 
         m_loadingPopUpWindow
                 = LoadingPopUpWindow.generatePopUpWindow(this, getLayoutInflater());
@@ -141,7 +150,7 @@ public class ChatActivity extends AppCompatActivity
 
     @Override
     public void onDialogLoaded() {
-        m_isDialogLoaded = true;
+        m_isChatLoaded = true;
 
         if (m_loadingPopUpWindow == null) return;
 
