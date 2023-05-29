@@ -77,16 +77,27 @@ public class AttachmentPickerActivity extends AppCompatActivity
         if (getSupportFragmentManager().
                 findFragmentById(R.id.attachment_type_picker_wrapper) == null)
         {
+            AttachmentTypePickerFragment attachmentTypePickerFragment =
+                    AttachmentTypePickerFragment.getInstance(this);
+
+            if (attachmentTypePickerFragment == null) {
+                ErrorBroadcastReceiver.broadcastError(
+                        new Error(
+                                "Attachment Type Picking Fragment hasn't been initialized!",
+                                true),
+                        getApplicationContext()
+                );
+            }
+
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.attachment_type_picker_wrapper,
-                            new AttachmentTypePickerFragment(this))
+                    .add(R.id.attachment_type_picker_wrapper, attachmentTypePickerFragment)
                     .commit();
         }
 
-        m_docPickerLauncher = registerForActivityResult(
-                new DocPickerContract(),
-                new DocPickerCallbackWrapper(this)
-        );
+        m_docPickerLauncher =
+                registerForActivityResult(
+                    new DocPickerContract(),
+                    new DocPickerCallbackWrapper(this));
 
         ActivityResultLauncher<String[]> permissionsRequestLauncher =
                 registerForActivityResult(
