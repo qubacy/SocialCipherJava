@@ -1,6 +1,5 @@
 package com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.docs.adapter;
 
-import android.content.Context;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,22 +20,41 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
     implements
         AttachmentPickerDocViewHolderCallback
 {
-    private LayoutInflater m_inflater = null;
-    private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_docAttachmentDataList = null;
+    final private LayoutInflater m_inflater;
+    final private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_docAttachmentDataList;
 
     private AttachmentPickerDocAdapterCallback m_callback = null;
 
-    public AttachmentPickerDocAdapter(
-            @NonNull Context context,
-            @NonNull AttachmentPickerDocAdapterCallback callback)
+    protected AttachmentPickerDocAdapter(
+            final LayoutInflater layoutInflater,
+            final AttachmentPickerDocAdapterCallback callback)
     {
         super();
         setHasStableIds(true);
 
-        m_inflater = LayoutInflater.from(context);
+        m_inflater = layoutInflater;
+        m_callback = callback;
+
         m_docAttachmentDataList = new ArrayList<>();
+    }
+
+    public static AttachmentPickerDocAdapter getInstance(
+            final LayoutInflater layoutInflater,
+            final AttachmentPickerDocAdapterCallback callback)
+    {
+        if (layoutInflater == null) return null;
+
+        return new AttachmentPickerDocAdapter(layoutInflater, callback);
+    }
+
+    public boolean setCallback(
+            final AttachmentPickerDocAdapterCallback callback)
+    {
+        if (callback == null || m_callback != null) return false;
 
         m_callback = callback;
+
+        return true;
     }
 
     @NonNull
@@ -45,7 +63,8 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
             @NonNull ViewGroup parent,
             int viewType)
     {
-        View viewHolder = m_inflater.inflate(R.layout.attachment_doc_view_holder, parent, false);
+        View viewHolder =
+                m_inflater.inflate(R.layout.attachment_doc_view_holder, parent, false);
 
         return new AttachmentPickerDocViewHolder(
                 viewHolder,
@@ -68,6 +87,8 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
                 docAttachmentItem.first.getFileName(),
                 docAttachmentItem.second.getValue()))
         {
+            if (m_callback == null) return;
+
             m_callback.onAttachmentPickerDocAdapterErrorOccurred(
                     new Error("Doc Data setting has been occurred!", true)
             );
@@ -133,6 +154,8 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
 
     @Override
     public void onDocViewHolderErrorOccurred(final Error error) {
+        if (m_callback == null) return;
+
         if (error == null) {
             m_callback.onAttachmentPickerDocAdapterErrorOccurred(
                     new Error("Error data hasn't been provided!", true)

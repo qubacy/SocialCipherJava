@@ -124,7 +124,7 @@ public class ChatActivity extends AppCompatActivity
         if (chat == null)
             return new Error("Chat with provided Id hasn't been found!", true);
 
-        String title = ChatTitleExtractor.getTitleByDialog(chat);
+        String title = ChatTitleExtractor.getTitleByChat(chat);
 
         if (title == null)
             chatTitleWrapper.setValue(C_DEFAULT_CHAT_NAME);

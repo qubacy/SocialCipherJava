@@ -51,22 +51,24 @@ public class ChatListFragment extends Fragment
     final private ChatListFragmentCallback m_callback;
     final private ChatListLoaderBase m_chatListLoader;
     final private ChatListBroadcastReceiver m_chatChangeBroadcastReceiver;
+    final private ChatListAdapter m_chatListAdapter;
 
     private ChatListViewModel m_chatListViewModel = null;
 
     private RecyclerView m_dialogsListRecyclerView = null;
-    private ChatListAdapter m_dialogsListAdapter = null;
 
     protected ChatListFragment(
             final ChatListFragmentCallback callback,
             final ChatListLoaderBase chatListLoader,
-            final ChatListBroadcastReceiver chatListBroadcastReceiver)
+            final ChatListBroadcastReceiver chatListBroadcastReceiver,
+            final ChatListAdapter chatListAdapter)
     {
         super();
 
         m_callback = callback;
         m_chatListLoader = chatListLoader;
         m_chatChangeBroadcastReceiver = chatListBroadcastReceiver;
+        m_chatListAdapter = chatListAdapter;
     }
 
     public static ChatListFragment getInstance(
@@ -103,18 +105,29 @@ public class ChatListFragment extends Fragment
         if (chatListBroadcastReceiver == null)
             return null;
 
-        return new ChatListFragment(callback, chatListLoader, chatListBroadcastReceiver);
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
+        ChatListAdapter chatListAdapter =
+                ChatListAdapter.getInstance(
+                        layoutInflater, null, null);
+
+        return new ChatListFragment(
+                callback, chatListLoader, chatListBroadcastReceiver, chatListAdapter);
     }
 
     public static ChatListFragment getInstance(
             final ChatListFragmentCallback callback,
             final ChatListLoaderBase chatListLoader,
-            final ChatListBroadcastReceiver chatListBroadcastReceiver)
+            final ChatListBroadcastReceiver chatListBroadcastReceiver,
+            final ChatListAdapter chatListAdapter)
     {
-        if (callback == null || chatListLoader == null || chatListBroadcastReceiver == null)
+        if (callback == null || chatListLoader == null ||
+            chatListBroadcastReceiver == null || chatListAdapter == null)
+        {
             return null;
+        }
 
-        return new ChatListFragment(callback, chatListLoader, chatListBroadcastReceiver);
+        return new ChatListFragment(
+                callback, chatListLoader, chatListBroadcastReceiver, chatListAdapter);
     }
 
     @Override
@@ -128,8 +141,10 @@ public class ChatListFragment extends Fragment
         m_chatChangeBroadcastReceiver.setNewMessageReceivedCallback(this);
         m_chatChangeBroadcastReceiver.setCommandSendingCallback(this);
         m_chatListLoader.setCallback(this);
+        m_chatListAdapter.setChatListCallback(this);
+        m_chatListAdapter.setChatListItemCallback(this);
 
-        IntentFilter intentFilter =  new IntentFilter(ChatListBroadcastReceiver.C_NEW_MESSAGE_ADDED);
+        IntentFilter intentFilter = new IntentFilter(ChatListBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
         intentFilter.addAction(ChatListBroadcastReceiver.C_UPDATES_RECEIVED);
         intentFilter.addAction(ChatListBroadcastReceiver.C_SEND_COMMAND_MESSAGE);
@@ -171,11 +186,11 @@ public class ChatListFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
 
         m_dialogsListRecyclerView = view.findViewById(R.id.dialogs_recycler_view);
-        m_dialogsListAdapter = new ChatListAdapter(getActivity(), this, this);
 
-        m_dialogsListRecyclerView.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+        m_dialogsListRecyclerView.addItemDecoration(
+                new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
         m_dialogsListRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        m_dialogsListRecyclerView.setAdapter(m_dialogsListAdapter);
+        m_dialogsListRecyclerView.setAdapter(m_chatListAdapter);
 
         return view;
     }
@@ -193,7 +208,7 @@ public class ChatListFragment extends Fragment
 
         List<ChatEntity> dialogs = ChatsStore.getInstance().getChatList();
 
-        if (!m_dialogsListAdapter.setDialogsList(dialogs)) {
+        if (!m_chatListAdapter.setDialogsList(dialogs)) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Dialogs list is empty!", true),
                     getContext().getApplicationContext()

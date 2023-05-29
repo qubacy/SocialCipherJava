@@ -1,6 +1,5 @@
 package com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.type;
 
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +8,6 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
 import com.mcdead.busycoder.socialcipher.R;
@@ -23,12 +21,28 @@ public class AttachmentTypePickerFragment extends Fragment {
 
     private List<AppCompatImageButton> m_buttons = null;
 
-    public AttachmentTypePickerFragment(
+    protected AttachmentTypePickerFragment(
             final AttachmentTypePickerFragmentCallback callback)
     {
         m_callback = callback;
 
         m_buttons = new ArrayList<>();
+    }
+
+    public static AttachmentTypePickerFragment getInstance(
+            final AttachmentTypePickerFragmentCallback callback)
+    {
+        return new AttachmentTypePickerFragment(callback);
+    }
+
+    public boolean setCallback(
+            final AttachmentTypePickerFragmentCallback callback)
+    {
+        if (callback == null || m_callback != null) return false;
+
+        m_callback = callback;
+
+        return true;
     }
 
     @Override
@@ -43,14 +57,20 @@ public class AttachmentTypePickerFragment extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_attachment_type_picker, container, false);
+        View view =
+                inflater.inflate(
+                        R.layout.fragment_attachment_type_picker, container, false);
 
-        AppCompatImageButton imageButton = view.findViewById(R.id.attachment_type_picker_image_button);
-        AppCompatImageButton fileButton = view.findViewById(R.id.attachment_type_picker_file_button);
+        AppCompatImageButton imageButton =
+                view.findViewById(R.id.attachment_type_picker_image_button);
+        AppCompatImageButton fileButton =
+                view.findViewById(R.id.attachment_type_picker_file_button);
 
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (m_callback == null) return;
+
                 m_callback.onTypePicked(AttachmentType.IMAGE);
 
                 setChosenButton(view.getId());
@@ -59,6 +79,8 @@ public class AttachmentTypePickerFragment extends Fragment {
         fileButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (m_callback == null) return;
+
                 m_callback.onTypePicked(AttachmentType.DOC);
 
                 setChosenButton(view.getId());

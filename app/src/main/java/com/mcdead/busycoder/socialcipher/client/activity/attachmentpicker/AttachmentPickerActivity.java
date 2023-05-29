@@ -74,9 +74,12 @@ public class AttachmentPickerActivity extends AppCompatActivity
             }
         });
 
-        if (getSupportFragmentManager().findFragmentById(R.id.attachment_type_picker_wrapper) == null) {
+        if (getSupportFragmentManager().
+                findFragmentById(R.id.attachment_type_picker_wrapper) == null)
+        {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.attachment_type_picker_wrapper, new AttachmentTypePickerFragment(this))
+                    .add(R.id.attachment_type_picker_wrapper,
+                            new AttachmentTypePickerFragment(this))
                     .commit();
         }
 
@@ -85,10 +88,9 @@ public class AttachmentPickerActivity extends AppCompatActivity
                 new DocPickerCallbackWrapper(this)
         );
 
-        ActivityResultLauncher<String[]> permissionsRequestLauncher = registerForActivityResult(
-            new ActivityResultContracts.RequestMultiplePermissions(),
-            this
-        );
+        ActivityResultLauncher<String[]> permissionsRequestLauncher =
+                registerForActivityResult(
+                        new ActivityResultContracts.RequestMultiplePermissions(), this);
 
         permissionsRequestLauncher.launch(getPermissions());
     }
@@ -98,15 +100,30 @@ public class AttachmentPickerActivity extends AppCompatActivity
         Fragment fragment = null;
 
         switch (attachmentType) {
-            case IMAGE: fragment = new AttachmentPickerImageFragment(); break;
+            case IMAGE: {
+                fragment = AttachmentPickerImageFragment.getInstance(this);
+
+                break;
+            }
             case DOC: {
-                fragment = new AttachmentPickerDocFragment();
+                fragment = AttachmentPickerDocFragment.getInstance(this);
 
                 openDocPicker();
 
                 break;
             }
             default: return;
+        }
+
+        if (fragment == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Attachment Picking Fragment hasn't been initialized!",
+                            true),
+                    getApplicationContext()
+            );
+
+            return;
         }
 
         fragmentTransaction
@@ -141,7 +158,9 @@ public class AttachmentPickerActivity extends AppCompatActivity
         if (result == null) {
             ErrorBroadcastReceiver
                     .broadcastError(
-                            new Error("Null permissions' requesting result has been provided!", true),
+                            new Error(
+                                    "Null permissions' requesting result has been provided!",
+                                    true),
                             getApplicationContext()
                     );
 
@@ -152,7 +171,9 @@ public class AttachmentPickerActivity extends AppCompatActivity
             if (!permission.getValue()) {
                 ErrorBroadcastReceiver
                         .broadcastError(
-                                new Error("Media permissions haven't been granted!", true),
+                                new Error(
+                                        "Media permissions haven't been granted!",
+                                        true),
                                 getApplicationContext()
                         );
 

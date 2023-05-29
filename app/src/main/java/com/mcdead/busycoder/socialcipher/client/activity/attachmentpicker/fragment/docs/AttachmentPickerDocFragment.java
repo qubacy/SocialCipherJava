@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.docs;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,14 +23,43 @@ import java.util.List;
 
 public class AttachmentPickerDocFragment extends Fragment
     implements
-//        DocSearcherCallback,
         AttachmentPickerDocAdapterCallback
 {
-    private AttachmentPickerDocAdapter m_docListAdapter = null;
+    final private AttachmentPickerDocAdapter m_docListAdapter;
+
+    protected AttachmentPickerDocFragment(
+            final AttachmentPickerDocAdapter attachmentPickerDocAdapter)
+    {
+        m_docListAdapter = attachmentPickerDocAdapter;
+    }
+
+    public static AttachmentPickerDocFragment getInstance(
+            final AttachmentPickerDocAdapter attachmentPickerDocAdapter)
+    {
+        if (attachmentPickerDocAdapter == null) return null;
+
+        return new AttachmentPickerDocFragment(attachmentPickerDocAdapter);
+    }
+
+    public static AttachmentPickerDocFragment getInstance(
+            final Context context)
+    {
+        if (context == null) return null;
+
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
+        AttachmentPickerDocAdapter attachmentPickerDocAdapter =
+                AttachmentPickerDocAdapter.getInstance(layoutInflater, null);
+
+        if (attachmentPickerDocAdapter == null) return null;
+
+        return new AttachmentPickerDocFragment(attachmentPickerDocAdapter);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        m_docListAdapter.setCallback(this);
     }
 
     @Nullable
@@ -39,12 +69,15 @@ public class AttachmentPickerDocFragment extends Fragment
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_attachment_doc_picker, container, false);
+        View view =
+                inflater.inflate(
+                    R.layout.fragment_attachment_doc_picker, container, false);
 
         RecyclerView docListView = view.findViewById(R.id.attachment_doc_picker_list);
 
-        m_docListAdapter = new AttachmentPickerDocAdapter(getContext(), this);
-        docListView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        docListView.setLayoutManager(
+                new LinearLayoutManager(
+                        getContext(), LinearLayoutManager.VERTICAL, false));
         docListView.setAdapter(m_docListAdapter);
 
         return view;
@@ -56,28 +89,7 @@ public class AttachmentPickerDocFragment extends Fragment
             @Nullable Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
-
-        //String externalStorageDirPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-
-        //new DocSearcher(getContext(), this).execute();
     }
-
-//    @Override
-//    public void onDocSearcherErrorOccurred(final Error error) {
-//        ErrorBroadcastReceiver
-//                .broadcastError(
-//                        error, getActivity().getApplicationContext());
-//    }
-
-//    @Override
-//    public void onDocSearcherDocsFound(final List<AttachmentData> docAttachmentDataList) {
-//        if (!m_docListAdapter.setDocList(docAttachmentDataList)) {
-//            ErrorBroadcastReceiver
-//                    .broadcastError(
-//                            new Error("Image List setting problem has been occurred!", true),
-//                            getActivity().getApplicationContext());
-//        }
-//    }
 
     @Override
     public void onAttachmentPickerDocAdapterErrorOccurred(final Error error) {

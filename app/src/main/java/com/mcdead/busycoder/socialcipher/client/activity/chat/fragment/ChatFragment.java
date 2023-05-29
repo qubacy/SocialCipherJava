@@ -35,12 +35,12 @@ import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.M
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListItemCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragment;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragmentCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.AttachmentShowerActivity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSide;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSideDefiner;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.side.ChatSideDefinerFactory;
@@ -94,10 +94,11 @@ public class ChatFragment extends Fragment
     final private AttachmentUploaderSyncBase m_attachmentUploader;
     final private MessageSenderBase m_messageSender;
 
-    private ChatBroadcastReceiver m_broadcastReceiver = null;
+    final private ChatBroadcastReceiver m_broadcastReceiver;
+
+    final private MessageListAdapter m_messageListAdapter;
 
     private RecyclerView m_messagesList = null;
-    private MessageListAdapter m_messagesAdapter = null;
 
     private EditText m_sendingMessageText = null;
     private List<AttachmentData> m_uploadingAttachmentList = null;
@@ -110,7 +111,9 @@ public class ChatFragment extends Fragment
             final ChatFragmentCallback callback,
             final ChatLoaderBase chatLoader,
             final AttachmentUploaderSyncBase attachmentUploader,
-            final MessageSenderBase messageSender)
+            final MessageSenderBase messageSender,
+            final ChatBroadcastReceiver chatBroadcastReceiver,
+            final MessageListAdapter messageListAdapter)
     {
         super();
 
@@ -121,6 +124,9 @@ public class ChatFragment extends Fragment
         m_chatLoader = chatLoader;
         m_attachmentUploader = attachmentUploader;
         m_messageSender = messageSender;
+
+        m_broadcastReceiver = chatBroadcastReceiver;
+        m_messageListAdapter = messageListAdapter;
 
         m_uploadingAttachmentList = new ArrayList<>();
     }
@@ -152,23 +158,23 @@ public class ChatFragment extends Fragment
         if (chatLoader == null || attachmentUploader == null || messageSender == null)
             return null;
 
+        ChatBroadcastReceiver chatBroadcastReceiver =
+                ChatBroadcastReceiver.getInstance(null);
+
+        if (chatBroadcastReceiver == null)
+            return null;
+
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
+        MessageListAdapter messageListAdapter =
+                MessageListAdapter.getInstance(layoutInflater, null, localUser.getPeerId());
+
+        if (messageListAdapter == null)
+            return null;
+
         return new ChatFragment(
                 chatId, localUser.getPeerId(), callback,
-                chatLoader, attachmentUploader, messageSender);
-    }
-
-    public static ChatFragment getInstance(
-            final long chatId,
-            final long localPeerId,
-            final ChatFragmentCallback callback,
-            final Context context)
-    {
-        UserIdChecker userIdChecker = UserIdCheckerGenerator.generateUserIdChecker();
-
-        if (userIdChecker == null) return null;
-        if (!userIdChecker.isValid(chatId)) return null;
-
-        return getInstance(chatId, localPeerId, callback, context);
+                chatLoader, attachmentUploader, messageSender,
+                chatBroadcastReceiver, messageListAdapter);
     }
 
     public static ChatFragment getInstance(
@@ -177,10 +183,13 @@ public class ChatFragment extends Fragment
             final ChatFragmentCallback callback,
             final ChatLoaderBase chatLoader,
             final AttachmentUploaderSyncBase attachmentUploader,
-            final MessageSenderBase messageSender)
+            final MessageSenderBase messageSender,
+            final ChatBroadcastReceiver chatBroadcastReceiver,
+            final MessageListAdapter messageListAdapter)
     {
         if (chatLoader == null || attachmentUploader == null ||
-            messageSender == null || callback == null)
+            messageSender == null || callback == null || chatBroadcastReceiver == null ||
+            messageListAdapter == null)
         {
             return null;
         }
@@ -192,22 +201,20 @@ public class ChatFragment extends Fragment
         if (!userIdChecker.isValid(chatId) || !chatIdChecker.isValid(localPeerId)) return null;
 
         return new ChatFragment(
-                chatId, localPeerId, callback, chatLoader, attachmentUploader, messageSender);
+                chatId, localPeerId, callback, chatLoader,
+                attachmentUploader, messageSender, chatBroadcastReceiver,
+                messageListAdapter);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        m_broadcastReceiver = new ChatBroadcastReceiver(this);
-        m_messagesAdapter = new MessageListAdapter(
-                getActivity(),
-                this,
-                m_localPeerId);
-
         m_messageSender.setCallback(this);
         m_chatLoader.setCallback(this);
         m_attachmentUploader.setContentResolver(getContext().getContentResolver());
+        m_broadcastReceiver.setCallback(this);
+        m_messageListAdapter.setCallback(this);
 
         IntentFilter intentFilter = new IntentFilter(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
@@ -231,7 +238,7 @@ public class ChatFragment extends Fragment
 
         m_messagesList = view.findViewById(R.id.messages_list);
 
-        m_messagesList.setAdapter(m_messagesAdapter);
+        m_messagesList.setAdapter(m_messageListAdapter);
         m_messagesList.setLayoutManager(new LinearLayoutManager(getContext()));
         //m_messagesList.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
 
@@ -303,7 +310,7 @@ public class ChatFragment extends Fragment
         ChatEntity dialog = ChatsStore.getInstance().getChatById(m_chatId);
         List<MessageEntity> messageList = dialog.getMessages();
 
-        if (!m_messagesAdapter.addNewMessage(messageList.get(messageList.size() - 1))) {
+        if (!m_messageListAdapter.addNewMessage(messageList.get(messageList.size() - 1))) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Dialog doesn't exist!", true),
                     getContext().getApplicationContext()
@@ -312,7 +319,7 @@ public class ChatFragment extends Fragment
             return;
         }
 
-        m_messagesList.scrollToPosition(m_messagesAdapter.getItemCount() - 1);
+        m_messagesList.scrollToPosition(m_messageListAdapter.getItemCount() - 1);
     }
 
     @Override
@@ -460,7 +467,7 @@ public class ChatFragment extends Fragment
 
         ChatEntity dialog = ChatsStore.getInstance().getChatById(m_chatId);
 
-        if (!m_messagesAdapter.setMessagesList(dialog.getMessages())) {
+        if (!m_messageListAdapter.setMessagesList(dialog.getMessages())) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Dialog doesn't exist!", true),
                     getContext().getApplicationContext()

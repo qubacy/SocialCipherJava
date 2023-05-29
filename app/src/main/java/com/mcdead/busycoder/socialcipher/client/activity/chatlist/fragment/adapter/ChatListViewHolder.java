@@ -13,9 +13,9 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntit
 import com.mcdead.busycoder.socialcipher.client.data.utility.message.MessageTextGenerator;
 
 public class ChatListViewHolder extends ViewHolder {
-    private View m_itemView = null;
-    private TextView m_peerNameTextView = null;
-    private TextView m_lastMessageTextView = null;
+    final private View m_itemView;
+    final private TextView m_peerNameTextView;
+    final private TextView m_lastMessageTextView;
 
     public ChatListViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -25,17 +25,16 @@ public class ChatListViewHolder extends ViewHolder {
         m_lastMessageTextView = itemView.findViewById(R.id.dialog_view_holder_last_message);
     }
 
-    public boolean setDialogData(final ChatEntity dialog)
-    {
-        if (dialog == null) return false;
+    public boolean setDialogData(final ChatEntity chat) {
+        if (chat == null) return false;
 
-        String name = ChatTitleExtractor.getTitleByDialog(dialog);
+        String name = ChatTitleExtractor.getTitleByChat(chat);
 
         if (name == null) return false;
 
         m_peerNameTextView.setText(name);
 
-        MessageEntity lastMessage = dialog.getLastMessage();
+        MessageEntity lastMessage = chat.getLastMessage();
 
         if (lastMessage != null)
             setChatLastMessage(lastMessage);

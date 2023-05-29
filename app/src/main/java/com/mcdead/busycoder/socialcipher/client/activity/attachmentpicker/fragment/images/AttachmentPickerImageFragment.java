@@ -1,5 +1,6 @@
 package com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.images;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,11 +31,41 @@ public class AttachmentPickerImageFragment extends Fragment
     public static final int C_IMAGE_GRID_CACHE_SIZE = 21;
     public static final int C_NUMB_OF_COLS = 3;
 
-    private AttachmentPickerImageAdapter m_imageGridAdapter = null;
+    final private AttachmentPickerImageAdapter m_attachmentPickerImageAdapter;
+
+    protected AttachmentPickerImageFragment(
+            final AttachmentPickerImageAdapter attachmentPickerImageAdapter)
+    {
+        m_attachmentPickerImageAdapter = attachmentPickerImageAdapter;
+    }
+
+    public static AttachmentPickerImageFragment getInstance(
+            final AttachmentPickerImageAdapter attachmentPickerImageAdapter)
+    {
+        if (attachmentPickerImageAdapter == null) return null;
+
+        return new AttachmentPickerImageFragment(attachmentPickerImageAdapter);
+    }
+
+    public static AttachmentPickerImageFragment getInstance(
+            final Context context)
+    {
+        if (context == null) return null;
+
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
+        AttachmentPickerImageAdapter attachmentPickerImageAdapter =
+                AttachmentPickerImageAdapter.getInstance(layoutInflater, null);
+
+        if (attachmentPickerImageAdapter == null) return null;
+
+        return new AttachmentPickerImageFragment(attachmentPickerImageAdapter);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        m_attachmentPickerImageAdapter.setCallback(this);
     }
 
     @Nullable
@@ -48,14 +79,12 @@ public class AttachmentPickerImageFragment extends Fragment
 
         RecyclerView imageGridView = view.findViewById(R.id.attachment_image_picker_grid);
 
-        m_imageGridAdapter = new AttachmentPickerImageAdapter(getContext(), this);
-
         imageGridView.setLayoutManager(new GridLayoutManager(getContext(), C_NUMB_OF_COLS));
         imageGridView.setHasFixedSize(true);
         imageGridView.setItemViewCacheSize(C_IMAGE_GRID_CACHE_SIZE);
         imageGridView.setDrawingCacheEnabled(true);
         imageGridView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-        imageGridView.setAdapter(m_imageGridAdapter);
+        imageGridView.setAdapter(m_attachmentPickerImageAdapter);
 
         return view;
     }
@@ -86,7 +115,7 @@ public class AttachmentPickerImageFragment extends Fragment
 
     @Override
     public void onImageSearcherImagesFound(final List<AttachmentData> imageAttachmentDataList) {
-        if (!m_imageGridAdapter.setImageList(imageAttachmentDataList)) {
+        if (!m_attachmentPickerImageAdapter.setImageList(imageAttachmentDataList)) {
             ErrorBroadcastReceiver
                     .broadcastError(
                             new Error("Image List setting problem has been occurred!", true),
@@ -95,6 +124,6 @@ public class AttachmentPickerImageFragment extends Fragment
     }
 
     public List<AttachmentData> getChosenImageDataList() {
-        return m_imageGridAdapter.getChosenImages();
+        return m_attachmentPickerImageAdapter.getChosenImages();
     }
 }

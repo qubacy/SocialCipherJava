@@ -6,13 +6,13 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntityConve
 import com.mcdead.busycoder.socialcipher.client.data.entity.user.UserEntity;
 
 public class ChatTitleExtractor {
-    public static String getTitleByDialog(final ChatEntity dialog) {
-        if (dialog == null) return null;
+    public static String getTitleByChat(final ChatEntity chat) {
+        if (chat == null) return null;
 
-        switch (dialog.getType()) {
-            case CONVERSATION: return ((ChatEntityConversation) dialog).getTitle();
+        switch (chat.getType()) {
+            case CONVERSATION: return ((ChatEntityConversation) chat).getTitle();
             case WITH_GROUP:
-            case DIALOG: return getNameByPeerId(dialog.getDialogId());
+            case DIALOG: return getNameByPeerId(chat.getDialogId());
         }
 
         return null;

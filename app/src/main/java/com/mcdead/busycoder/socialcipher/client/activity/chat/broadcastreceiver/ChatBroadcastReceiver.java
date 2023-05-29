@@ -7,12 +7,17 @@ import android.content.Intent;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 
 public class ChatBroadcastReceiver extends BroadcastReceiver {
-    public static final String C_NEW_MESSAGE_ADDED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.NEW_MESSAGE_ADDED";
-    public static final String C_SEND_NEW_MESSAGE = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SEND_NEW_MESSAGE";
-    public static final String C_SHOW_NEW_CHAT_NOTIFICATION = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SHOW_NEW_CHAT_NOTIFICATION";
+    public static final String C_NEW_MESSAGE_ADDED =
+            "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.NEW_MESSAGE_ADDED";
+    public static final String C_SEND_NEW_MESSAGE =
+            "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SEND_NEW_MESSAGE";
+    public static final String C_SHOW_NEW_CHAT_NOTIFICATION =
+            "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SHOW_NEW_CHAT_NOTIFICATION";
 
-    public static final String C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SETTING_CIPHER_SESSION_ANSWER_REQUESTED";
-    public static final String C_CIPHER_SESSION_SETTING_ENDED = "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.CIPHER_SESSION_SETTING_ENDED";
+    public static final String C_SETTING_CIPHER_SESSION_ANSWER_REQUESTED =
+            "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.SETTING_CIPHER_SESSION_ANSWER_REQUESTED";
+    public static final String C_CIPHER_SESSION_SETTING_ENDED =
+            "com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver.CIPHER_SESSION_SETTING_ENDED";
 
     public static final String C_CHAT_ID_PROP_NAME = "chatId";
     public static final String C_MESSAGE_ID_PROP_NAME = "messageId";
@@ -23,15 +28,23 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
 
     private ChatBroadcastReceiverCallback m_callback = null;
 
-    public ChatBroadcastReceiver(final ChatBroadcastReceiverCallback callback) {
+    protected ChatBroadcastReceiver(
+            final ChatBroadcastReceiverCallback callback)
+    {
         super();
 
         m_callback = callback;
     }
 
+    public static ChatBroadcastReceiver getInstance(
+            final ChatBroadcastReceiverCallback callback)
+    {
+        return new ChatBroadcastReceiver(callback);
+    }
+
     @Override
-    public void onReceive(Context context,
-                          Intent intent)
+    public void onReceive(final Context context,
+                          final Intent intent)
     {
         Error processingError = null;
 
@@ -52,7 +65,20 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
             m_callback.onChatBroadcastReceiverErrorOccurred(processingError);
     }
 
+    public boolean setCallback(
+            final ChatBroadcastReceiverCallback callback)
+    {
+        if (m_callback != null || callback == null)
+            return false;
+
+        m_callback = callback;
+
+        return true;
+    }
+
     private Error processNewMessageAddedAction() {
+        if (m_callback == null) return null;
+
         m_callback.onNewChatMessageReceived();
 
         return null;
@@ -61,6 +87,7 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
     private Error processSettingCipherSessionAnswerRequest(
             final Intent data)
     {
+        if (m_callback == null) return null;
         if (data == null)
             return new Error("Intent data was null!", true);
 
@@ -80,6 +107,7 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
     private Error processCipherSessionSettingEnded(
             final Intent data)
     {
+        if (m_callback == null) return null;
         if (data == null)
             return new Error("Intent data was null!", true);
 
@@ -97,6 +125,7 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
     private Error processSendNewMessage(
             final Intent data)
     {
+        if (m_callback == null) return null;
         if (data == null)
             return new Error("Intent data was null!", true);
 
@@ -114,6 +143,7 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
     private Error processShowChatNotificationRequest(
             final Intent data)
     {
+        if (m_callback == null) return null;
         if (data == null)
             return new Error("Intent data was null!", true);
 
