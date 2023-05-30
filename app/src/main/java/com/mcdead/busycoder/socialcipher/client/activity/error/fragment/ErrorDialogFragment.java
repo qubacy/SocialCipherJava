@@ -10,37 +10,79 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
-import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.client.activity.error.fragment.model.ErrorDialogFragmentViewModel;
 
 public class ErrorDialogFragment extends Fragment {
-    private Error m_error = null;
-    private ErrorFragmentCallback m_callback = null;
+    private static final String C_ERROR_ARG_NAME = "error";
+    private static final String C_CALLBACK_ARG_NAME = "callback";
 
-    public ErrorDialogFragment(
-            final Error error,
-            ErrorFragmentCallback callback)
+    private ErrorDialogFragmentViewModel m_errorDialogFragmentViewModel = null;
+
+    public ErrorDialogFragment() {
+        super();
+    }
+
+    protected ErrorDialogFragment(
+            final Bundle args)
     {
-        m_error = error;
-        m_callback = callback;
+        super();
+
+        setArguments(args);
+    }
+
+    public static ErrorDialogFragment getInstance(
+            final Error error,
+            final ErrorFragmentCallback callback)
+    {
+        if (error == null || callback == null)
+            return null;
+
+        Bundle args = new Bundle();
+
+        args.putSerializable(C_ERROR_ARG_NAME, error);
+        args.putSerializable(C_CALLBACK_ARG_NAME, callback);
+
+        return new ErrorDialogFragment(args);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState == null) return;
+        m_errorDialogFragmentViewModel =
+                new ViewModelProvider(this).get(ErrorDialogFragmentViewModel.class);
 
-        m_error = (Error) savedInstanceState.getSerializable(ErrorBroadcastReceiver.C_ERROR_EXTRA_PROP_NAME);
+        if (!m_errorDialogFragmentViewModel.isInitialized()) {
+            Bundle args = getArguments();
+
+            if (args == null) {
+
+                return;
+            }
+
+            Error error = (Error) args.getSerializable(C_ERROR_ARG_NAME);
+            ErrorFragmentCallback errorFragmentCallback =
+                    (ErrorFragmentCallback) args.getSerializable(C_CALLBACK_ARG_NAME);
+
+            if (!m_errorDialogFragmentViewModel.setError(error)) {
+
+                return;
+            }
+
+            if (!m_errorDialogFragmentViewModel.setCallback(errorFragmentCallback)) {
+
+                return;
+            }
+        }
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-
-        outState.putSerializable(ErrorBroadcastReceiver.C_ERROR_EXTRA_PROP_NAME, m_error);
     }
 
     @Nullable
@@ -54,7 +96,7 @@ public class ErrorDialogFragment extends Fragment {
         TextView errorTextView = view.findViewById(R.id.error_text);
         Button errorButton = view.findViewById(R.id.error_button);
 
-        errorTextView.setText(m_error.getMessage());
+        errorTextView.setText(m_errorDialogFragmentViewModel.getError().getMessage());
         errorButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -66,9 +108,6 @@ public class ErrorDialogFragment extends Fragment {
     }
 
     private void onButtonClicked() {
-        m_callback.onErrorClosed();
-
-//        if (m_error.isCritical())
-//            System.exit(-1);
+        m_errorDialogFragmentViewModel.getCallback().onErrorClosed();
     }
 }

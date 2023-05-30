@@ -15,8 +15,9 @@ public class ErrorBroadcastReceiver extends BroadcastReceiver {
 
     private ErrorReceivedInterface m_callback = null;
 
-    public static void broadcastError(final Error error,
-                                      Context context)
+    public static void broadcastError(
+            final Error error,
+            final Context context)
     {
         Intent intent = new Intent(ErrorBroadcastReceiver.C_ERROR_RECEIVED);
 
@@ -29,10 +30,24 @@ public class ErrorBroadcastReceiver extends BroadcastReceiver {
                 .sendBroadcast(intent);
     }
 
-    public ErrorBroadcastReceiver(ErrorReceivedInterface callback) {
+    public ErrorBroadcastReceiver() {
+        super();
+    }
+
+    protected ErrorBroadcastReceiver(
+            final ErrorReceivedInterface callback)
+    {
         super();
 
         m_callback = callback;
+    }
+
+    public static ErrorBroadcastReceiver getInstance(
+            final ErrorReceivedInterface callback)
+    {
+        if (callback == null) return null;
+
+        return new ErrorBroadcastReceiver(callback);
     }
 
     @Override

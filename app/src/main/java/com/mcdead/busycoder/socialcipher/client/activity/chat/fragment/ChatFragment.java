@@ -669,6 +669,12 @@ public class ChatFragment extends Fragment
     public void onAttachmentFilesPicked(
             final List<AttachmentData> pickedFileUriList)
     {
+        if (pickedFileUriList == null) {
+            m_uploadingAttachmentList = new ArrayList<>();
+
+            return;
+        }
+
         m_uploadingAttachmentList = pickedFileUriList;
     }
 

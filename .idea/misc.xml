@@ -3,6 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_doc_view_holder_chosen_background.xml" value="0.134" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_shower_background.xml" value="0.134" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/ic_folder_24.xml" value="0.134" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_attachment_picker.xml" value="0.1859375" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_attachment_shower.xml" value="0.1859375" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_chooser.xml" value="0.1859375" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_shower.xml" value="0.18802083333333333" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_type_picker.xml" value="0.553519768563163" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_signin_web_view.xml" value="0.36666666666666664" />
       </map>
     </option>

@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class Error implements Serializable {
-    private String m_message = null;
-    private boolean m_isCritical = false;
+    final private String m_message;
+    final private boolean m_isCritical;
 
     public Error(final String message,
                  final boolean isCritical)

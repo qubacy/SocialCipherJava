@@ -10,15 +10,15 @@ import android.widget.PopupWindow;
 import com.mcdead.busycoder.socialcipher.R;
 
 public class LoadingPopUpWindow extends PopupWindow {
-    private LoadingPopUpWindow(Activity activity) {
+    protected LoadingPopUpWindow(final Activity activity) {
         super(activity);
     }
 
     public static LoadingPopUpWindow generatePopUpWindow(
-            Activity activity,
-            LayoutInflater inflater)
+            final Activity activity,
+            final LayoutInflater inflater)
     {
-        if (inflater == null) return null;
+        if (inflater == null || activity == null) return null;
 
         View popUpView = inflater.inflate(R.layout.loader_screen, null);
 
@@ -35,7 +35,7 @@ public class LoadingPopUpWindow extends PopupWindow {
         return loadingPopUpWindow;
     }
 
-    public boolean show(View parentView) {
+    public boolean show(final View parentView) {
         if (parentView == null) return false;
 
         showAtLocation(parentView, Gravity.CENTER, 0, 0);

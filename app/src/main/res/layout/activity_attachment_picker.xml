@@ -6,17 +6,51 @@
     android:layout_height="match_parent"
     android:padding="@dimen/default_gap">
 
-    <FrameLayout
-        android:id="@+id/attachment_type_picker_wrapper"
+    <LinearLayout
+        android:id="@+id/attachment_type_picker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:orientation="vertical"
+        android:padding="@dimen/default_gap">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textSize="16dp"
+            android:text="@string/attachment_type_picker_header_caption"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_gap"
+            android:gravity="center">
+
+            <ImageButton
+                android:id="@+id/attachment_type_picker_image_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_image_24"
+                android:background="@drawable/attachment_picker_button_shape"/>
+
+            <ImageButton
+                android:id="@+id/attachment_type_picker_file_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/default_gap"
+                android:src="@drawable/ic_file_24"
+                android:background="@drawable/attachment_picker_button_shape"/>
+
+        </LinearLayout>
+    </LinearLayout>
 
     <FrameLayout
         android:id="@+id/attachment_file_picker_wrapper"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/attachment_type_picker_wrapper"
+        app:layout_constraintTop_toBottomOf="@id/attachment_type_picker"
         app:layout_constraintBottom_toTopOf="@id/attachment_file_picker_confirm_button"/>
 
     <Button

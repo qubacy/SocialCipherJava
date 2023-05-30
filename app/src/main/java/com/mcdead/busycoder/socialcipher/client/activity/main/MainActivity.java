@@ -66,7 +66,9 @@ public class MainActivity extends AppCompatActivity
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
 
-        m_errorBroadcastReceiver = new ErrorBroadcastReceiver(this);
+        m_errorBroadcastReceiver = ErrorBroadcastReceiver.getInstance(this);
+
+        if (m_errorBroadcastReceiver == null) finish();
 
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(

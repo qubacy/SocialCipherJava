@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -19,14 +20,12 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.docs.AttachmentPickerDocFragment;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.docs.DocPickerCallback;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.docs.intent.DocPickerCallbackWrapper;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.docs.intent.DocPickerContract;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.images.AttachmentPickerImageFragment;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.AttachmentPickerDocFragment;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.DocPickerCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.intent.DocPickerCallbackWrapper;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.intent.DocPickerContract;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.images.AttachmentPickerImageFragment;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.intent.AttachmentPickerActivityContract;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.type.AttachmentTypePickerFragment;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.type.AttachmentTypePickerFragmentCallback;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentType;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
@@ -38,13 +37,20 @@ import java.util.Map;
 
 public class AttachmentPickerActivity extends AppCompatActivity
     implements
-        AttachmentTypePickerFragmentCallback,
         ActivityResultCallback<Map<String, Boolean>>,
         DocPickerCallback
 {
     private AttachmentType m_attachmentType = null;
 
     private ActivityResultLauncher<Void> m_docPickerLauncher = null;
+
+    private List<ImageButton> m_buttons = null;
+
+    public AttachmentPickerActivity() {
+        super();
+
+        m_buttons = new ArrayList<>();
+    }
 
     private static String[] getPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -65,6 +71,29 @@ public class AttachmentPickerActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_attachment_picker);
 
+        ImageButton imageButton =
+                findViewById(R.id.attachment_type_picker_image_button);
+        ImageButton fileButton =
+                findViewById(R.id.attachment_type_picker_file_button);
+
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onTypePicked(AttachmentType.IMAGE);
+                setChosenButton(view.getId());
+            }
+        });
+        fileButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onTypePicked(AttachmentType.DOC);
+                setChosenButton(view.getId());
+            }
+        });
+
+        m_buttons.add(imageButton);
+        m_buttons.add(fileButton);
+
         Button confirmButton = findViewById(R.id.attachment_file_picker_confirm_button);
 
         confirmButton.setOnClickListener(new View.OnClickListener() {
@@ -73,26 +102,6 @@ public class AttachmentPickerActivity extends AppCompatActivity
                 onConfirmClicked();
             }
         });
-
-        if (getSupportFragmentManager().
-                findFragmentById(R.id.attachment_type_picker_wrapper) == null)
-        {
-            AttachmentTypePickerFragment attachmentTypePickerFragment =
-                    AttachmentTypePickerFragment.getInstance(this);
-
-            if (attachmentTypePickerFragment == null) {
-                ErrorBroadcastReceiver.broadcastError(
-                        new Error(
-                                "Attachment Type Picking Fragment hasn't been initialized!",
-                                true),
-                        getApplicationContext()
-                );
-            }
-
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.attachment_type_picker_wrapper, attachmentTypePickerFragment)
-                    .commit();
-        }
 
         m_docPickerLauncher =
                 registerForActivityResult(
@@ -104,6 +113,15 @@ public class AttachmentPickerActivity extends AppCompatActivity
                         new ActivityResultContracts.RequestMultiplePermissions(), this);
 
         permissionsRequestLauncher.launch(getPermissions());
+    }
+
+    private void setChosenButton(int buttonResourceId) {
+        for (final ImageButton button : m_buttons) {
+            if (button.getId() == buttonResourceId)
+                button.setBackgroundResource(R.drawable.attachment_picker_button_chosen_shape);
+            else
+                button.setBackgroundResource(R.drawable.attachment_picker_button_shape);
+        }
     }
 
     private void setFilePickerFragment(final AttachmentType attachmentType) {
@@ -138,8 +156,10 @@ public class AttachmentPickerActivity extends AppCompatActivity
         }
 
         fragmentTransaction
-                .replace(R.id.attachment_file_picker_wrapper, fragment)
-                .commit();
+                .replace(R.id.attachment_file_picker_wrapper, fragment);
+
+        if (!getSupportFragmentManager().isDestroyed())
+            fragmentTransaction.commit();
 
         m_attachmentType = attachmentType;
     }
@@ -148,7 +168,6 @@ public class AttachmentPickerActivity extends AppCompatActivity
         m_docPickerLauncher.launch(null);
     }
 
-    @Override
     public void onTypePicked(final AttachmentType type) {
         if (type == null) {
             ErrorBroadcastReceiver.broadcastError(

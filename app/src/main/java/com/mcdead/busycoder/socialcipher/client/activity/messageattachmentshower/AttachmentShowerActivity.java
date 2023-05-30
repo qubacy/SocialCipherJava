@@ -7,8 +7,14 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcdead.busycoder.socialcipher.R;
+import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.adapter.AttachmentListAdapter;
+import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.adapter.AttachmentListAdapterCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.model.AttachmentShowerViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.LinkedFileOpenerAsync;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.LinkedFileOpenerCallback;
@@ -19,19 +25,19 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.Atta
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentType;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
-import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.chooser.AttachmentChooserCallback;
-import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.chooser.AttachmentChooserFragment;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.util.List;
 
 public class AttachmentShowerActivity extends AppCompatActivity
     implements
-        AttachmentChooserCallback,
-        LinkedFileOpenerCallback
+        LinkedFileOpenerCallback,
+        AttachmentListAdapterCallback
 {
     public static final String C_ATTACHMENT_LIST_WRAPPER_PROP_NAME = "attachmentListWrapper";
     public static final String C_ATTACHMENT_LIST_PROP_NAME = "attachmentList";
+
+    private AttachmentShowerViewModel m_attachmentChooserViewModel = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,11 +51,13 @@ public class AttachmentShowerActivity extends AppCompatActivity
             actionBar.setTitle(R.string.attachment_shower_action_bar_title);
         }
 
-        if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null) {
-            ObjectWrapper<List<AttachmentEntityBase>> attachmentListWrapper
-                    = new ObjectWrapper<>();
-            Error retrievingError
-                    = retrieveAttachmentsFromIntent(getIntent(), attachmentListWrapper);
+        m_attachmentChooserViewModel =
+                new ViewModelProvider(this).get(AttachmentShowerViewModel.class);
+
+        if (!m_attachmentChooserViewModel.isInitialized()) {
+            ObjectWrapper<List<AttachmentEntityBase>> attachmentListWrapper = new ObjectWrapper<>();
+            Error retrievingError =
+                    retrieveAttachmentsFromIntent(getIntent(), attachmentListWrapper);
 
             if (retrievingError != null) {
                 finishWithError(retrievingError);
@@ -57,8 +65,23 @@ public class AttachmentShowerActivity extends AppCompatActivity
                 return;
             }
 
-            showChooser(attachmentListWrapper.getValue());
+            if (!m_attachmentChooserViewModel.setAttachmentList(attachmentListWrapper.getValue())) {
+                finishWithError(
+                        new Error("Attachment List hasn't been set!", true));
+
+                return;
+            }
         }
+
+        RecyclerView attachmentListView = findViewById(R.id.attachment_chooser_list);
+        AttachmentListAdapter attachmentListAdapter =
+                new AttachmentListAdapter(
+                        m_attachmentChooserViewModel.getAttachmentList(),
+                        getLayoutInflater(),
+                        this);
+
+        attachmentListView.setLayoutManager(new LinearLayoutManager(this));
+        attachmentListView.setAdapter(attachmentListAdapter);
     }
 
     private Error retrieveAttachmentsFromIntent(
@@ -90,38 +113,35 @@ public class AttachmentShowerActivity extends AppCompatActivity
         finish();
     }
 
-    private void showChooser(final List<AttachmentEntityBase> attachmentList) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(
-                        android.R.id.content,
-                        new AttachmentChooserFragment(attachmentList, this),
-                        AttachmentChooserFragment.C_TAG)
-                .commit();
-    }
-
     private void showShower(final AttachmentEntityBase attachment) {
+        AttachmentShowerFragment attachmentShowerFragment =
+                AttachmentShowerFragment.getInstance(attachment);
+
+        if (attachmentShowerFragment == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Attachment Shower Fragment hasn't been initialized!",
+                            true),
+                    getApplicationContext());
+
+            return;
+        }
+
         getSupportFragmentManager()
                 .beginTransaction()
                 .addToBackStack(null)
                 .replace(
                         android.R.id.content,
-                        new AttachmentShowerFragment(attachment),
+                        attachmentShowerFragment,
                         AttachmentShowerFragment.C_TAG)
                 .commit();
     }
 
     @Override
-    public void onAttachmentChosen(final AttachmentEntityBase chosenAttachment) {
-        if (chosenAttachment == null) {
-            finishWithError(new Error("No Attachment has been chosen!", true));
+    public void onBackPressed() {
+        super.onBackPressed();
 
-            return;
-        }
 
-        Error processingError = processAttachmentChoice(chosenAttachment);
-
-        if (processingError != null) finishWithError(processingError);
     }
 
     private Error processAttachmentChoice(
@@ -160,5 +180,33 @@ public class AttachmentShowerActivity extends AppCompatActivity
     @Override
     public void onFileOpeningError(Error error) {
         finishWithError(error);
+    }
+
+    @Override
+    public void onAttachmentListError(final Error error) {
+        if (error == null) {
+            ErrorBroadcastReceiver
+                    .broadcastError(
+                            new Error("Error Data hasn't been provided", true),
+                            getApplicationContext());
+
+            return;
+        }
+
+        ErrorBroadcastReceiver
+                .broadcastError(error, getApplicationContext());
+    }
+
+    @Override
+    public void onAttachmentChosen(AttachmentEntityBase attachment) {
+        if (attachment == null) {
+            finishWithError(new Error("No Attachment has been chosen!", true));
+
+            return;
+        }
+
+        Error processingError = processAttachmentChoice(attachment);
+
+        if (processingError != null) finishWithError(processingError);
     }
 }

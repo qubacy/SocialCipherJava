@@ -9,7 +9,7 @@ import android.provider.MediaStore;
 
 import androidx.annotation.NonNull;
 
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.docs.data.DocData;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.data.DocData;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 

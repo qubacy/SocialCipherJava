@@ -27,14 +27,29 @@ public class ErrorActivity extends AppCompatActivity
 
         if (getIntent() == null) finish();
 
-        Error error = (Error) getIntent().getSerializableExtra(ErrorBroadcastReceiver.C_ERROR_EXTRA_PROP_NAME);
+        Error error =
+                (Error) getIntent().
+                        getSerializableExtra(ErrorBroadcastReceiver.C_ERROR_EXTRA_PROP_NAME);
 
         if (error == null) finish();
 
         if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null) {
+            ErrorDialogFragment errorDialogFragment =
+                    ErrorDialogFragment.getInstance(error, this);
+
+            if (errorDialogFragment == null) {
+                ErrorBroadcastReceiver.broadcastError(
+                        new Error(
+                                "Error Dialog Fragment hasn't been initialized!",
+                                true),
+                        getApplicationContext());
+
+                return;
+            }
+
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(android.R.id.content, new ErrorDialogFragment(error, this))
+                    .add(android.R.id.content, errorDialogFragment)
                     .commit();
         }
     }
