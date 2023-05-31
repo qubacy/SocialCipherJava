@@ -5,5 +5,8 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 
 public interface AttachmentListAdapterCallback {
     public void onAttachmentListError(final Error error);
-    public void onAttachmentChosen(final AttachmentEntityBase attachment);
+    public boolean onAttachmentChosen(
+            final AttachmentEntityBase attachment,
+            final int position);
+    public int getLastChosenAttachment();
 }

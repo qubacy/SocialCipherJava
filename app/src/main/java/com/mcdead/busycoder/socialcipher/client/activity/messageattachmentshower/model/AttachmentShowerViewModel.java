@@ -7,7 +7,10 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.Attachmen
 import java.util.List;
 
 public class AttachmentShowerViewModel extends ViewModel {
+    public static final int C_ATTACHMENT_NOT_CHOSEN = -1;
+
     private List<AttachmentEntityBase> m_attachmentList = null;
+    private int m_curAttachmentIndex = C_ATTACHMENT_NOT_CHOSEN;
     private boolean m_isShowerVisible = false;
 
     public AttachmentShowerViewModel() {
@@ -18,6 +21,15 @@ public class AttachmentShowerViewModel extends ViewModel {
         if (isShowerVisible == m_isShowerVisible) return false;
 
         m_isShowerVisible = isShowerVisible;
+
+        return true;
+    }
+
+    public boolean setCurAttachmentIndex(final int index) {
+        if (m_curAttachmentIndex == index || index < C_ATTACHMENT_NOT_CHOSEN)
+            return false;
+
+        m_curAttachmentIndex = index;
 
         return true;
     }
@@ -35,6 +47,10 @@ public class AttachmentShowerViewModel extends ViewModel {
 
     public boolean isShowerVisible() {
         return m_isShowerVisible;
+    }
+
+    public int getCurAttachmentIndex() {
+        return m_curAttachmentIndex;
     }
 
     public List<AttachmentEntityBase> getAttachmentList() {

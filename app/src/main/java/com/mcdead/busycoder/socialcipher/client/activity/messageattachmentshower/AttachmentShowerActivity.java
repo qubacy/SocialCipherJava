@@ -14,11 +14,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.adapter.AttachmentListAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.adapter.AttachmentListAdapterCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.adapter.AttachmentListViewHolder;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.model.AttachmentShowerViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.LinkedFileOpenerAsync;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.fragment.AttachmentShowerFragment;
+import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityDoc;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
@@ -39,20 +41,19 @@ public class AttachmentShowerActivity extends AppCompatActivity
 
     private AttachmentShowerViewModel m_attachmentChooserViewModel = null;
 
+    private RecyclerView m_attachmentListView = null;
+    private AttachmentListAdapter m_attachmentListAdapter = null;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_attachment_shower);
 
-        if (getSupportActionBar() != null) {
-            ActionBar actionBar = getSupportActionBar();
-
-            actionBar.setTitle(R.string.attachment_shower_action_bar_title);
-        }
-
         m_attachmentChooserViewModel =
                 new ViewModelProvider(this).get(AttachmentShowerViewModel.class);
+
+        initActionBar();
 
         if (!m_attachmentChooserViewModel.isInitialized()) {
             ObjectWrapper<List<AttachmentEntityBase>> attachmentListWrapper = new ObjectWrapper<>();
@@ -73,15 +74,31 @@ public class AttachmentShowerActivity extends AppCompatActivity
             }
         }
 
-        RecyclerView attachmentListView = findViewById(R.id.attachment_chooser_list);
+        m_attachmentListView = findViewById(R.id.attachment_chooser_list);
+
         AttachmentListAdapter attachmentListAdapter =
-                new AttachmentListAdapter(
+                AttachmentListAdapter.getInstance(
                         m_attachmentChooserViewModel.getAttachmentList(),
                         getLayoutInflater(),
                         this);
 
-        attachmentListView.setLayoutManager(new LinearLayoutManager(this));
-        attachmentListView.setAdapter(attachmentListAdapter);
+        if (attachmentListAdapter == null) {
+            finishWithError(
+                    new Error(
+                            "Attachment List Adapter generation has been failed!",
+                            true));
+
+            return;
+        }
+
+        m_attachmentListAdapter = attachmentListAdapter;
+
+        m_attachmentListView.setLayoutManager(
+                new LinearLayoutManager(
+                        this,
+                        LinearLayoutManager.HORIZONTAL,
+                        false));
+        m_attachmentListView.setAdapter(m_attachmentListAdapter);
     }
 
     private Error retrieveAttachmentsFromIntent(
@@ -129,19 +146,26 @@ public class AttachmentShowerActivity extends AppCompatActivity
 
         getSupportFragmentManager()
                 .beginTransaction()
-                .addToBackStack(null)
                 .replace(
-                        android.R.id.content,
+                        R.id.attachment_shower_content_wrapper,
                         attachmentShowerFragment,
                         AttachmentShowerFragment.C_TAG)
                 .commit();
-    }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
+        String attachmentFileName =
+                AttachmentContext.getFileNameByURI(attachment.getURIBySize(AttachmentSize.STANDARD));
 
+        if (attachmentFileName == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Attachment File Name retrieving process has been failed!",
+                            true),
+                    getApplicationContext());
 
+            return;
+        }
+
+        setActionBarTitle(attachmentFileName);
     }
 
     private Error processAttachmentChoice(
@@ -172,6 +196,54 @@ public class AttachmentShowerActivity extends AppCompatActivity
         return null;
     }
 
+    private void initActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+
+        if (actionBar != null) {
+            boolean isSet = false;
+
+            if (m_attachmentChooserViewModel.isInitialized()) {
+                int curAttachmentIndex = m_attachmentChooserViewModel.getCurAttachmentIndex();
+
+                if (curAttachmentIndex != AttachmentShowerViewModel.C_ATTACHMENT_NOT_CHOSEN) {
+                    String fileName =
+                            AttachmentContext.getFileNameByURI(
+                                    m_attachmentChooserViewModel.
+                                            getAttachmentList().
+                                            get(curAttachmentIndex).
+                                            getURIBySize(AttachmentSize.STANDARD));
+
+                    if (fileName != null) {
+                        setActionBarTitle(fileName);
+
+                        isSet = true;
+                    }
+                }
+            }
+
+            if (!isSet)
+                actionBar.setTitle(R.string.attachment_shower_action_bar_title);
+        }
+    }
+
+    private void setActionBarTitle(final String title) {
+        ActionBar actionBar = getSupportActionBar();
+
+        if (actionBar == null) return;
+
+        actionBar.setTitle(title);
+    }
+
+    private void resetPreviousChosenAttachment() {
+        AttachmentListViewHolder prevAttachmentListViewHolder =
+                (AttachmentListViewHolder) m_attachmentListView.
+                        findViewHolderForAdapterPosition(
+                                m_attachmentChooserViewModel.getCurAttachmentIndex());
+
+        if (prevAttachmentListViewHolder != null)
+            prevAttachmentListViewHolder.setActiveState(false);
+    }
+
     @Override
     public void onFileOpeningFail(Uri fileUri) {
         AttachmentDocUtility.showFileShowingFailedToast(this, fileUri);
@@ -198,15 +270,33 @@ public class AttachmentShowerActivity extends AppCompatActivity
     }
 
     @Override
-    public void onAttachmentChosen(AttachmentEntityBase attachment) {
-        if (attachment == null) {
+    public boolean onAttachmentChosen(
+            final AttachmentEntityBase attachment,
+            final int position)
+    {
+        if (attachment == null || position < 0) {
             finishWithError(new Error("No Attachment has been chosen!", true));
 
-            return;
+            return false;
         }
 
         Error processingError = processAttachmentChoice(attachment);
 
-        if (processingError != null) finishWithError(processingError);
+        if (processingError != null) {
+            finishWithError(processingError);
+
+            return false;
+        }
+
+        resetPreviousChosenAttachment();
+
+        m_attachmentChooserViewModel.setCurAttachmentIndex(position);
+
+        return true;
+    }
+
+    @Override
+    public int getLastChosenAttachment() {
+        return m_attachmentChooserViewModel.getCurAttachmentIndex();
     }
 }

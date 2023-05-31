@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.URI;
 
 public class AttachmentContext {
+    private static final char C_DIR_DIVIDER = '/';
+
     public static String getExtensionByFilePath(final String filepath) {
         if (filepath == null) return null;
         if (filepath.isEmpty()) return null;
@@ -56,5 +58,16 @@ public class AttachmentContext {
         }
 
         return uri;
+    }
+
+    public static String getFileNameByURI(final URI uri) {
+        if (uri == null) return null;
+
+        String filePath = uri.getPath();
+        int lastDividerIndex = filePath.lastIndexOf(C_DIR_DIVIDER);
+
+        if (lastDividerIndex < 0) return filePath;
+
+        return filePath.substring(lastDividerIndex + 1);
     }
 }

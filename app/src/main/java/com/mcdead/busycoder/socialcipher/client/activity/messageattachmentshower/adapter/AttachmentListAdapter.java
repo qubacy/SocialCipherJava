@@ -14,18 +14,29 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import java.util.List;
 
 public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListViewHolder> {
-    private List<AttachmentEntityBase> m_attachmentList = null;
-    private LayoutInflater m_inflater = null;
-    private AttachmentListAdapterCallback m_callback = null;
+    final private List<AttachmentEntityBase> m_attachmentToShowList;
+    final private LayoutInflater m_inflater;
+    final private AttachmentListAdapterCallback m_callback;
 
-    public AttachmentListAdapter(
-            final List<AttachmentEntityBase> attachmentList,
-            LayoutInflater inflater,
-            AttachmentListAdapterCallback callback)
+    protected AttachmentListAdapter(
+            final List<AttachmentEntityBase> attachmentToShowList,
+            final LayoutInflater inflater,
+            final AttachmentListAdapterCallback callback)
     {
-        m_attachmentList = attachmentList;
+        m_attachmentToShowList = attachmentToShowList;
         m_inflater = inflater;
         m_callback = callback;
+    }
+
+    public static AttachmentListAdapter getInstance(
+            final List<AttachmentEntityBase> attachmentList,
+            final LayoutInflater inflater,
+            final AttachmentListAdapterCallback callback)
+    {
+        if (attachmentList == null || inflater == null || callback == null)
+            return null;
+
+        return new AttachmentListAdapter(attachmentList, inflater, callback);
     }
 
     @NonNull
@@ -34,9 +45,19 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
             @NonNull ViewGroup parent,
             int viewType)
     {
-        View viewHolder = m_inflater.inflate(R.layout.attachment_view_holder, parent, false);
+        View viewHolder =
+                m_inflater.inflate(R.layout.attachment_shower_view_holder, parent, false);
+        AttachmentListViewHolder attachmentListViewHolder =
+                AttachmentListViewHolder.getInstance(viewHolder);
 
-        return new AttachmentListViewHolder(viewHolder);
+        if (attachmentListViewHolder == null) {
+            m_callback.onAttachmentListError(
+                    new Error(
+                            "Cannot create a View Holder for the attachment!",
+                            true));
+        }
+
+        return attachmentListViewHolder;
     }
 
     @Override
@@ -44,11 +65,12 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
             @NonNull AttachmentListViewHolder holder,
             int position)
     {
-        if (position >= m_attachmentList.size()) return;
+        if (position >= m_attachmentToShowList.size()) return;
 
-        AttachmentEntityBase attachment = m_attachmentList.get(position);
+        AttachmentEntityBase attachmentDataToShow = m_attachmentToShowList.get(position);
+        boolean isChosen = (m_callback.getLastChosenAttachment() == position);
 
-        if (!holder.setData(attachment)) {
+        if (!holder.setData(attachmentDataToShow, isChosen)) {
             m_callback.onAttachmentListError(
                     new Error(
                             "Setting Attachment Data process has gone wrong!",
@@ -61,13 +83,17 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
         holder.setOnItemClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                m_callback.onAttachmentChosen(attachment);
+                if (m_callback.onAttachmentChosen(
+                        attachmentDataToShow, holder.getAdapterPosition()))
+                {
+                    holder.setActiveState(true);
+                }
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return (m_attachmentList == null ? 0 : m_attachmentList.size());
+        return (m_attachmentToShowList == null ? 0 : m_attachmentToShowList.size());
     }
 }
