@@ -22,7 +22,7 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
     final private LayoutInflater m_inflater;
     private AttachmentPickerImageAdapterCallback m_callback = null;
 
-    private ArrayList<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_imageAttachmentDataList = null;
+    private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_imageAttachmentDataList = null;
 
     protected AttachmentPickerImageAdapter(
             final LayoutInflater layoutInflater,
@@ -34,8 +34,6 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
 
         m_inflater = layoutInflater;
         m_callback = callback;
-
-        m_imageAttachmentDataList = new ArrayList();
     }
 
     public static AttachmentPickerImageAdapter getInstance(
@@ -85,6 +83,8 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
 
     @Override
     public int getItemCount() {
+        if (m_imageAttachmentDataList == null) return 0;
+
         return m_imageAttachmentDataList.size();
     }
 
@@ -93,19 +93,12 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
         return position;
     }
 
-    public boolean setImageList(
-            final List<AttachmentData> imageAttachmentDataList)
+    public void setImageDataList(
+            final List<Pair<AttachmentData, ObjectWrapper<Boolean>>> imageAttachmentDataList)
     {
-        if (imageAttachmentDataList == null) return false;
-
-        for (final AttachmentData imageAttachmentData : imageAttachmentDataList) {
-            m_imageAttachmentDataList.add(
-                    new Pair<>(imageAttachmentData, new ObjectWrapper<>(false)));
-        }
+        m_imageAttachmentDataList = imageAttachmentDataList;
 
         notifyDataSetChanged();
-
-        return true;
     }
 
     public ArrayList<AttachmentData> getChosenImages() {

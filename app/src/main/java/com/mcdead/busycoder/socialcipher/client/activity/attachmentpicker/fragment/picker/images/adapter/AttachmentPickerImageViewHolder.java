@@ -17,8 +17,6 @@ import com.mcdead.busycoder.socialcipher.client.processor.filesystem.image.loade
 public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder
     implements ImageLoaderCallback
 {
-    private static final int C_THUMBNAIL_SIZE = 256;
-
     private boolean m_isChosen = false;
 
     private Context m_context = null;
@@ -36,7 +34,8 @@ public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder
         super(itemView);
 
         m_image = itemView.findViewById(R.id.attachment_image_view_holder_image);
-        m_choosingIndicationIcon = itemView.findViewById(R.id.attachment_image_view_holder_choosing_indication_icon);
+        m_choosingIndicationIcon =
+                itemView.findViewById(R.id.attachment_image_view_holder_choosing_indication_icon);
 
         m_callback = callback;
 
@@ -96,36 +95,4 @@ public class AttachmentPickerImageViewHolder extends RecyclerView.ViewHolder
     public void onImagesLoadingError(final Error error) {
         m_callback.onViewHolderErrorOccurred(error);
     }
-
-//    private class LoadImage extends AsyncTask<Uri, Void, Bitmap> {
-//        @Override
-//        protected Bitmap doInBackground(final Uri... imageUriList) {
-//            if (imageUriList.length <= 0) return null;
-//
-//            Uri imageUri = imageUriList[0];
-//            Bitmap thumbnail = null;
-//
-//            try (InputStream imageStream = m_contentResolver.openInputStream(imageUri)) {
-//                thumbnail = ThumbnailUtils.extractThumbnail(
-//                        BitmapFactory.decodeStream(imageStream),
-//                        C_THUMBNAIL_SIZE, C_THUMBNAIL_SIZE);
-//
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//
-//                return null;
-//            }
-//
-//            return thumbnail;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(final Bitmap bitmap) {
-//            if (bitmap == null) return;
-//
-//            setImageBitmap(bitmap);
-//        }
-//    }
-
-
 }

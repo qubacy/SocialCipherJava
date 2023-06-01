@@ -13,7 +13,6 @@ import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.A
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentPickerDocViewHolder>
@@ -21,7 +20,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         AttachmentPickerDocViewHolderCallback
 {
     final private LayoutInflater m_inflater;
-    final private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_docAttachmentDataList;
+    private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_docAttachmentDataList = null;
 
     private AttachmentPickerDocAdapterCallback m_callback = null;
 
@@ -34,8 +33,6 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
 
         m_inflater = layoutInflater;
         m_callback = callback;
-
-        m_docAttachmentDataList = new ArrayList<>();
     }
 
     public static AttachmentPickerDocAdapter getInstance(
@@ -97,6 +94,8 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
 
     @Override
     public int getItemCount() {
+        if (m_docAttachmentDataList == null) return 0;
+
         return m_docAttachmentDataList.size();
     }
 
@@ -118,28 +117,15 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
     }
 
     public boolean setDocList(
-            final List<AttachmentData> docAttachmentDataList)
+            final List<Pair<AttachmentData, ObjectWrapper<Boolean>>> docAttachmentDataList)
     {
         if (docAttachmentDataList == null) return false;
 
-        for (final AttachmentData docAttachmentData : docAttachmentDataList) {
-            m_docAttachmentDataList.add(new Pair<>(docAttachmentData, new ObjectWrapper<>(false)));
-        }
+        m_docAttachmentDataList = docAttachmentDataList;
 
-        notifyDataSetChanged();
+        notifyItemRangeInserted(0, docAttachmentDataList.size());
 
         return true;
-    }
-
-    public List<AttachmentData> getChosenDocList() {
-        List<AttachmentData> chosenDocAttachmentDataList = new ArrayList<>();
-
-        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentItem : m_docAttachmentDataList) {
-            if (docAttachmentItem.second.getValue())
-                chosenDocAttachmentDataList.add(docAttachmentItem.first);
-        }
-
-        return chosenDocAttachmentDataList;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragm
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,11 +18,14 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.images.adapter.AttachmentPickerImageAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.images.adapter.AttachmentPickerImageAdapterCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.images.model.AttachmentPickerImageViewModel;
 import com.mcdead.busycoder.socialcipher.client.processor.filesystem.image.searcher.ImageSearcher;
 import com.mcdead.busycoder.socialcipher.client.processor.filesystem.image.searcher.ImageSearcherCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AttachmentPickerImageFragment extends Fragment
@@ -30,6 +35,8 @@ public class AttachmentPickerImageFragment extends Fragment
 {
     public static final int C_IMAGE_GRID_CACHE_SIZE = 21;
     public static final int C_NUMB_OF_COLS = 3;
+
+    private AttachmentPickerImageViewModel m_imagePickerViewModel = null;
 
     private AttachmentPickerImageAdapter m_attachmentPickerImageAdapter = null;
 
@@ -96,7 +103,9 @@ public class AttachmentPickerImageFragment extends Fragment
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_attachment_image_picker, container, false);
+        View view =
+                inflater.inflate(
+                        R.layout.fragment_attachment_image_picker, container, false);
 
         RecyclerView imageGridView = view.findViewById(R.id.attachment_image_picker_grid);
 
@@ -117,7 +126,19 @@ public class AttachmentPickerImageFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
-        new ImageSearcher(getContext(), this).execute();
+        m_imagePickerViewModel =
+                new ViewModelProvider(getActivity()).get(AttachmentPickerImageViewModel.class);
+
+        if (!m_imagePickerViewModel.isInitialized())
+            new ImageSearcher(getContext(), this).execute();
+        else
+            m_attachmentPickerImageAdapter.setImageDataList(
+                    m_imagePickerViewModel.getImageDataList());
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart(); // todo: here is the model already reset. why?
     }
 
     @Override
@@ -135,13 +156,34 @@ public class AttachmentPickerImageFragment extends Fragment
     }
 
     @Override
-    public void onImageSearcherImagesFound(final List<AttachmentData> imageAttachmentDataList) {
-        if (!m_attachmentPickerImageAdapter.setImageList(imageAttachmentDataList)) {
+    public void onImageSearcherImagesFound(final List<AttachmentData> imageAttachmentList) {
+        if (imageAttachmentList == null) {
             ErrorBroadcastReceiver
                     .broadcastError(
-                            new Error("Image List setting problem has been occurred!", true),
+                            new Error("Image List was null!", true),
                             getActivity().getApplicationContext());
+
+            return;
         }
+
+        ArrayList<Pair<AttachmentData, ObjectWrapper<Boolean>>> imageAttachmentDataList =
+                new ArrayList<>();
+
+        for (final AttachmentData imageAttachmentData : imageAttachmentList) {
+            imageAttachmentDataList.add(
+                    new Pair<>(imageAttachmentData, new ObjectWrapper<>(false)));
+        }
+
+        if (!m_imagePickerViewModel.setImageDataList(imageAttachmentDataList)) {
+            ErrorBroadcastReceiver
+                    .broadcastError(
+                            new Error("Image Data List setting has been failed!", true),
+                            getActivity().getApplicationContext());
+
+            return;
+        }
+
+        m_attachmentPickerImageAdapter.setImageDataList(m_imagePickerViewModel.getImageDataList());
     }
 
     public List<AttachmentData> getChosenImageDataList() {

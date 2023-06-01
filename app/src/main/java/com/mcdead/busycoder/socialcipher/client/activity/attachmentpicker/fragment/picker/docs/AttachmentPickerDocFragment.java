@@ -2,6 +2,7 @@ package com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragm
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,15 +18,20 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.adapter.AttachmentPickerDocAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.adapter.AttachmentPickerDocAdapterCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.model.AttachmentPickerDocViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
+import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AttachmentPickerDocFragment extends Fragment
     implements
         AttachmentPickerDocAdapterCallback
 {
+    private AttachmentPickerDocViewModel m_attachmentPickerDocViewModel = null;
+
     private AttachmentPickerDocAdapter m_docListAdapter;
 
     public AttachmentPickerDocFragment() {
@@ -112,6 +119,13 @@ public class AttachmentPickerDocFragment extends Fragment
             @Nullable Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
+
+        m_attachmentPickerDocViewModel =
+                new ViewModelProvider(getActivity()).get(AttachmentPickerDocViewModel.class);
+
+        if (m_attachmentPickerDocViewModel.isInitialized()) {
+            m_docListAdapter.setDocList(m_attachmentPickerDocViewModel.getDocAttachmentDataList());
+        }
     }
 
     @Override
@@ -131,13 +145,41 @@ public class AttachmentPickerDocFragment extends Fragment
         );
     }
 
-    public void setDocList(final List<AttachmentData> docAttachmentDataList) {
-        if (docAttachmentDataList == null) return;
+    public void setDocList(final List<AttachmentData> docAttachmentList) {
+        if (docAttachmentList == null) return;
 
-        m_docListAdapter.setDocList(docAttachmentDataList);
+        List<Pair<AttachmentData, ObjectWrapper<Boolean>>> docAttachmentDataList =
+                new ArrayList<>();
+
+        for (final AttachmentData attachmentData : docAttachmentList) {
+            docAttachmentDataList.add(new Pair<>(attachmentData, new ObjectWrapper<>(false)));
+        }
+
+        if (!m_attachmentPickerDocViewModel.setDocAttachmentDataList(docAttachmentDataList)) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Attachment Doc. Data list setting has been failed!",
+                            true),
+                    getActivity().getApplicationContext());
+
+            return;
+        }
+
+        m_docListAdapter.setDocList(m_attachmentPickerDocViewModel.getDocAttachmentDataList());
     }
 
     public List<AttachmentData> getChosenDocDataList() {
-        return m_docListAdapter.getChosenDocList();
+        List<Pair<AttachmentData, ObjectWrapper<Boolean>>> docAttachmentDataList =
+                m_attachmentPickerDocViewModel.getDocAttachmentDataList();
+        List<AttachmentData> chosenAttachmentDataList = new ArrayList<>();
+
+        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentData :
+                docAttachmentDataList)
+        {
+            if (docAttachmentData.second.getValue())
+                chosenAttachmentDataList.add(docAttachmentData.first);
+        }
+
+        return chosenAttachmentDataList;
     }
 }
