@@ -13,4 +13,6 @@ public abstract class UpdateCheckerAsyncBase implements Runnable {
         m_token = token;
         m_context = context;
     }
+
+    public abstract void interruptChecking();
 }

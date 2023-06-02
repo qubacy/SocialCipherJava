@@ -5,6 +5,7 @@ import static com.mcdead.busycoder.socialcipher.client.processor.update.service.
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.CommandSendingCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.NewMessageReceivedCallback;

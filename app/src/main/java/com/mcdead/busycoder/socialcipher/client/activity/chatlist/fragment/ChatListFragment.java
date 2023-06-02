@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,12 +19,12 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mcdead.busycoder.socialcipher.client.activity.chat.ChatActivity;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListAdapterCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListItemCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.model.ChatListViewModel;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoaderBase;
@@ -48,14 +49,20 @@ public class ChatListFragment extends Fragment
         NewMessageReceivedCallback,
         CommandSendingCallback
 {
-    final private ChatListFragmentCallback m_callback;
-    final private ChatListLoaderBase m_chatListLoader;
-    final private ChatListBroadcastReceiver m_chatChangeBroadcastReceiver;
-    final private ChatListAdapter m_chatListAdapter;
-
     private ChatListViewModel m_chatListViewModel = null;
 
+    private ChatListFragmentCallback m_callback = null;
+    private ChatListLoaderBase m_chatListLoader = null;
+    private ChatListBroadcastReceiver m_chatChangeBroadcastReceiver = null;
+    private ChatListAdapter m_chatListAdapter = null;
+
     private RecyclerView m_dialogsListRecyclerView = null;
+
+    private Context m_context = null;
+
+    public ChatListFragment() {
+        super();
+    }
 
     protected ChatListFragment(
             final ChatListFragmentCallback callback,
@@ -134,15 +141,28 @@ public class ChatListFragment extends Fragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (!launchChatsLoader()) return;
-
         m_chatListViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
 
-        m_chatChangeBroadcastReceiver.setNewMessageReceivedCallback(this);
-        m_chatChangeBroadcastReceiver.setCommandSendingCallback(this);
-        m_chatListLoader.setCallback(this);
-        m_chatListAdapter.setChatListCallback(this);
-        m_chatListAdapter.setChatListItemCallback(this);
+        if (!m_chatListViewModel.isInitialized()) {
+            m_chatChangeBroadcastReceiver.setNewMessageReceivedCallback(this);
+            m_chatChangeBroadcastReceiver.setCommandSendingCallback(this);
+            m_chatListLoader.setCallback(this);
+            m_chatListAdapter.setChatListCallback(this);
+            m_chatListAdapter.setChatListItemCallback(this);
+
+            m_chatListViewModel.setChatListAdapter(m_chatListAdapter);
+            m_chatListViewModel.setChatListLoader(m_chatListLoader);
+            m_chatListViewModel.setCallback(m_callback);
+            m_chatListViewModel.setChatListBroadcastReceiver(m_chatChangeBroadcastReceiver);
+
+        } else {
+            m_chatListAdapter = m_chatListViewModel.getChatListAdapter();
+            m_chatListLoader = m_chatListViewModel.getChatLoader();
+            m_chatChangeBroadcastReceiver = m_chatListViewModel.getChatListBroadcastReceiver();
+            m_callback = m_chatListViewModel.getCallback();
+        }
+
+        launchChatsLoader();
 
         IntentFilter intentFilter = new IntentFilter(ChatListBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
@@ -151,9 +171,7 @@ public class ChatListFragment extends Fragment
 
         LocalBroadcastManager.
                 getInstance(getActivity().getApplicationContext()).
-                registerReceiver(
-                        m_chatChangeBroadcastReceiver,
-                    intentFilter);
+                registerReceiver(m_chatChangeBroadcastReceiver, intentFilter);
     }
 
     @Override
@@ -196,6 +214,13 @@ public class ChatListFragment extends Fragment
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        m_context = context;
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view,
                               @Nullable Bundle savedInstanceState)
     {
@@ -203,15 +228,22 @@ public class ChatListFragment extends Fragment
     }
 
     @Override
+    public void onDestroyView() {
+        m_dialogsListRecyclerView.setAdapter(null);
+
+        super.onDestroyView();
+    }
+
+    @Override
     public void onDialogsLoaded() {
-        m_callback.onDialogsLoaded();
+        m_callback.onChatListLoaded();
 
         List<ChatEntity> dialogs = ChatsStore.getInstance().getChatList();
 
         if (!m_chatListAdapter.setDialogsList(dialogs)) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Dialogs list is empty!", true),
-                    getContext().getApplicationContext()
+                    m_context.getApplicationContext()
             );
 
             return;
@@ -222,7 +254,7 @@ public class ChatListFragment extends Fragment
     public void onDialogsLoadingError(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getContext().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 
@@ -230,29 +262,29 @@ public class ChatListFragment extends Fragment
     public void onRecyclerViewAdapterErrorOccurred(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getContext().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 
     @Override
-    public void onDialogItemClick(long peerId) {
-        m_chatListViewModel.setCurrentChatId(peerId);
+    public void onDialogItemClick(final long chatId) {
+        m_callback.onChatItemClicked(chatId);
 
-        Intent intent = new Intent(getActivity(), ChatActivity.class);
-
-        intent.putExtra(ChatActivity.C_PEER_ID_EXTRA_PROP_NAME, peerId);
-
-        startActivity(intent);
+        m_chatListViewModel.setCurrentChatId(chatId);
     }
 
     private boolean launchChatsLoader() {
+        if (m_chatListViewModel.isChatListLoadingStarted())
+            return true;
+
+        m_chatListViewModel.setChatListLoadingStarted();
         m_chatListLoader.execute();
 
         return true;
     }
 
     @Override
-    public void onNewMessageReceived(long chatId) {
+    public void onNewMessageReceived(final long chatId) {
         onDialogsLoaded();
 
         if (m_chatListViewModel.getCurrentChatId() != chatId)
@@ -261,7 +293,7 @@ public class ChatListFragment extends Fragment
         Intent newMessagesIntent = new Intent(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
         LocalBroadcastManager
-                .getInstance(getActivity().getApplicationContext())
+                .getInstance(m_context.getApplicationContext())
                 .sendBroadcast(newMessagesIntent);
     }
 
@@ -269,7 +301,7 @@ public class ChatListFragment extends Fragment
     public void onNewMessageReceivingError(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getActivity().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 
@@ -277,7 +309,7 @@ public class ChatListFragment extends Fragment
     public void onNewCommandSendingError(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getActivity().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 }

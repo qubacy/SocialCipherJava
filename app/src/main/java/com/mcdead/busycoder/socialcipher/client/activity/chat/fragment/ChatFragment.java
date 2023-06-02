@@ -22,6 +22,7 @@ import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,9 +34,9 @@ import com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListAdapterCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListItemCallback;
+import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.model.ChatViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragment;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.requestanswerdialog.RequestAnswerDialogFragmentCallback;
-import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.AttachmentShowerActivity;
@@ -50,7 +51,7 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.user.id.UserIdChecke
 import com.mcdead.busycoder.socialcipher.client.data.store.UsersStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
-import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.LinkedFileOpenerCallback;
+import com.mcdead.busycoder.socialcipher.client.processor.filesystem.doc.opener.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderBase;
@@ -86,24 +87,28 @@ public class ChatFragment extends Fragment
         AttachmentPickerCallback,
         RequestAnswerDialogFragmentCallback
 {
-    final private long m_chatId;
-    final private long m_localPeerId;
-    final private ChatFragmentCallback m_callback;
+    private ChatViewModel m_chatViewModel = null;
 
-    final private ChatLoaderBase m_chatLoader;
-    final private AttachmentUploaderSyncBase m_attachmentUploader;
-    final private MessageSenderBase m_messageSender;
+    private long m_chatId;
+    private long m_localPeerId;
+    private ChatFragmentCallback m_callback;
 
-    final private ChatBroadcastReceiver m_broadcastReceiver;
+    private ChatLoaderBase m_chatLoader;
+    private AttachmentUploaderSyncBase m_attachmentUploader;
+    private MessageSenderBase m_messageSender;
 
-    final private MessageListAdapter m_messageListAdapter;
+    private ChatBroadcastReceiver m_broadcastReceiver;
 
-    private RecyclerView m_messagesList = null;
+    private MessageListAdapter m_messageListAdapter;
 
+    private Context m_context = null;
+    private RecyclerView m_messagesListView = null;
     private EditText m_sendingMessageText = null;
-    private List<AttachmentData> m_uploadingAttachmentList = null;
-
     private AppCompatImageButton m_cipherButton = null;
+
+    public ChatFragment() {
+        super();
+    }
 
     protected ChatFragment(
             final long chatId,
@@ -127,8 +132,6 @@ public class ChatFragment extends Fragment
 
         m_broadcastReceiver = chatBroadcastReceiver;
         m_messageListAdapter = messageListAdapter;
-
-        m_uploadingAttachmentList = new ArrayList<>();
     }
 
     public static ChatFragment getInstance(
@@ -210,11 +213,36 @@ public class ChatFragment extends Fragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        m_messageSender.setCallback(this);
-        m_chatLoader.setCallback(this);
-        m_attachmentUploader.setContentResolver(getContext().getContentResolver());
-        m_broadcastReceiver.setCallback(this);
-        m_messageListAdapter.setCallback(this);
+        m_chatViewModel =
+                new ViewModelProvider(this).get(ChatViewModel.class);
+
+        if (!m_chatViewModel.isInitialized()) {
+            m_messageSender.setCallback(this);
+            m_chatLoader.setCallback(this);
+            m_attachmentUploader.setContentResolver(m_context.getContentResolver());
+            m_broadcastReceiver.setCallback(this);
+            m_messageListAdapter.setCallback(this);
+
+            m_chatViewModel.setChatId(m_chatId);
+            m_chatViewModel.setLocalPeerId(m_localPeerId);
+            m_chatViewModel.setCallback(m_callback);
+            m_chatViewModel.setMessageSender(m_messageSender);
+            m_chatViewModel.setChatLoader(m_chatLoader);
+            m_chatViewModel.setAttachmentUploader(m_attachmentUploader);
+            m_chatViewModel.setBroadcastReceiver(m_broadcastReceiver);
+            m_chatViewModel.setMessageListAdapter(m_messageListAdapter);
+            m_chatViewModel.setWaitingForCipherSessionSet(false);
+
+        } else {
+            m_chatId = m_chatViewModel.getChatId();
+            m_localPeerId = m_chatViewModel.getLocalPeerId();
+            m_callback = m_chatViewModel.getCallback(); // todo: not sure..
+            m_messageSender = m_chatViewModel.getMessageSender();
+            m_chatLoader = m_chatViewModel.getChatLoader();
+            m_attachmentUploader = m_chatViewModel.getAttachmentUploader();
+            m_broadcastReceiver = m_chatViewModel.getBroadcastReceiver();
+            m_messageListAdapter = m_chatViewModel.getMessageListAdapter();
+        }
 
         IntentFilter intentFilter = new IntentFilter(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
@@ -224,7 +252,7 @@ public class ChatFragment extends Fragment
         intentFilter.addAction(ChatBroadcastReceiver.C_SHOW_NEW_CHAT_NOTIFICATION);
 
         LocalBroadcastManager
-                .getInstance(getContext().getApplicationContext())
+                .getInstance(m_context.getApplicationContext())
                 .registerReceiver(m_broadcastReceiver, intentFilter);
     }
 
@@ -236,10 +264,10 @@ public class ChatFragment extends Fragment
     {
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
 
-        m_messagesList = view.findViewById(R.id.messages_list);
+        m_messagesListView = view.findViewById(R.id.messages_list);
 
-        m_messagesList.setAdapter(m_messageListAdapter);
-        m_messagesList.setLayoutManager(new LinearLayoutManager(getContext()));
+        m_messagesListView.setAdapter(m_messageListAdapter);
+        m_messagesListView.setLayoutManager(new LinearLayoutManager(getContext()));
         //m_messagesList.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
 
         m_sendingMessageText = view.findViewById(R.id.dialog_message_sending_text);
@@ -263,6 +291,8 @@ public class ChatFragment extends Fragment
         });
 
         m_cipherButton = view.findViewById(R.id.dialog_message_sending_ciphering_button);
+
+        onCipherButtonEnabledChange(!m_chatViewModel.isWaitingForCipherSessionSet());
 
         m_cipherButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -292,14 +322,28 @@ public class ChatFragment extends Fragment
 
         if (error != null) {
             ErrorBroadcastReceiver.broadcastError(error,
-                    getActivity().getApplicationContext());
+                    m_context.getApplicationContext());
         }
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        m_context = context;
+    }
+
+    @Override
+    public void onDestroyView() {
+        m_messagesListView.setAdapter(null);
+
+        super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
         LocalBroadcastManager
-                .getInstance(getContext().getApplicationContext())
+                .getInstance(m_context.getApplicationContext())
                 .unregisterReceiver(m_broadcastReceiver);
 
         super.onDestroy();
@@ -313,20 +357,22 @@ public class ChatFragment extends Fragment
         if (!m_messageListAdapter.addNewMessage(messageList.get(messageList.size() - 1))) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Dialog doesn't exist!", true),
-                    getContext().getApplicationContext()
+                    m_context.getApplicationContext()
             );
 
             return;
         }
 
-        m_messagesList.scrollToPosition(m_messageListAdapter.getItemCount() - 1);
+        // todo: it doesn't work after the screen's rotation:
+
+        m_messagesListView.scrollToPosition(m_messageListAdapter.getItemCount() - 1);
     }
 
     @Override
     public void onChatBroadcastReceiverErrorOccurred(final Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getContext().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 
@@ -384,6 +430,7 @@ public class ChatFragment extends Fragment
 
         onNewChatNotificationShowingRequested((isCipherSessionSet ? "Session set!" : "Session hasn't been set!"));
 
+        m_chatViewModel.setWaitingForCipherSessionSet(false);
         onCipherButtonEnabledChange(true);
     }
 
@@ -401,7 +448,7 @@ public class ChatFragment extends Fragment
             ErrorBroadcastReceiver
                     .broadcastError(
                             new Error("Message Can't be sent!", false),
-                            getActivity().getApplicationContext());
+                            m_context.getApplicationContext());
 
             return;
         }
@@ -415,14 +462,14 @@ public class ChatFragment extends Fragment
     {
         // todo: showing chat notification..
 
-        Toast.makeText(getContext(), chatNotificationText, Toast.LENGTH_LONG).show();
+        Toast.makeText(m_context, chatNotificationText, Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onErrorOccurred(final Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getContext().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 
@@ -432,7 +479,7 @@ public class ChatFragment extends Fragment
             ErrorBroadcastReceiver
                     .broadcastError(
                             new Error("Message Data hasn't been provided!", true),
-                            getActivity().getApplicationContext()
+                            m_context.getApplicationContext()
                     );
 
             return;
@@ -449,7 +496,7 @@ public class ChatFragment extends Fragment
             final List<AttachmentEntityBase> messageAttachments)
     {
         Intent intent = new Intent(
-                getActivity().getApplicationContext(),
+                m_context.getApplicationContext(),
                 AttachmentShowerActivity.class);
         Bundle args = new Bundle();
 
@@ -463,27 +510,27 @@ public class ChatFragment extends Fragment
 
     @Override
     public void onChatLoaded() {
-        m_callback.onDialogLoaded();
+        m_callback.onChatLoaded();
 
-        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_chatId);
+        ChatEntity chat = ChatsStore.getInstance().getChatById(m_chatId);
 
-        if (!m_messageListAdapter.setMessagesList(dialog.getMessages())) {
+        if (!m_messageListAdapter.setMessagesList(chat.getMessages())) {
             ErrorBroadcastReceiver.broadcastError(
-                    new Error("Dialog doesn't exist!", true),
-                    getContext().getApplicationContext()
+                    new Error("Chat doesn't exist!", true),
+                    m_context.getApplicationContext()
             );
 
             return;
         }
 
-        m_messagesList.scrollToPosition(dialog.getMessages().size() - 1);
+        m_messagesListView.scrollToPosition(chat.getMessages().size() - 1);
     }
 
     @Override
-    public void onChatLoadingError(Error error) {
+    public void onChatLoadingError(final Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getContext().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 
@@ -515,8 +562,10 @@ public class ChatFragment extends Fragment
 
         if (chatSideDefiner == null) {
             ErrorBroadcastReceiver.broadcastError(
-                    new Error("Chat Side Definer creating process has been failed!", true),
-                    getActivity().getApplicationContext());
+                    new Error(
+                            "Chat Side Definer creating process has been failed!",
+                            true),
+                    m_context.getApplicationContext());
 
             return;
         }
@@ -525,6 +574,8 @@ public class ChatFragment extends Fragment
 
         if (chatSide == ChatSide.LOCAL)
             return;
+
+        m_chatViewModel.setWaitingForCipherSessionSet(true);
 
         onCipherButtonEnabledChange(false);
 
@@ -537,7 +588,7 @@ public class ChatFragment extends Fragment
         intent.putExtra(CommandProcessorServiceBroadcastReceiver.C_CHAT_ID_PROP_NAME, m_chatId);
 
         LocalBroadcastManager.
-                getInstance(getContext().getApplicationContext()).
+                getInstance(m_context.getApplicationContext()).
                 sendBroadcast(intent);
     }
 
@@ -547,8 +598,10 @@ public class ChatFragment extends Fragment
         if (dialogActivity == null) {
             ErrorBroadcastReceiver
                     .broadcastError(
-                            new Error("DialogFragmentCallback hasn't been derived!", true),
-                            getActivity().getApplicationContext()
+                            new Error(
+                                    "DialogFragmentCallback hasn't been derived!",
+                                    true),
+                            m_context.getApplicationContext()
                     );
 
             return;
@@ -559,9 +612,10 @@ public class ChatFragment extends Fragment
 
     private void sendNewMessage() {
         String text = m_sendingMessageText.getText().toString();
-        List<AttachmentData> attachmentDataList = new ArrayList<>(m_uploadingAttachmentList);
+        List<AttachmentData> attachmentDataList =
+                new ArrayList<>(m_chatViewModel.getUploadingAttachmentList());
 
-        if (text.isEmpty() && m_uploadingAttachmentList.isEmpty()) {
+        if (text.isEmpty() && attachmentDataList.isEmpty()) {
             // todo: may be it needs to show something..
 
             return;
@@ -580,7 +634,7 @@ public class ChatFragment extends Fragment
 
                 if (cipheringError != null) {
                     ErrorBroadcastReceiver.broadcastError(cipheringError,
-                            getActivity().getApplicationContext());
+                            m_context.getApplicationContext());
 
                     return;
                 }
@@ -595,13 +649,13 @@ public class ChatFragment extends Fragment
                     ObjectWrapper<AttachmentData> processedAttachmentData = new ObjectWrapper<>();
                     cipheringError =
                             messageCipherProcessor.cipherAttachmentData(
-                                    getContext().getContentResolver(),
+                                    m_context.getContentResolver(),
                                     attachmentData,
                                     processedAttachmentData);
 
                     if (cipheringError != null) {
                         ErrorBroadcastReceiver.broadcastError(cipheringError,
-                                getActivity().getApplicationContext());
+                                m_context.getApplicationContext());
 
                         return;
                     }
@@ -623,13 +677,13 @@ public class ChatFragment extends Fragment
             ErrorBroadcastReceiver
                     .broadcastError(
                             new Error("Message to send can't be generated!", true),
-                            getActivity().getApplicationContext());
+                            m_context.getApplicationContext());
 
             return;
         }
 
         m_sendingMessageText.getText().clear();
-        m_uploadingAttachmentList.clear();
+        m_chatViewModel.setUploadingAttachmentDataList(new ArrayList<>());
 
         m_messageSender.execute(messageToSendData);
     }
@@ -644,7 +698,7 @@ public class ChatFragment extends Fragment
             final Error error)
     {
         ErrorBroadcastReceiver
-                .broadcastError(error, getActivity().getApplicationContext());
+                .broadcastError(error, m_context.getApplicationContext());
     }
 
     @Override
@@ -662,7 +716,7 @@ public class ChatFragment extends Fragment
             final Error error)
     {
         ErrorBroadcastReceiver
-                .broadcastError(error, getActivity().getApplicationContext());
+                .broadcastError(error, m_context.getApplicationContext());
     }
 
     @Override
@@ -670,24 +724,26 @@ public class ChatFragment extends Fragment
             final List<AttachmentData> pickedFileUriList)
     {
         if (pickedFileUriList == null) {
-            m_uploadingAttachmentList = new ArrayList<>();
+            m_chatViewModel.setUploadingAttachmentDataList(new ArrayList<>());
 
             return;
         }
 
-        m_uploadingAttachmentList = pickedFileUriList;
+        m_chatViewModel.setUploadingAttachmentDataList(pickedFileUriList);
     }
 
     @Override
     public void onRequestAnswerDialogResultGotten(
             final RequestAnswer requestAnswer)
     {
-        Intent intent = new Intent(CommandProcessorServiceBroadcastReceiver.C_PROVIDE_REQUEST_ANSWER);
+        Intent intent =
+                new Intent(CommandProcessorServiceBroadcastReceiver.C_PROVIDE_REQUEST_ANSWER);
 
-        intent.putExtra(CommandProcessorServiceBroadcastReceiver.C_REQUEST_ANSWER_PROP_NAME, requestAnswer);
+        intent.putExtra(
+                CommandProcessorServiceBroadcastReceiver.C_REQUEST_ANSWER_PROP_NAME, requestAnswer);
 
         LocalBroadcastManager.
-                getInstance(getActivity().getApplicationContext()).
+                getInstance(m_context.getApplicationContext()).
                 sendBroadcast(intent);
     }
 

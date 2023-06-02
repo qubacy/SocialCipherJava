@@ -12,6 +12,7 @@ import com.mcdead.busycoder.socialcipher.client.api.common.gson.update.ResponseU
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.processor.update.checker.UpdateCheckerAsyncFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.network.update.processor.UpdateProcessorAsyncFactory;
+import com.mcdead.busycoder.socialcipher.client.processor.update.checker.UpdateCheckerAsyncBase;
 
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,6 +22,8 @@ public class UpdateProcessorService extends Service {
 
     private Thread m_updateCheckerThread = null;
     private Thread m_messageProcessorThread = null;
+
+    private UpdateCheckerAsyncBase m_updateChecker = null;
 
     private volatile LinkedBlockingQueue<ResponseUpdateItemInterface> m_pendingUpdates = null;
 
@@ -50,9 +53,14 @@ public class UpdateProcessorService extends Service {
 
     @Override
     public void onDestroy() {
-        if (m_updateCheckerThread != null)
-            if (m_updateCheckerThread.isAlive())
+        if (m_updateCheckerThread != null) {
+            if (m_updateCheckerThread.isAlive()) {
                 m_updateCheckerThread.interrupt();
+
+                if (m_updateChecker != null)
+                    m_updateChecker.interruptChecking();
+            }
+        }
         if (m_messageProcessorThread != null)
             if (m_messageProcessorThread.isAlive())
                 m_messageProcessorThread.interrupt();
@@ -71,8 +79,15 @@ public class UpdateProcessorService extends Service {
     private boolean processStartUpdateChecker() {
         if (m_updateCheckerThread != null) return false;
 
-        m_updateCheckerThread = new Thread(
-                UpdateCheckerAsyncFactory.generateUpdateChecker(this));
+        Log.d("TEST", "Update checker thread creation..");
+
+        UpdateCheckerAsyncBase updateChecker =
+                UpdateCheckerAsyncFactory.generateUpdateChecker(this);
+
+        if (updateChecker == null) return false;
+
+        m_updateChecker = updateChecker;
+        m_updateCheckerThread = new Thread(m_updateChecker);
 
         m_updateCheckerThread.start();
 
@@ -83,6 +98,8 @@ public class UpdateProcessorService extends Service {
         if (data == null) return false;
 
         if (m_messageProcessorThread == null) {
+            Log.d("TEST", "Message processor thread creation..");
+
             m_pendingUpdates = new LinkedBlockingQueue<ResponseUpdateItemInterface>();
 
             m_messageProcessorThread = new Thread(
@@ -99,9 +116,9 @@ public class UpdateProcessorService extends Service {
                         getSerializable(ChatListBroadcastReceiver.C_UPDATES_LIST_EXTRA_PROP_NAME);
 
         try {
-            for (final ResponseUpdateItemInterface update : updates)
-                if (update != null)
-                    m_pendingUpdates.put(update);
+            for (final ResponseUpdateItemInterface update : updates) {
+                if (update != null) m_pendingUpdates.put(update);
+            }
 
         } catch (InterruptedException e) {
             e.printStackTrace();

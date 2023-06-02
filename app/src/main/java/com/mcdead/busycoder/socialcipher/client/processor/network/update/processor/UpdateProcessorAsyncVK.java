@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Process;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -136,6 +137,8 @@ public class UpdateProcessorAsyncVK extends UpdateProcessorAsyncBase {
     private Error processNewMessageUpdate(
             final ResponseUpdateItem updateItem)
     {
+        Log.d("TEST", String.valueOf(updateItem.messageId));
+
         ChatsStore chatsStore = ChatsStore.getInstance();
 
         if (chatsStore == null)

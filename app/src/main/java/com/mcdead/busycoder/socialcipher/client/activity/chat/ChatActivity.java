@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +25,8 @@ import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 public class ChatActivity extends AppCompatActivity
     implements ChatFragmentCallback
 {
+    private static final String C_IS_CHAT_LOADED_PROP_NAME = "isChatLoaded";
+
     public static final String C_PEER_ID_EXTRA_PROP_NAME = "peerId";
 
     public static final String C_DEFAULT_CHAT_NAME = "My Chat";
@@ -40,6 +43,10 @@ public class ChatActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_chat);
+
+        if (savedInstanceState != null) {
+            m_isChatLoaded = savedInstanceState.getBoolean(C_IS_CHAT_LOADED_PROP_NAME);
+        }
 
         ObjectWrapper<Long> peerIdWrapper = new ObjectWrapper<>();
         Error peerIdError = retrievePeerIdFromIntent(peerIdWrapper);
@@ -87,6 +94,13 @@ public class ChatActivity extends AppCompatActivity
                 registerForActivityResult(
                     new AttachmentPickerActivityContract(),
                     new AttachmentPickerActivityCallback(m_chatFragment));
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putBoolean(C_IS_CHAT_LOADED_PROP_NAME, m_isChatLoaded);
     }
 
     private Error retrievePeerIdFromIntent(ObjectWrapper<Long> peerIdWrapper) {
@@ -149,7 +163,7 @@ public class ChatActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDialogLoaded() {
+    public void onChatLoaded() {
         m_isChatLoaded = true;
 
         if (m_loadingPopUpWindow == null) return;

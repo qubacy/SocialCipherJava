@@ -13,9 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
-import com.mcdead.busycoder.socialcipher.client.api.APIProviderGenerator;
 import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIContext;
-import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIProvider;
 import com.mcdead.busycoder.socialcipher.client.api.vk.webinterface.VKAPIAttachment;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.longpoll.ResponseLongPollServerBody;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.longpoll.ResponseLongPollServerWrapper;
@@ -33,6 +31,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import retrofit2.Response;
@@ -53,6 +52,8 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
     private static final int C_TIMEOUT_SEC_VALUE = 30;
 
     final protected VKAPIAttachment m_vkAPIAttachment;
+
+    private Call m_curCall = null;
 
     protected UpdateCheckerAsyncVK(
             final String token,
@@ -119,11 +120,14 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
         while (!Thread.interrupted()) {
             SystemClock.sleep(VKAPIContext.C_REQUEST_TIMEOUT);
 
-            Request request = new Request.Builder()
-                    .url(generateLongPollUrl(server, key, ts))
-                    .build();
+            Request request =
+                    new Request.Builder().
+                            url(generateLongPollUrl(server, key, ts)).
+                            build();
 
-            try (okhttp3.Response response = client.newCall(request).execute()) {
+            m_curCall = client.newCall(request);
+
+            try (okhttp3.Response response = m_curCall.execute()) {
                 ObjectWrapper<ResponseUpdateBody> updateBodyWrapper = new ObjectWrapper<>();
 
                 Error updateError = getResponseUpdateBody(response, updateBodyWrapper);
@@ -143,6 +147,8 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
 
                 // todo: how to handle?
 
+                return null;
+
             }
             catch (JSONException e) {
                 e.printStackTrace();
@@ -152,7 +158,10 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
             catch (IOException e) {
                 e.printStackTrace();
 
-                return new Error(e.getMessage(), true);
+                // todo: it needs to be defined fully.
+                //return new Error(e.getMessage(), true);
+
+                return null;
             }
         }
 
@@ -165,10 +174,16 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
 
         Error checkingUpdateError = execUpdateChecking();
 
+        Log.d("TEST", "Checker is out of the game!");
+
         if (checkingUpdateError != null)
             sendErrorBroadcast(checkingUpdateError);
+    }
 
-        Log.d(getClass().getName(), "Exec. is over now!");
+    @Override
+    public void interruptChecking() {
+        if (m_curCall != null)
+            m_curCall.cancel();
     }
 
     private void sendUpdateReceivedBroadcast(final List<ResponseUpdateItem> updates) {
@@ -177,6 +192,8 @@ public class UpdateCheckerAsyncVK extends UpdateCheckerAsyncBase {
 
         updatesBundle.putSerializable(ChatListBroadcastReceiver.C_UPDATES_LIST_EXTRA_PROP_NAME, (Serializable) updates);
         intent.putExtra(ChatListBroadcastReceiver.C_UPDATES_WRAPPER_EXTRA_PROP_NAME, updatesBundle);
+
+        if (Thread.currentThread().isInterrupted()) return;
 
         LocalBroadcastManager.getInstance(m_context.getApplicationContext()).sendBroadcast(intent);
     }

@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.mcdead.busycoder.socialcipher.client.activity.chat.ChatActivity;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.ChatListFragment;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.ChatListFragmentCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver.ErrorBroadcastReceiver;
@@ -34,6 +35,10 @@ public class ChatListActivity extends AppCompatActivity
         ChatListFragmentCallback,
         CacheCleanerCallback
 {
+    private static final String C_IS_CHAT_LIST_LOADED_PROP_NAME = "isChatListLoaded";
+
+    private boolean m_isChatListLoaded = false;
+
     private LoadingPopUpWindow m_loadingPopUpWindow = null;
 
     @Override
@@ -41,6 +46,10 @@ public class ChatListActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_chats);
+
+        if (savedInstanceState != null) {
+            m_isChatListLoaded = savedInstanceState.getBoolean(C_IS_CHAT_LIST_LOADED_PROP_NAME);
+        }
 
         if (getSupportActionBar() != null) {
             ActionBar actionBar = getSupportActionBar();
@@ -74,6 +83,13 @@ public class ChatListActivity extends AppCompatActivity
 
             return;
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putBoolean(C_IS_CHAT_LIST_LOADED_PROP_NAME, m_isChatListLoaded);
     }
 
     private Error startServices() {
@@ -133,8 +149,10 @@ public class ChatListActivity extends AppCompatActivity
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        m_loadingPopUpWindow
-                = LoadingPopUpWindow.generatePopUpWindow(this, getLayoutInflater());
+        if (m_isChatListLoaded) return;
+
+        m_loadingPopUpWindow =
+                LoadingPopUpWindow.generatePopUpWindow(this, getLayoutInflater());
 
         if (m_loadingPopUpWindow == null) return;
 
@@ -142,10 +160,21 @@ public class ChatListActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDialogsLoaded() {
+    public void onChatListLoaded() {
+        m_isChatListLoaded = true;
+
         if (m_loadingPopUpWindow == null) return;
 
         m_loadingPopUpWindow.dismiss();
+    }
+
+    @Override
+    public void onChatItemClicked(final long chatId) {
+        Intent intent = new Intent(this, ChatActivity.class);
+
+        intent.putExtra(ChatActivity.C_PEER_ID_EXTRA_PROP_NAME, chatId);
+
+        startActivity(intent);
     }
 
     @Override

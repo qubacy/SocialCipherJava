@@ -1,5 +1,7 @@
 package com.mcdead.busycoder.socialcipher.client.data.entity.chat;
 
+import android.util.Log;
+
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 

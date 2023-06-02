@@ -123,7 +123,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
 
         m_docAttachmentDataList = docAttachmentDataList;
 
-        notifyItemRangeInserted(0, docAttachmentDataList.size());
+        notifyDataSetChanged();
 
         return true;
     }
