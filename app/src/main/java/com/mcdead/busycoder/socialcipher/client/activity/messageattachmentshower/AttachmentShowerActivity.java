@@ -17,8 +17,8 @@ import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.adapter.AttachmentListViewHolder;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.model.AttachmentShowerViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.AttachmentDocUtility;
-import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.LinkedFileOpenerAsync;
-import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.LinkedFileOpenerCallback;
+import com.mcdead.busycoder.socialcipher.client.processor.filesystem.doc.opener.LinkedFileOpenerAsync;
+import com.mcdead.busycoder.socialcipher.client.processor.filesystem.doc.opener.LinkedFileOpenerCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.fragment.AttachmentShowerFragment;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentContext;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;

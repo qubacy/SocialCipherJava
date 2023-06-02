@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc;
+package com.mcdead.busycoder.socialcipher.client.processor.filesystem.doc.opener;
 
 import android.net.Uri;
 

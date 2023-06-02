@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.client.activity.signin.fragment;
+package com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.token;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

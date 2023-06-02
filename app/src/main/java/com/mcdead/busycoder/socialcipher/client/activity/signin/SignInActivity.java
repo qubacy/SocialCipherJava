@@ -15,8 +15,8 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.activity.main.MainActivity;
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.activity.signin.data.SignInData;
-import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.SignInTokenFragment;
-import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.SignInWebViewFragment;
+import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.token.SignInTokenFragment;
+import com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.webview.SignInWebViewFragment;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
 
 public class SignInActivity extends AppCompatActivity

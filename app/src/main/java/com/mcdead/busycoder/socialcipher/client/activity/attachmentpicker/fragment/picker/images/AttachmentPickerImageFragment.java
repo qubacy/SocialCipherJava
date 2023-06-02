@@ -40,6 +40,8 @@ public class AttachmentPickerImageFragment extends Fragment
 
     private AttachmentPickerImageAdapter m_attachmentPickerImageAdapter = null;
 
+    private RecyclerView m_imageGridView = null;
+
     public AttachmentPickerImageFragment() {
         super();
     }
@@ -76,24 +78,37 @@ public class AttachmentPickerImageFragment extends Fragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (m_attachmentPickerImageAdapter == null) {
-            AttachmentPickerImageAdapter attachmentPickerImageAdapter =
-                    AttachmentPickerImageAdapter.getInstance(getLayoutInflater(), this);
+        m_imagePickerViewModel =
+                new ViewModelProvider(getActivity()).get(AttachmentPickerImageViewModel.class);
 
-            if (attachmentPickerImageAdapter == null) {
-                ErrorBroadcastReceiver.broadcastError(
-                        new Error(
-                                "Image Attachment Picker Adapter hasn't been initialized",
-                                true),
-                        getActivity().getApplicationContext());
+        if (!m_imagePickerViewModel.isInitialized()) {
+            if (m_attachmentPickerImageAdapter == null) {
+                AttachmentPickerImageAdapter attachmentPickerImageAdapter =
+                        AttachmentPickerImageAdapter.getInstance(getLayoutInflater(), this);
 
-                return;
-            }
+                if (attachmentPickerImageAdapter == null) {
+                    ErrorBroadcastReceiver.broadcastError(
+                            new Error(
+                                    "Image Attachment Picker Adapter hasn't been initialized",
+                                    true),
+                            getActivity().getApplicationContext());
 
-            m_attachmentPickerImageAdapter = attachmentPickerImageAdapter;
+                    return;
+                }
 
-        } else
-            m_attachmentPickerImageAdapter.setCallback(this);
+                m_attachmentPickerImageAdapter = attachmentPickerImageAdapter;
+
+            } else
+                m_attachmentPickerImageAdapter.setCallback(this);
+
+            m_imagePickerViewModel.setAttachmentPickerImageAdapter(m_attachmentPickerImageAdapter);
+
+        } else {
+            m_attachmentPickerImageAdapter =
+                    m_imagePickerViewModel.getAttachmentPickerImageAdapter();
+            m_attachmentPickerImageAdapter.setImageDataList(
+                    m_imagePickerViewModel.getImageDataList());
+        }
     }
 
     @Nullable
@@ -107,14 +122,14 @@ public class AttachmentPickerImageFragment extends Fragment
                 inflater.inflate(
                         R.layout.fragment_attachment_image_picker, container, false);
 
-        RecyclerView imageGridView = view.findViewById(R.id.attachment_image_picker_grid);
+        m_imageGridView = view.findViewById(R.id.attachment_image_picker_grid);
 
-        imageGridView.setLayoutManager(new GridLayoutManager(getContext(), C_NUMB_OF_COLS));
-        imageGridView.setHasFixedSize(true);
-        imageGridView.setItemViewCacheSize(C_IMAGE_GRID_CACHE_SIZE);
-        imageGridView.setDrawingCacheEnabled(true);
-        imageGridView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-        imageGridView.setAdapter(m_attachmentPickerImageAdapter);
+        m_imageGridView.setLayoutManager(new GridLayoutManager(getContext(), C_NUMB_OF_COLS));
+        m_imageGridView.setHasFixedSize(true);
+        m_imageGridView.setItemViewCacheSize(C_IMAGE_GRID_CACHE_SIZE);
+        m_imageGridView.setDrawingCacheEnabled(true);
+        m_imageGridView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        m_imageGridView.setAdapter(m_attachmentPickerImageAdapter);
 
         return view;
     }
@@ -126,19 +141,20 @@ public class AttachmentPickerImageFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
-        m_imagePickerViewModel =
-                new ViewModelProvider(getActivity()).get(AttachmentPickerImageViewModel.class);
-
         if (!m_imagePickerViewModel.isInitialized())
             new ImageSearcher(getContext(), this).execute();
-        else
-            m_attachmentPickerImageAdapter.setImageDataList(
-                    m_imagePickerViewModel.getImageDataList());
     }
 
     @Override
     public void onStart() {
         super.onStart(); // todo: here is the model already reset. why?
+    }
+
+    @Override
+    public void onDestroyView() {
+        m_imageGridView.setAdapter(null);
+
+        super.onDestroyView();
     }
 
     @Override

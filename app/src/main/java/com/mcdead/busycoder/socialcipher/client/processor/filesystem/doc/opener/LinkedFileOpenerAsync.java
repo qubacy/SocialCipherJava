@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc;
+package com.mcdead.busycoder.socialcipher.client.processor.filesystem.doc.opener;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +9,7 @@ import android.os.Process;
 import androidx.core.content.FileProvider;
 
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
+import com.mcdead.busycoder.socialcipher.client.activity.messageattachmentshower.doc.FileContentViewIntentGenerator;
 import com.mcdead.busycoder.socialcipher.utility.FilesUtility;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 

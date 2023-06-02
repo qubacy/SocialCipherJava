@@ -1,20 +1,23 @@
-package com.mcdead.busycoder.socialcipher.client.activity.signin.fragment;
+package com.mcdead.busycoder.socialcipher.client.activity.signin.fragment.webview.client;
 
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import com.mcdead.busycoder.socialcipher.client.activity.signin.SignInCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.signin.data.SignInData;
 import com.mcdead.busycoder.socialcipher.client.api.vk.VKAPIContext;
 
-public class SignInWebViewClient extends WebViewClient {
+public class SignInWebViewClientVK extends SignInWebViewClient {
     private static final char C_QUERY_DEVIDER = '#';
 
-    private SignInCallback m_callback = null;
+    protected SignInWebViewClientVK(final SignInCallback callback) {
+        super(callback);
+    }
 
-    public SignInWebViewClient(final SignInCallback callback) {
-        m_callback = callback;
+    public static SignInWebViewClientVK getInstance(
+            final SignInCallback callback)
+    {
+        return new SignInWebViewClientVK(callback);
     }
 
     @Override
@@ -25,7 +28,8 @@ public class SignInWebViewClient extends WebViewClient {
 
         if (signInResult == null) return;
 
-        m_callback.processData(signInResult);
+        if (m_callback != null)
+            m_callback.processData(signInResult);
     }
 
     @Override
@@ -42,7 +46,8 @@ public class SignInWebViewClient extends WebViewClient {
 
         if (urlQuery == null) return null;
 
-        String accessToken = getQueryPropValueByPropName(urlQuery, VKAPIContext.C_ACCESS_TOKEN_PROP_NAME);
+        String accessToken =
+                getQueryPropValueByPropName(urlQuery, VKAPIContext.C_ACCESS_TOKEN_PROP_NAME);
 
         if (accessToken == null) return null;
 
