@@ -1,6 +1,5 @@
-package com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter;
+package com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.messagelist;
 
-import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -100,6 +99,8 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         MessageEntity message = m_messages.get(position);
 
         if (!holder.setMessageData(message, m_localPeerId)) {
+            if (m_callback == null) return;
+
             m_callback.onErrorOccurred(
                     new Error("View Holder setting error has been occurred!", true)
             );

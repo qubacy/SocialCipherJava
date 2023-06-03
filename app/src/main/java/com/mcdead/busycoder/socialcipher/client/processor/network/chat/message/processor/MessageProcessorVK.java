@@ -20,6 +20,7 @@ import com.mcdead.busycoder.socialcipher.client.api.vk.gson.document.ResponseDoc
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoItem;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.photo.ResponsePhotoWrapper;
 import com.mcdead.busycoder.socialcipher.client.api.vk.gson.update.ResponseUpdateItem;
+import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.data.AttachmentDataGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.size.AttachmentSize;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerVK;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntityGenerator;
@@ -626,8 +627,8 @@ public class MessageProcessorVK extends MessageProcessorBase {
         ResponseDocumentItem responseDocItem = null;
 
         try {
-            retrofit2.Response<ResponseDocumentWrapper> responseDocWrapper
-                    = m_vkAPIAttachment.getDocument(
+            retrofit2.Response<ResponseDocumentWrapper> responseDocWrapper =
+                    m_vkAPIAttachment.getDocument(
                             m_token,
                             attachmentToDownload.getFullAttachmentId()).execute();
 
@@ -753,10 +754,11 @@ public class MessageProcessorVK extends MessageProcessorBase {
         successFlagWrapper.setValue(true);
 
         AttachmentData attachmentData =
-                AttachmentData.getInstance(
+                AttachmentDataGenerator.generateAttachmentData(
                         attachmentDoc.getShortAttachmentId(),
                         attachmentDecipheringResultWrapper.getValue().getFileExtension(),
-                        attachmentDecipheringResultWrapper.getValue().getBytes());
+                        attachmentDecipheringResultWrapper.getValue().getBytes(),
+                        AttachmentType.DOC);
 
         if (attachmentData == null)
             return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_DATA_GENERATION);
@@ -895,10 +897,11 @@ public class MessageProcessorVK extends MessageProcessorBase {
         for (final Map.Entry<AttachmentSize, byte[]> attachmentSizeBytes :
                 attachmentSizeBytesHashMap.entrySet())
         {
-            AttachmentData attachmentSizeData = AttachmentData.getInstance(
-                    attachmentLink.getTypedShortAttachmentId(),
-                    fileExtension,
-                    attachmentSizeBytes.getValue());
+            AttachmentData attachmentSizeData =
+                    AttachmentDataGenerator.generateAttachmentData(
+                        attachmentLink.getTypedShortAttachmentId(),
+                        fileExtension,
+                        attachmentSizeBytes.getValue(), AttachmentType.IMAGE);
 
             if (attachmentSizeData == null)
                 return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_DATA_GENERATION);
@@ -922,10 +925,12 @@ public class MessageProcessorVK extends MessageProcessorBase {
         for (final Map.Entry<AttachmentSize, byte[]> attachmentSizeBytes :
                 attachmentSizeBytesHashMap.entrySet())
         {
-            AttachmentData attachmentSizeData = AttachmentData.getInstance(
-                    attachmentDoc.getTypedShortAttachmentId(),
-                    attachmentDoc.getExtension(),
-                    attachmentSizeBytes.getValue());
+            AttachmentData attachmentSizeData =
+                    AttachmentDataGenerator.generateAttachmentData(
+                        attachmentDoc.getTypedShortAttachmentId(),
+                        attachmentDoc.getExtension(),
+                        attachmentSizeBytes.getValue(),
+                        AttachmentType.DOC);
 
             if (attachmentSizeData == null)
                 return C_ERROR_HASH_MAP.get(ErrorType.FAILED_ATTACHMENT_DATA_GENERATION);

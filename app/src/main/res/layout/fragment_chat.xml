@@ -10,8 +10,15 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/dialog_message_sending_wrapper"
+        app:layout_constraintBottom_toTopOf="@id/attachment_list"
         android:padding="@dimen/default_gap"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/attachment_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/dialog_message_sending_wrapper"
+        android:visibility="gone"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/dialog_message_sending_wrapper"

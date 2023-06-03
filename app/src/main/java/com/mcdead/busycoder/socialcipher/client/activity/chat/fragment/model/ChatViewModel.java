@@ -5,7 +5,8 @@ import androidx.lifecycle.ViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.ChatBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.ChatFragmentCallback;
-import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.MessageListAdapter;
+import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.attachmentlist.AttachmentListAdapter;
+import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.messagelist.MessageListAdapter;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase;
@@ -26,6 +27,7 @@ public class ChatViewModel extends ViewModel {
     private ChatBroadcastReceiver m_broadcastReceiver = null;
 
     private MessageListAdapter m_messageListAdapter = null;
+    private AttachmentListAdapter m_attachmentListAdapter = null;
 
     private List<AttachmentData> m_uploadingAttachmentList = null;
 
@@ -107,12 +109,53 @@ public class ChatViewModel extends ViewModel {
         return true;
     }
 
+    public boolean setAttachmentListAdapter(
+            final AttachmentListAdapter attachmentListAdapter)
+    {
+        if (attachmentListAdapter == null || m_attachmentListAdapter != null)
+            return false;
+
+        m_attachmentListAdapter = attachmentListAdapter;
+
+        return true;
+    }
+
     public boolean setUploadingAttachmentDataList(
             final List<AttachmentData> uploadingAttachmentDataList)
     {
         m_uploadingAttachmentList = uploadingAttachmentDataList;
 
         return true;
+    }
+
+    public AttachmentData getUploadingAttachmentDataByIndex(final int index) {
+        if (index < 0 || index >= m_uploadingAttachmentList.size())
+            return null;
+
+        return m_uploadingAttachmentList.get(index);
+    }
+
+    public boolean addUploadingAttachmentData(
+            final AttachmentData attachmentData)
+    {
+        if (attachmentData == null) return false;
+
+        for (final AttachmentData curAttachmentData : m_uploadingAttachmentList) {
+            if (curAttachmentData.getUri().equals(attachmentData.getUri()))
+                return true;
+        }
+
+        m_uploadingAttachmentList.add(attachmentData);
+
+        return true;
+    }
+
+    public boolean removeUploadingAttachmentData(
+            final AttachmentData attachmentData)
+    {
+        if (attachmentData == null) return false;
+
+        return m_uploadingAttachmentList.remove(attachmentData);
     }
 
     public boolean setWaitingForCipherSessionSet(final boolean isWaitingForCipherSessionSet) {
@@ -151,6 +194,10 @@ public class ChatViewModel extends ViewModel {
         return m_messageListAdapter;
     }
 
+    public AttachmentListAdapter getAttachmentListAdapter() {
+        return m_attachmentListAdapter;
+    }
+
     public ChatLoaderBase getChatLoader() {
         return m_chatLoader;
     }
@@ -167,6 +214,6 @@ public class ChatViewModel extends ViewModel {
         return (m_chatId != null && m_localPeerId != null && m_callback != null &&
                 m_chatLoader != null && m_attachmentUploader != null &&
                 m_messageSender != null && m_broadcastReceiver != null &&
-                m_messageListAdapter != null);
+                m_messageListAdapter != null && m_attachmentListAdapter != null);
     }
 }

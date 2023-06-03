@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentType;
 
+import java.util.Objects;
+
 public class AttachmentData implements Parcelable {
     private AttachmentType m_type = null;
     private String m_mimeType = null;
@@ -117,5 +119,24 @@ public class AttachmentData implements Parcelable {
         parcel.writeString(m_mimeType);
         parcel.writeString(m_fileName);
         parcel.writeParcelable(m_uri, i);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AttachmentData that = (AttachmentData) o;
+
+        return m_type == that.m_type &&
+                Objects.equals(m_mimeType, that.m_mimeType) &&
+                Objects.equals(m_fileName, that.m_fileName) &&
+                Objects.equals(m_uri, that.m_uri);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_type, m_mimeType, m_fileName, m_uri);
     }
 }

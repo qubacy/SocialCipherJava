@@ -1,4 +1,4 @@
-package com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter;
+package com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.messagelist;
 
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -147,6 +147,8 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         attachmentPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (m_callback == null) return;
+
                 m_callback.onAttachmentsShowClicked(message);
             }
         });
@@ -160,6 +162,8 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
             attachmentsExpandButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    if (m_callback == null) return;
+
                     m_callback.onAttachmentsShowClicked(message);
                 }
             });
@@ -192,18 +196,8 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         if (fileIcon == null) return null;
 
         ImageView attachmentImageView = new ImageView(m_attachmentPreview.getContext());
-//        Uri docUri = Uri.parse(attachmentDoc.getURI().toString());
 
         attachmentImageView.setImageDrawable(fileIcon);
-
-//        // todo: think of this kind of handlers' competition:
-//
-//        attachmentImageView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                m_callback.onLinkedAttachmentClicked(docUri);
-//            }
-//        });
 
         return attachmentImageView;
     }
