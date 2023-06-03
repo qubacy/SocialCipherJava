@@ -11,15 +11,11 @@ import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 
-import java.util.List;
-
 public class ChatListAdapter extends RecyclerView.Adapter<ChatListViewHolder> {
     final private LayoutInflater m_inflater;
 
     private ChatListAdapterCallback m_chatListAdapterCallback = null;
     private ChatListItemCallback m_chatListItemCallback = null;
-
-    private List<ChatEntity> m_dialogs = null;
 
     protected ChatListAdapter(
             final LayoutInflater layoutInflater,
@@ -64,16 +60,6 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListViewHolder> {
         return true;
     }
 
-    public boolean setDialogsList(final List<ChatEntity> dialogs) {
-        if (dialogs == null) return false;
-
-        m_dialogs = dialogs;
-
-        notifyDataSetChanged();
-
-        return true;
-    }
-
     @NonNull
     @Override
     public ChatListViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
@@ -88,11 +74,11 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListViewHolder> {
     public void onBindViewHolder(@NonNull ChatListViewHolder holder,
                                  int position)
     {
-        if (m_dialogs == null) return;
+        if (m_chatListAdapterCallback == null) return;
 
-        ChatEntity dialog = m_dialogs.get(position);
+        ChatEntity chat = m_chatListAdapterCallback.getChatByIndex(position);
 
-        if (!holder.setDialogData(dialog)) {
+        if (!holder.setDialogData(chat)) {
             m_chatListAdapterCallback.onRecyclerViewAdapterErrorOccurred(
                     new Error("View Holder setting error has been occurred!", true)
             );
@@ -103,23 +89,13 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListViewHolder> {
         holder.setItemClickedListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ChatEntity dialog = m_dialogs.get(holder.getAdapterPosition());
-
-                if (dialog == null) {
-                    m_chatListAdapterCallback.onRecyclerViewAdapterErrorOccurred(
-                            new Error("Dialog cannot be found!", true)
-                    );
-
-                    return;
-                }
-
-                m_chatListItemCallback.onDialogItemClick(dialog.getDialogId());
+                m_chatListItemCallback.onDialogItemClick(chat.getId());
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return (m_dialogs == null ? 0 : m_dialogs.size());
+        return m_chatListAdapterCallback.getChatListSize();
     }
 }

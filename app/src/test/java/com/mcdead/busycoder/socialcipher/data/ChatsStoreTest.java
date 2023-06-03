@@ -62,7 +62,7 @@ public class ChatsStoreTest {
             @Override
             public void run() {
                 ChatEntity chatEntity =
-                        m_chatsStore.getChatById(m_chatEntity.getDialogId());
+                        m_chatsStore.getChatById(m_chatEntity.getId());
 
                 assertNotNull(chatEntity);
             }
@@ -71,7 +71,7 @@ public class ChatsStoreTest {
             @Override
             public void run() {
                 boolean removingResult =
-                        m_chatsStore.removeChat(m_chatEntity.getDialogId());
+                        m_chatsStore.removeChat(m_chatEntity.getId());
 
                 assertTrue(removingResult);
             }
@@ -99,7 +99,7 @@ public class ChatsStoreTest {
                 }
 
                 ChatEntity chatEntity =
-                        m_chatsStore.getChatById(m_chatEntity.getDialogId());
+                        m_chatsStore.getChatById(m_chatEntity.getId());
 
                 assertNull(chatEntity);
             }
@@ -108,7 +108,7 @@ public class ChatsStoreTest {
             @Override
             public void run() {
                 boolean removingResult =
-                        m_chatsStore.removeChat(m_chatEntity.getDialogId());
+                        m_chatsStore.removeChat(m_chatEntity.getId());
 
                 assertTrue(removingResult);
             }
@@ -144,7 +144,7 @@ public class ChatsStoreTest {
                         null);
 
         boolean addingMessageResult =
-            m_chatsStore.addNewMessage(messageEntity, m_chatEntity.getDialogId());
+            m_chatsStore.addNewMessage(messageEntity, m_chatEntity.getId());
 
         assertTrue(addingMessageResult);
 
@@ -153,7 +153,7 @@ public class ChatsStoreTest {
         assertEquals(messageEntity, gottenMessage);
 
         boolean removingMessageResult =
-            m_chatsStore.removeMessage(m_chatEntity.getDialogId(), messageId);
+            m_chatsStore.removeMessage(m_chatEntity.getId(), messageId);
 
         assertTrue(removingMessageResult);
 

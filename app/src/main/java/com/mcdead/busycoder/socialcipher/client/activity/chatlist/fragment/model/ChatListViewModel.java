@@ -70,7 +70,7 @@ public class ChatListViewModel extends ViewModel {
         return m_isChatListLoadingStarted = true;
     }
 
-    public long getCurrentChatId() {
+    public Long getCurrentChatId() {
         return m_currentChatId;
     }
 

@@ -238,16 +238,7 @@ public class ChatListFragment extends Fragment
     public void onDialogsLoaded() {
         m_callback.onChatListLoaded();
 
-        List<ChatEntity> dialogs = ChatsStore.getInstance().getChatList();
-
-        if (!m_chatListAdapter.setDialogsList(dialogs)) {
-            ErrorBroadcastReceiver.broadcastError(
-                    new Error("Dialogs list is empty!", true),
-                    m_context.getApplicationContext()
-            );
-
-            return;
-        }
+        m_chatListAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -256,6 +247,28 @@ public class ChatListFragment extends Fragment
                 error,
                 m_context.getApplicationContext()
         );
+    }
+
+    @Override
+    public ChatEntity getChatByIndex(int index) {
+        ChatEntity chat = ChatsStore.getInstance().getChatByIndex(index);
+
+        if (chat == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Chat hasn't been found!",
+                            true),
+                    m_context.getApplicationContext());
+
+            return null;
+        }
+
+        return chat;
+    }
+
+    @Override
+    public int getChatListSize() {
+        return ChatsStore.getInstance().getChatList().size();
     }
 
     @Override
@@ -287,8 +300,10 @@ public class ChatListFragment extends Fragment
     public void onNewMessageReceived(final long chatId) {
         onDialogsLoaded();
 
-        if (m_chatListViewModel.getCurrentChatId() != chatId)
-            return;
+        Long curChatId = m_chatListViewModel.getCurrentChatId();
+
+        if (curChatId == null) return;
+        if (curChatId != chatId) return;
 
         Intent newMessagesIntent = new Intent(ChatBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 

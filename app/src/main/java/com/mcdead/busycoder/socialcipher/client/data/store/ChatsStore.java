@@ -1,7 +1,5 @@
 package com.mcdead.busycoder.socialcipher.client.data.store;
 
-import android.util.Log;
-
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.AttachmentEntityBase;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
@@ -44,7 +42,7 @@ public class ChatsStore {
         if (chatId == 0) return null;
 
         for (final ChatEntity dialog : m_chatList)
-            if (dialog.getDialogId() == chatId)
+            if (dialog.getId() == chatId)
                 return dialog;
 
         return null;
@@ -141,7 +139,7 @@ public class ChatsStore {
 
         synchronized (m_chatList) {
             for (final ChatEntity dialog : m_chatList)
-                if (dialog.getDialogId() == chatId)
+                if (dialog.getId() == chatId)
                     return m_chatList.remove(dialog);
         }
 

@@ -379,17 +379,7 @@ public class ChatFragment extends Fragment
     public void onNewChatMessageReceived() {
         ChatEntity chat = ChatsStore.getInstance().getChatById(m_chatId);
         List<MessageEntity> messageList = chat.getMessages();
-
         int insertedMessageIndex = messageList.size() - 1;
-
-        if (!m_chatViewModel.addMessage(messageList.get(insertedMessageIndex))) {
-            ErrorBroadcastReceiver.broadcastError(
-                    new Error("Chat doesn't exist!", true),
-                    m_context.getApplicationContext()
-            );
-
-            return;
-        }
 
         m_messageListAdapter.notifyItemInserted(insertedMessageIndex);
         // todo: it doesn't work after the screen's rotation (the index is fine):
@@ -496,12 +486,32 @@ public class ChatFragment extends Fragment
 
     @Override
     public MessageEntity getMessageByIndex(int index) {
-        return m_chatViewModel.getMessageByIndex(index);
+        ChatEntity chat = ChatsStore.getInstance().getChatById(m_chatId);
+
+        if (chat == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Chat hasn't been found!", true),
+                    m_context.getApplicationContext());
+
+            return null;
+        }
+
+        return chat.getMessageByIndex(index);
     }
 
     @Override
     public int getMessageListSize() {
-        return (m_chatViewModel.getMessageList().size());
+        ChatEntity chat = ChatsStore.getInstance().getChatById(m_chatId);
+
+        if (chat == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Chat hasn't been found!", true),
+                    m_context.getApplicationContext());
+
+            return 0;
+        }
+
+        return chat.getMessages().size();
     }
 
     @Override
@@ -553,11 +563,10 @@ public class ChatFragment extends Fragment
 
         ChatEntity chat = ChatsStore.getInstance().getChatById(m_chatId);
 
-        if (!m_chatViewModel.setMessageList(chat.getMessages())) {
+        if (chat == null) {
             ErrorBroadcastReceiver.broadcastError(
-                    new Error("Chat doesn't exist!", true),
-                    m_context.getApplicationContext()
-            );
+                    new Error("Chat hasn't been found!", true),
+                    m_context.getApplicationContext());
 
             return;
         }

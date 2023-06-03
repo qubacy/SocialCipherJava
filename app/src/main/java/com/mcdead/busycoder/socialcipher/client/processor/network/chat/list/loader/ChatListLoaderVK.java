@@ -168,7 +168,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
                 Error error =
                         m_messageProcessor.processReceivedMessage(
                             messageItem,
-                            chat.getDialogId(),
+                            chat.getId(),
                             senderUser,
                             newMessageWrapper);
 

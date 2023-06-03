@@ -1,7 +1,5 @@
 package com.mcdead.busycoder.socialcipher.client.data.entity.chat;
 
-import android.util.Log;
-
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 
@@ -11,20 +9,20 @@ import java.util.List;
 import java.util.Objects;
 
 public abstract class ChatEntity {
-    final private long m_dialogId;
+    final private long m_id;
     final private ChatType m_type;
     private volatile List<MessageEntity> m_messages = null;
 
     protected ChatEntity(final long peerId,
                       final ChatType type)
     {
-        m_dialogId = peerId;
+        m_id = peerId;
         m_type = type;
         m_messages = new LinkedList<>();
     }
 
-    public long getDialogId() {
-        return m_dialogId;
+    public long getId() {
+        return m_id;
     }
 
     public ChatType getType() {
@@ -105,13 +103,13 @@ public abstract class ChatEntity {
 
         ChatEntity that = (ChatEntity) o;
 
-        return m_dialogId == that.m_dialogId &&
+        return m_id == that.m_id &&
                 m_type == that.m_type &&
                 Objects.equals(m_messages, that.m_messages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(m_dialogId, m_type, m_messages);
+        return Objects.hash(m_id, m_type, m_messages);
     }
 }

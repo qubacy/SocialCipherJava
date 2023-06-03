@@ -12,7 +12,7 @@ public class ChatTitleExtractor {
         switch (chat.getType()) {
             case CONVERSATION: return ((ChatEntityConversation) chat).getTitle();
             case WITH_GROUP:
-            case DIALOG: return getNameByPeerId(chat.getDialogId());
+            case DIALOG: return getNameByPeerId(chat.getId());
         }
 
         return null;
