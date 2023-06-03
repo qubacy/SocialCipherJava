@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -376,21 +377,23 @@ public class ChatFragment extends Fragment
 
     @Override
     public void onNewChatMessageReceived() {
-        ChatEntity dialog = ChatsStore.getInstance().getChatById(m_chatId);
-        List<MessageEntity> messageList = dialog.getMessages();
+        ChatEntity chat = ChatsStore.getInstance().getChatById(m_chatId);
+        List<MessageEntity> messageList = chat.getMessages();
 
-        if (!m_messageListAdapter.addNewMessage(messageList.get(messageList.size() - 1))) {
+        int insertedMessageIndex = messageList.size() - 1;
+
+        if (!m_chatViewModel.addMessage(messageList.get(insertedMessageIndex))) {
             ErrorBroadcastReceiver.broadcastError(
-                    new Error("Dialog doesn't exist!", true),
+                    new Error("Chat doesn't exist!", true),
                     m_context.getApplicationContext()
             );
 
             return;
         }
 
-        // todo: it doesn't work after the screen's rotation:
-
-        m_messagesListView.scrollToPosition(m_messageListAdapter.getItemCount() - 1);
+        m_messageListAdapter.notifyItemInserted(insertedMessageIndex);
+        // todo: it doesn't work after the screen's rotation (the index is fine):
+        m_messagesListView.scrollToPosition(insertedMessageIndex);
     }
 
     @Override
@@ -453,7 +456,8 @@ public class ChatFragment extends Fragment
 
         // todo: enabling some identification showing current chat ciphering state..
 
-        onNewChatNotificationShowingRequested((isCipherSessionSet ? "Session set!" : "Session hasn't been set!"));
+        onNewChatNotificationShowingRequested(
+                (isCipherSessionSet ? "Session set!" : "Session hasn't been set!"));
 
         m_chatViewModel.setWaitingForCipherSessionSet(false);
         onCipherButtonEnabledChange(true);
@@ -488,6 +492,16 @@ public class ChatFragment extends Fragment
         // todo: showing chat notification..
 
         Toast.makeText(m_context, chatNotificationText, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public MessageEntity getMessageByIndex(int index) {
+        return m_chatViewModel.getMessageByIndex(index);
+    }
+
+    @Override
+    public int getMessageListSize() {
+        return (m_chatViewModel.getMessageList().size());
     }
 
     @Override
@@ -539,7 +553,7 @@ public class ChatFragment extends Fragment
 
         ChatEntity chat = ChatsStore.getInstance().getChatById(m_chatId);
 
-        if (!m_messageListAdapter.setMessagesList(chat.getMessages())) {
+        if (!m_chatViewModel.setMessageList(chat.getMessages())) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Chat doesn't exist!", true),
                     m_context.getApplicationContext()
@@ -548,6 +562,7 @@ public class ChatFragment extends Fragment
             return;
         }
 
+        m_messageListAdapter.notifyDataSetChanged();
         m_messagesListView.scrollToPosition(chat.getMessages().size() - 1);
     }
 
@@ -563,12 +578,12 @@ public class ChatFragment extends Fragment
         ChatsStore chatsStore = ChatsStore.getInstance();
 
         if (chatsStore == null)
-            return new Error("Dialogs Store hasn't been initialized!", true);
+            return new Error("Chats Store hasn't been initialized!", true);
 
         ChatEntity chat = chatsStore.getChatById(m_chatId);
 
         if (chat == null)
-            return new Error("Dialog hasn't been found!", true);
+            return new Error("Chat hasn't been found!", true);
 
         if (!chat.areAttachmentsLoaded()) {
             m_chatLoader.execute();

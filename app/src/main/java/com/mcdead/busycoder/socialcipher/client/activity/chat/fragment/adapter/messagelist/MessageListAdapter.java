@@ -21,8 +21,6 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
 
     private MessageListAdapterCallback m_callback = null;
 
-    private List<MessageEntity> m_messages = null;
-
     protected MessageListAdapter(
             final LayoutInflater inflater,
             final MessageListAdapterCallback callback,
@@ -60,26 +58,6 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         return true;
     }
 
-    public boolean setMessagesList(final List<MessageEntity> messages) {
-        if (messages == null) return false;
-
-        m_messages = messages;
-
-        notifyDataSetChanged();
-
-        return true;
-    }
-
-    public boolean addNewMessage(final MessageEntity message) {
-        if (message == null) return false;
-
-        m_messages.add(message);
-
-        notifyItemInserted(m_messages.size() - 1);
-
-        return true;
-    }
-
     @NonNull
     @Override
     public MessageListViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
@@ -94,13 +72,19 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     public void onBindViewHolder(@NonNull MessageListViewHolder holder,
                                  int position)
     {
-        if (m_messages == null) return;
+        if (m_callback == null) return;
 
-        MessageEntity message = m_messages.get(position);
+        MessageEntity message = m_callback.getMessageByIndex(position);
+
+        if (message == null) {
+            m_callback.onErrorOccurred(
+                    new Error("Message was null!", true)
+            );
+
+            return;
+        }
 
         if (!holder.setMessageData(message, m_localPeerId)) {
-            if (m_callback == null) return;
-
             m_callback.onErrorOccurred(
                     new Error("View Holder setting error has been occurred!", true)
             );
@@ -111,6 +95,8 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
 
     @Override
     public int getItemCount() {
-        return (m_messages == null ? 0 : m_messages.size());
+        if (m_callback == null) return 0;
+
+        return m_callback.getMessageListSize();
     }
 }

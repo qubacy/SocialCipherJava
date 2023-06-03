@@ -7,6 +7,7 @@ import com.mcdead.busycoder.socialcipher.client.activity.chat.broadcastreceiver.
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.ChatFragmentCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.attachmentlist.AttachmentListAdapter;
 import com.mcdead.busycoder.socialcipher.client.activity.chat.fragment.adapter.messagelist.MessageListAdapter;
+import com.mcdead.busycoder.socialcipher.client.data.entity.message.MessageEntity;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase;
@@ -29,6 +30,7 @@ public class ChatViewModel extends ViewModel {
     private MessageListAdapter m_messageListAdapter = null;
     private AttachmentListAdapter m_attachmentListAdapter = null;
 
+    private List<MessageEntity> m_messageList = null;
     private List<AttachmentData> m_uploadingAttachmentList = null;
 
     private boolean m_isWaitingForCipherSessionSet = false;
@@ -36,6 +38,7 @@ public class ChatViewModel extends ViewModel {
     public ChatViewModel() {
         super();
 
+        m_messageList = new ArrayList<>();
         m_uploadingAttachmentList = new ArrayList<>();
     }
 
@@ -128,6 +131,27 @@ public class ChatViewModel extends ViewModel {
         return true;
     }
 
+    public boolean addMessage(final MessageEntity message) {
+        if (message == null) return false;
+
+        return m_messageList.add(message);
+    }
+
+    public boolean setMessageList(final List<MessageEntity> messageList) {
+        if (messageList == null) return false;
+
+        m_messageList = messageList;
+
+        return true;
+    }
+
+    public MessageEntity getMessageByIndex(final int index) {
+        if (index < 0 || index >= m_messageList.size())
+            return null;
+
+        return m_messageList.get(index);
+    }
+
     public AttachmentData getUploadingAttachmentDataByIndex(final int index) {
         if (index < 0 || index >= m_uploadingAttachmentList.size())
             return null;
@@ -204,6 +228,10 @@ public class ChatViewModel extends ViewModel {
 
     public List<AttachmentData> getUploadingAttachmentList() {
         return m_uploadingAttachmentList;
+    }
+
+    public List<MessageEntity> getMessageList() {
+        return m_messageList;
     }
 
     public boolean isWaitingForCipherSessionSet() {
