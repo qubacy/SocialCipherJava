@@ -20,9 +20,8 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         AttachmentPickerDocViewHolderCallback
 {
     final private LayoutInflater m_inflater;
-    private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_docAttachmentDataList = null;
 
-    private AttachmentPickerDocAdapterCallback m_callback = null;
+    final private AttachmentPickerDocAdapterCallback m_callback;
 
     protected AttachmentPickerDocAdapter(
             final LayoutInflater layoutInflater,
@@ -39,19 +38,9 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
             final LayoutInflater layoutInflater,
             final AttachmentPickerDocAdapterCallback callback)
     {
-        if (layoutInflater == null) return null;
+        if (layoutInflater == null || callback == null) return null;
 
         return new AttachmentPickerDocAdapter(layoutInflater, callback);
-    }
-
-    public boolean setCallback(
-            final AttachmentPickerDocAdapterCallback callback)
-    {
-        if (callback == null || m_callback != null) return false;
-
-        m_callback = callback;
-
-        return true;
     }
 
     @NonNull
@@ -78,14 +67,12 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
             return;
 
         Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentItem =
-                m_docAttachmentDataList.get(position);
+                m_callback.getDocAttachmentDataByIndex(holder.getAdapterPosition());
 
         if (!holder.setData(
                 docAttachmentItem.first.getFileName(),
                 docAttachmentItem.second.getValue()))
         {
-            if (m_callback == null) return;
-
             m_callback.onAttachmentPickerDocAdapterErrorOccurred(
                     new Error("Doc Data setting has been occurred!", true)
             );
@@ -94,9 +81,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
 
     @Override
     public int getItemCount() {
-        if (m_docAttachmentDataList == null) return 0;
-
-        return m_docAttachmentDataList.size();
+        return m_callback.getDocAttachmentDataListSize();
     }
 
     @Override
@@ -105,7 +90,7 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
     }
 
     private boolean checkItemId(final int id) {
-        if (id < 0 || m_docAttachmentDataList.size() <= id) {
+        if (id < 0 || m_callback.getDocAttachmentDataListSize() <= id) {
 //            m_callback.onAttachmentPickerDocAdapterErrorOccurred(
 //                    new Error("Wrong Image Id has been provided!", true)
 //            );
@@ -116,32 +101,16 @@ public class AttachmentPickerDocAdapter extends RecyclerView.Adapter<AttachmentP
         return true;
     }
 
-    public boolean setDocList(
-            final List<Pair<AttachmentData, ObjectWrapper<Boolean>>> docAttachmentDataList)
-    {
-        if (docAttachmentDataList == null) return false;
-
-        m_docAttachmentDataList = docAttachmentDataList;
-
-        notifyDataSetChanged();
-
-        return true;
-    }
-
     @Override
     public void onDocViewHolderDocClicked(final int position) {
         if (!checkItemId(position))
             return;
 
-        Pair<AttachmentData, ObjectWrapper<Boolean>> docItem = m_docAttachmentDataList.get(position);
-
-        docItem.second.setValue(!docItem.second.getValue());
+        m_callback.onDocAttachmentDataChosenStateChanged(position);
     }
 
     @Override
     public void onDocViewHolderErrorOccurred(final Error error) {
-        if (m_callback == null) return;
-
         if (error == null) {
             m_callback.onAttachmentPickerDocAdapterErrorOccurred(
                     new Error("Error data hasn't been provided!", true)

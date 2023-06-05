@@ -148,12 +148,12 @@ public class AttachmentPickerActivity extends AppCompatActivity
 
         switch (attachmentType) {
             case IMAGE: {
-                fragment = AttachmentPickerImageFragment.getInstance(this);
+                fragment = AttachmentPickerImageFragment.getInstance();
 
                 break;
             }
             case DOC: {
-                fragment = AttachmentPickerDocFragment.getInstance(this);
+                fragment = AttachmentPickerDocFragment.getInstance();
 
                 if (!isCreating) openDocPicker();
 

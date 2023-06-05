@@ -32,41 +32,17 @@ public class AttachmentPickerDocFragment extends Fragment
 {
     private AttachmentPickerDocViewModel m_attachmentPickerDocViewModel = null;
 
-    private AttachmentPickerDocAdapter m_docListAdapter;
+    private AttachmentPickerDocAdapter m_docListAdapter = null;
     private RecyclerView m_docListView = null;
+
+    private Context m_context = null;
 
     public AttachmentPickerDocFragment() {
         super();
     }
 
-    protected AttachmentPickerDocFragment(
-            final AttachmentPickerDocAdapter attachmentPickerDocAdapter)
-    {
-        super();
-
-        m_docListAdapter = attachmentPickerDocAdapter;
-    }
-
-    public static AttachmentPickerDocFragment getInstance(
-            final AttachmentPickerDocAdapter attachmentPickerDocAdapter)
-    {
-        if (attachmentPickerDocAdapter == null) return null;
-
-        return new AttachmentPickerDocFragment(attachmentPickerDocAdapter);
-    }
-
-    public static AttachmentPickerDocFragment getInstance(
-            final Context context)
-    {
-        if (context == null) return null;
-
-        LayoutInflater layoutInflater = LayoutInflater.from(context);
-        AttachmentPickerDocAdapter attachmentPickerDocAdapter =
-                AttachmentPickerDocAdapter.getInstance(layoutInflater, null);
-
-        if (attachmentPickerDocAdapter == null) return null;
-
-        return new AttachmentPickerDocFragment(attachmentPickerDocAdapter);
+    public static AttachmentPickerDocFragment getInstance() {
+        return new AttachmentPickerDocFragment();
     }
 
     @Override
@@ -75,33 +51,6 @@ public class AttachmentPickerDocFragment extends Fragment
 
         m_attachmentPickerDocViewModel =
                 new ViewModelProvider(getActivity()).get(AttachmentPickerDocViewModel.class);
-
-        if (m_attachmentPickerDocViewModel.isInitialized()) {
-            m_docListAdapter = m_attachmentPickerDocViewModel.getDocListAdapter();
-            m_docListAdapter.setDocList(m_attachmentPickerDocViewModel.getDocAttachmentDataList());
-
-        } else {
-            if (m_docListAdapter == null) {
-                AttachmentPickerDocAdapter attachmentPickerDocAdapter =
-                        AttachmentPickerDocAdapter.getInstance(getLayoutInflater(), this);
-
-                if (attachmentPickerDocAdapter == null) {
-                    ErrorBroadcastReceiver.broadcastError(
-                            new Error(
-                                    "Doc Attachment Picker Adapter hasn't been initialized!",
-                                    true),
-                            getActivity().getApplicationContext());
-
-                    return;
-                }
-
-                m_docListAdapter = attachmentPickerDocAdapter;
-
-            } else
-                m_docListAdapter.setCallback(this);
-
-            m_attachmentPickerDocViewModel.setDocListAdapter(m_docListAdapter);
-        }
     }
 
     @Nullable
@@ -120,6 +69,22 @@ public class AttachmentPickerDocFragment extends Fragment
         m_docListView.setLayoutManager(
                 new LinearLayoutManager(
                         getContext(), LinearLayoutManager.VERTICAL, false));
+
+        AttachmentPickerDocAdapter attachmentPickerDocAdapter =
+                AttachmentPickerDocAdapter.getInstance(inflater, this);
+
+        if (attachmentPickerDocAdapter == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Doc Attachment Picker Adapter hasn't been initialized!",
+                            true),
+                    m_context.getApplicationContext());
+
+            return view;
+        }
+
+        m_docListAdapter = attachmentPickerDocAdapter;
+
         m_docListView.setAdapter(m_docListAdapter);
 
         return view;
@@ -131,6 +96,17 @@ public class AttachmentPickerDocFragment extends Fragment
             @Nullable Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
+
+        if (m_attachmentPickerDocViewModel.isInitialized()) {
+            m_docListAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        m_context = context;
     }
 
     @Override
@@ -141,11 +117,45 @@ public class AttachmentPickerDocFragment extends Fragment
     }
 
     @Override
+    public Pair<AttachmentData, ObjectWrapper<Boolean>> getDocAttachmentDataByIndex(int index) {
+        Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentData =
+                m_attachmentPickerDocViewModel.getDocAttachmentDataByIndex(index);
+
+        if (docAttachmentData == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Demanded Doc Attachment data was null!", true),
+                    m_context.getApplicationContext());
+
+            return null;
+        }
+
+        return docAttachmentData;
+    }
+
+    @Override
+    public void onDocAttachmentDataChosenStateChanged(int index) {
+        if (!m_attachmentPickerDocViewModel.changeDocAttachmentDataChosenStateByIndex(index)) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Doc Attachment Data Chosen state changing went wrong!",
+                            true),
+                    m_context.getApplicationContext());
+
+            return;
+        }
+    }
+
+    @Override
+    public int getDocAttachmentDataListSize() {
+        return m_attachmentPickerDocViewModel.getDocDataListSize();
+    }
+
+    @Override
     public void onAttachmentPickerDocAdapterErrorOccurred(final Error error) {
         if (error == null) {
             ErrorBroadcastReceiver.broadcastError(
                     new Error("Provided Error was null!", true),
-                    getContext().getApplicationContext()
+                    m_context.getApplicationContext()
             );
 
             return;
@@ -153,7 +163,7 @@ public class AttachmentPickerDocFragment extends Fragment
 
         ErrorBroadcastReceiver.broadcastError(
                 error,
-                getContext().getApplicationContext()
+                m_context.getApplicationContext()
         );
     }
 
@@ -172,12 +182,12 @@ public class AttachmentPickerDocFragment extends Fragment
                     new Error(
                             "Attachment Doc. Data list setting has been failed!",
                             true),
-                    getActivity().getApplicationContext());
+                    m_context.getApplicationContext());
 
             return;
         }
 
-        m_docListAdapter.setDocList(m_attachmentPickerDocViewModel.getDocAttachmentDataList());
+        m_docListAdapter.notifyDataSetChanged();
     }
 
     public List<AttachmentData> getChosenDocDataList() {

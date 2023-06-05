@@ -5,51 +5,59 @@ import android.util.Pair;
 import androidx.lifecycle.ViewModel;
 
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
-import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.images.adapter.AttachmentPickerImageAdapter;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
 import java.util.List;
 
 public class AttachmentPickerImageViewModel extends ViewModel {
-    private AttachmentPickerImageAdapter m_attachmentPickerImageAdapter = null;
     private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_imageAttachmentDataList = null;
 
     public AttachmentPickerImageViewModel() {
-
-    }
-
-    public boolean setAttachmentPickerImageAdapter(
-            final AttachmentPickerImageAdapter attachmentPickerImageAdapter)
-    {
-        if (attachmentPickerImageAdapter == null || m_attachmentPickerImageAdapter != null)
-            return false;
-
-        m_attachmentPickerImageAdapter = attachmentPickerImageAdapter;
-
-        return true;
+        super();
     }
 
     public boolean setImageDataList(
             final List<Pair<AttachmentData, ObjectWrapper<Boolean>>> imageAttachmentDataList)
     {
-        if (imageAttachmentDataList == null)
-            return false;
+        if (imageAttachmentDataList == null) return false;
 
         m_imageAttachmentDataList = imageAttachmentDataList;
 
         return true;
     }
 
-    public AttachmentPickerImageAdapter getAttachmentPickerImageAdapter() {
-        return m_attachmentPickerImageAdapter;
+    public Pair<AttachmentData, ObjectWrapper<Boolean>> getImageDataByIndex(final int index) {
+        if (m_imageAttachmentDataList == null) return null;
+        if (index < 0 || index >= m_imageAttachmentDataList.size())
+            return null;
+
+        return m_imageAttachmentDataList.get(index);
+    }
+
+    public boolean changeImageDataChosenStateByIndex(final int index) {
+        if (m_imageAttachmentDataList == null) return false;
+        if (index < 0 || index >= m_imageAttachmentDataList.size())
+            return false;
+
+        Pair<AttachmentData, ObjectWrapper<Boolean>> imageData = m_imageAttachmentDataList.get(index);
+
+        imageData.second.setValue(!imageData.second.getValue());
+
+        return true;
     }
 
     public List<Pair<AttachmentData, ObjectWrapper<Boolean>>> getImageDataList() {
         return m_imageAttachmentDataList;
     }
 
+    public int getImageDataListSize() {
+        if (m_imageAttachmentDataList == null) return 0;
+
+        return m_imageAttachmentDataList.size();
+    }
+
     public boolean isInitialized() {
-        return (m_attachmentPickerImageAdapter != null && m_imageAttachmentDataList != null);
+        return (m_imageAttachmentDataList != null);
     }
 
     @Override

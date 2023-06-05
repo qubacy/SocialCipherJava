@@ -77,10 +77,7 @@ public class AttachmentShowerActivity extends AppCompatActivity
         m_attachmentListView = findViewById(R.id.attachment_chooser_list);
 
         AttachmentListAdapter attachmentListAdapter =
-                AttachmentListAdapter.getInstance(
-                        m_attachmentChooserViewModel.getAttachmentList(),
-                        getLayoutInflater(),
-                        this);
+                AttachmentListAdapter.getInstance(getLayoutInflater(), this);
 
         if (attachmentListAdapter == null) {
             finishWithError(
@@ -293,6 +290,29 @@ public class AttachmentShowerActivity extends AppCompatActivity
         m_attachmentChooserViewModel.setCurAttachmentIndex(position);
 
         return true;
+    }
+
+    @Override
+    public AttachmentEntityBase getAttachmentByIndex(int index) {
+        AttachmentEntityBase attachment =
+                m_attachmentChooserViewModel.getAttachmentByIndex(index);
+
+        if (attachment == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Demanded Attachment was null!",
+                            true),
+                    getApplicationContext());
+
+            return null;
+        }
+
+        return attachment;
+    }
+
+    @Override
+    public int getAttachmentListSize() {
+        return m_attachmentChooserViewModel.getAttachmentListSize();
     }
 
     @Override

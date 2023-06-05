@@ -14,7 +14,7 @@ public class AttachmentShowerViewModel extends ViewModel {
     private boolean m_isShowerVisible = false;
 
     public AttachmentShowerViewModel() {
-
+        super();
     }
 
     public boolean setIsShowerVisible(final boolean isShowerVisible) {
@@ -55,6 +55,19 @@ public class AttachmentShowerViewModel extends ViewModel {
 
     public List<AttachmentEntityBase> getAttachmentList() {
         return m_attachmentList;
+    }
+
+    public AttachmentEntityBase getAttachmentByIndex(final int index) {
+        if (m_attachmentList == null) return null;
+        if (index < 0 || index >= m_attachmentList.size()) return null;
+
+        return m_attachmentList.get(index);
+    }
+
+    public int getAttachmentListSize() {
+        if (m_attachmentList == null) return 0;
+
+        return m_attachmentList.size();
     }
 
     public boolean isInitialized() {

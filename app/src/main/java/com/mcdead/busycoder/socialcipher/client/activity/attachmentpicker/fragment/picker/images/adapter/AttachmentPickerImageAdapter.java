@@ -13,16 +13,11 @@ import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.A
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<AttachmentPickerImageViewHolder>
     implements AttachmentPickerImageViewHolderCallback
 {
     final private LayoutInflater m_inflater;
-    private AttachmentPickerImageAdapterCallback m_callback = null;
-
-    private List<Pair<AttachmentData, ObjectWrapper<Boolean>>> m_imageAttachmentDataList = null;
+    final private AttachmentPickerImageAdapterCallback m_callback;
 
     protected AttachmentPickerImageAdapter(
             final LayoutInflater layoutInflater,
@@ -40,20 +35,9 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
             final LayoutInflater layoutInflater,
             final AttachmentPickerImageAdapterCallback callback)
     {
-        if (layoutInflater == null) return null;
+        if (layoutInflater == null || callback == null) return null;
 
         return new AttachmentPickerImageAdapter(layoutInflater, callback);
-    }
-
-    public boolean setCallback(
-            final AttachmentPickerImageAdapterCallback callback)
-    {
-        if (callback == null || m_callback != null)
-            return false;
-
-        m_callback = callback;
-
-        return true;
     }
 
     @NonNull
@@ -76,16 +60,14 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
             int position)
     {
         Pair<AttachmentData, ObjectWrapper<Boolean>> imageData =
-                m_imageAttachmentDataList.get(position);
+                m_callback.getImageAttachmentDataByIndex(holder.getAdapterPosition());
 
         holder.setData(imageData.first.getUri(), imageData.second.getValue());
     }
 
     @Override
     public int getItemCount() {
-        if (m_imageAttachmentDataList == null) return 0;
-
-        return m_imageAttachmentDataList.size();
+        return m_callback.getImageAttachmentDataListSize();
     }
 
     @Override
@@ -93,30 +75,8 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
         return position;
     }
 
-    public void setImageDataList(
-            final List<Pair<AttachmentData, ObjectWrapper<Boolean>>> imageAttachmentDataList)
-    {
-        m_imageAttachmentDataList = imageAttachmentDataList;
-
-        notifyDataSetChanged();
-    }
-
-    public ArrayList<AttachmentData> getChosenImages() {
-        ArrayList<AttachmentData> chosenImageAttachmentDataList = new ArrayList<>();
-
-        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> imageData :
-                m_imageAttachmentDataList)
-        {
-            if (!imageData.second.getValue()) continue;
-
-            chosenImageAttachmentDataList.add(imageData.first);
-        }
-
-        return chosenImageAttachmentDataList;
-    }
-
     private boolean checkImageId(final int id) {
-        if (id < 0 || m_imageAttachmentDataList.size() <= id) {
+        if (id < 0 || m_callback.getImageAttachmentDataListSize() <= id) {
 //            m_callback.onAttachmentPickerImageAdapterErrorOccurred(
 //                    new Error("Wrong Image Id has been provided!", true)
 //            );
@@ -131,16 +91,11 @@ public class AttachmentPickerImageAdapter extends RecyclerView.Adapter<Attachmen
     public void onImageClicked(final int id) {
         if (!checkImageId(id)) return;
 
-        Pair<AttachmentData, ObjectWrapper<Boolean>> imageAttachmentData =
-                m_imageAttachmentDataList.get(id);
-
-        imageAttachmentData.second.setValue(!imageAttachmentData.second.getValue());
+        m_callback.onImageAttachmentDataChosenStateChanged(id);
     }
 
     @Override
     public void onViewHolderErrorOccurred(final Error error) {
-        if (m_callback == null) return;
-
         m_callback.onAttachmentPickerImageAdapterErrorOccurred(error);
     }
 }

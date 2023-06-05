@@ -14,29 +14,25 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import java.util.List;
 
 public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListViewHolder> {
-    final private List<AttachmentEntityBase> m_attachmentToShowList;
     final private LayoutInflater m_inflater;
     final private AttachmentListAdapterCallback m_callback;
 
     protected AttachmentListAdapter(
-            final List<AttachmentEntityBase> attachmentToShowList,
             final LayoutInflater inflater,
             final AttachmentListAdapterCallback callback)
     {
-        m_attachmentToShowList = attachmentToShowList;
         m_inflater = inflater;
         m_callback = callback;
     }
 
     public static AttachmentListAdapter getInstance(
-            final List<AttachmentEntityBase> attachmentList,
             final LayoutInflater inflater,
             final AttachmentListAdapterCallback callback)
     {
-        if (attachmentList == null || inflater == null || callback == null)
+        if (inflater == null || callback == null)
             return null;
 
-        return new AttachmentListAdapter(attachmentList, inflater, callback);
+        return new AttachmentListAdapter(inflater, callback);
     }
 
     @NonNull
@@ -65,9 +61,8 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
             @NonNull AttachmentListViewHolder holder,
             int position)
     {
-        if (position >= m_attachmentToShowList.size()) return;
-
-        AttachmentEntityBase attachmentDataToShow = m_attachmentToShowList.get(position);
+        AttachmentEntityBase attachmentDataToShow =
+                m_callback.getAttachmentByIndex(holder.getAdapterPosition());
         boolean isChosen = (m_callback.getLastChosenAttachment() == position);
 
         if (!holder.setData(attachmentDataToShow, isChosen)) {
@@ -94,6 +89,6 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
 
     @Override
     public int getItemCount() {
-        return (m_attachmentToShowList == null ? 0 : m_attachmentToShowList.size());
+        return m_callback.getAttachmentListSize();
     }
 }

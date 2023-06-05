@@ -42,36 +42,15 @@ public class AttachmentPickerImageFragment extends Fragment
 
     private RecyclerView m_imageGridView = null;
 
+    private Context m_context = null;
+
     public AttachmentPickerImageFragment() {
         super();
     }
 
-    protected AttachmentPickerImageFragment(
-            final AttachmentPickerImageAdapter attachmentPickerImageAdapter)
+    public static AttachmentPickerImageFragment getInstance()
     {
-        m_attachmentPickerImageAdapter = attachmentPickerImageAdapter;
-    }
-
-    public static AttachmentPickerImageFragment getInstance(
-            final AttachmentPickerImageAdapter attachmentPickerImageAdapter)
-    {
-        if (attachmentPickerImageAdapter == null) return null;
-
-        return new AttachmentPickerImageFragment(attachmentPickerImageAdapter);
-    }
-
-    public static AttachmentPickerImageFragment getInstance(
-            final Context context)
-    {
-        if (context == null) return null;
-
-        LayoutInflater layoutInflater = LayoutInflater.from(context);
-        AttachmentPickerImageAdapter attachmentPickerImageAdapter =
-                AttachmentPickerImageAdapter.getInstance(layoutInflater, null);
-
-        if (attachmentPickerImageAdapter == null) return null;
-
-        return new AttachmentPickerImageFragment(attachmentPickerImageAdapter);
+        return new AttachmentPickerImageFragment();
     }
 
     @Override
@@ -80,35 +59,6 @@ public class AttachmentPickerImageFragment extends Fragment
 
         m_imagePickerViewModel =
                 new ViewModelProvider(getActivity()).get(AttachmentPickerImageViewModel.class);
-
-        if (!m_imagePickerViewModel.isInitialized()) {
-            if (m_attachmentPickerImageAdapter == null) {
-                AttachmentPickerImageAdapter attachmentPickerImageAdapter =
-                        AttachmentPickerImageAdapter.getInstance(getLayoutInflater(), this);
-
-                if (attachmentPickerImageAdapter == null) {
-                    ErrorBroadcastReceiver.broadcastError(
-                            new Error(
-                                    "Image Attachment Picker Adapter hasn't been initialized",
-                                    true),
-                            getActivity().getApplicationContext());
-
-                    return;
-                }
-
-                m_attachmentPickerImageAdapter = attachmentPickerImageAdapter;
-
-            } else
-                m_attachmentPickerImageAdapter.setCallback(this);
-
-            m_imagePickerViewModel.setAttachmentPickerImageAdapter(m_attachmentPickerImageAdapter);
-
-        } else {
-            m_attachmentPickerImageAdapter =
-                    m_imagePickerViewModel.getAttachmentPickerImageAdapter();
-            m_attachmentPickerImageAdapter.setImageDataList(
-                    m_imagePickerViewModel.getImageDataList());
-        }
     }
 
     @Nullable
@@ -129,6 +79,22 @@ public class AttachmentPickerImageFragment extends Fragment
         m_imageGridView.setItemViewCacheSize(C_IMAGE_GRID_CACHE_SIZE);
         m_imageGridView.setDrawingCacheEnabled(true);
         m_imageGridView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+
+        AttachmentPickerImageAdapter attachmentPickerImageAdapter =
+                AttachmentPickerImageAdapter.getInstance(getLayoutInflater(), this);
+
+        if (attachmentPickerImageAdapter == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Image Attachment Picker Adapter hasn't been initialized",
+                            true),
+                    getActivity().getApplicationContext());
+
+            return view;
+        }
+
+        m_attachmentPickerImageAdapter = attachmentPickerImageAdapter;
+
         m_imageGridView.setAdapter(m_attachmentPickerImageAdapter);
 
         return view;
@@ -142,12 +108,21 @@ public class AttachmentPickerImageFragment extends Fragment
         super.onViewCreated(view, savedInstanceState);
 
         if (!m_imagePickerViewModel.isInitialized())
-            new ImageSearcher(getContext(), this).execute();
+            new ImageSearcher(m_context, this).execute();
+        else
+            m_attachmentPickerImageAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onStart() {
         super.onStart(); // todo: here is the model already reset. why?
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        m_context = context;
     }
 
     @Override
@@ -158,17 +133,53 @@ public class AttachmentPickerImageFragment extends Fragment
     }
 
     @Override
+    public Pair<AttachmentData, ObjectWrapper<Boolean>> getImageAttachmentDataByIndex(final int index) {
+        Pair<AttachmentData, ObjectWrapper<Boolean>> imageAttachmentData =
+                m_imagePickerViewModel.getImageDataByIndex(index);
+
+        if (imageAttachmentData == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error("Demanded Image Attachment data was null!", true),
+                    m_context.getApplicationContext());
+
+            return null;
+        }
+
+        return m_imagePickerViewModel.getImageDataByIndex(index);
+    }
+
+    @Override
+    public void onImageAttachmentDataChosenStateChanged(
+            final int index)
+    {
+        if (!m_imagePickerViewModel.changeImageDataChosenStateByIndex(index)) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Image Data Chosen state changing went wrong!",
+                            true),
+                    m_context.getApplicationContext());
+
+            return;
+        }
+    }
+
+    @Override
+    public int getImageAttachmentDataListSize() {
+        return m_imagePickerViewModel.getImageDataListSize();
+    }
+
+    @Override
     public void onAttachmentPickerImageAdapterErrorOccurred(final Error error) {
         ErrorBroadcastReceiver
                 .broadcastError(
-                        error, getActivity().getApplicationContext());
+                        error, m_context.getApplicationContext());
     }
 
     @Override
     public void onImageSearcherErrorOccurred(final Error error) {
         ErrorBroadcastReceiver
                 .broadcastError(
-                        error, getActivity().getApplicationContext());
+                        error, m_context.getApplicationContext());
     }
 
     @Override
@@ -177,7 +188,7 @@ public class AttachmentPickerImageFragment extends Fragment
             ErrorBroadcastReceiver
                     .broadcastError(
                             new Error("Image List was null!", true),
-                            getActivity().getApplicationContext());
+                            m_context.getApplicationContext());
 
             return;
         }
@@ -194,15 +205,24 @@ public class AttachmentPickerImageFragment extends Fragment
             ErrorBroadcastReceiver
                     .broadcastError(
                             new Error("Image Data List setting has been failed!", true),
-                            getActivity().getApplicationContext());
+                            m_context.getApplicationContext());
 
             return;
         }
 
-        m_attachmentPickerImageAdapter.setImageDataList(m_imagePickerViewModel.getImageDataList());
+        m_attachmentPickerImageAdapter.notifyDataSetChanged();
     }
 
     public List<AttachmentData> getChosenImageDataList() {
-        return m_attachmentPickerImageAdapter.getChosenImages();
+        List<AttachmentData> chosenImageDataList = new ArrayList<>();
+
+        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> imageData :
+                m_imagePickerViewModel.getImageDataList())
+        {
+            if (imageData.second.getValue())
+                chosenImageDataList.add(imageData.first);
+        }
+
+        return chosenImageDataList;
     }
 }

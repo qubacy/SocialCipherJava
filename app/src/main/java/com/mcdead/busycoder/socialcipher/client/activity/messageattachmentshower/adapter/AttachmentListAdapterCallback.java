@@ -8,5 +8,7 @@ public interface AttachmentListAdapterCallback {
     public boolean onAttachmentChosen(
             final AttachmentEntityBase attachment,
             final int position);
+    public AttachmentEntityBase getAttachmentByIndex(final int index);
+    public int getAttachmentListSize();
     public int getLastChosenAttachment();
 }
