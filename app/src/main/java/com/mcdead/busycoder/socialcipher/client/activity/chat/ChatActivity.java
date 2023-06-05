@@ -69,8 +69,8 @@ public class ChatActivity extends AppCompatActivity
             actionBar.setTitle(titleWrapper.getValue());
         }
 
-        m_chatFragment = (ChatFragment) getSupportFragmentManager()
-                .findFragmentById(android.R.id.content);
+        m_chatFragment =
+                (ChatFragment) getSupportFragmentManager().findFragmentById(android.R.id.content);
 
         if (m_chatFragment == null) {
             ChatFragment chatFragment =
@@ -174,5 +174,10 @@ public class ChatActivity extends AppCompatActivity
     @Override
     public void onAttachmentPickerDemanded() {
         m_attachmentPickerLauncher.launch(null);
+    }
+
+    @Override
+    public boolean isValid() {
+        return (!isDestroyed());
     }
 }

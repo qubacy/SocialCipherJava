@@ -5,16 +5,23 @@ import static com.mcdead.busycoder.socialcipher.client.processor.update.service.
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+
+import androidx.core.content.ContextCompat;
 
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.CommandSendingCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.NewMessageReceivedCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.error.data.Error;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
+import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
 import com.mcdead.busycoder.socialcipher.client.processor.network.chat.message.sender.data.MessageToSendData;
 import com.mcdead.busycoder.socialcipher.client.processor.update.service.UpdateProcessorService;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSendingCallback;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncFactory;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderFactory;
+
+import java.util.concurrent.Executor;
 
 public class ChatListBroadcastReceiver extends BroadcastReceiver
     implements MessageSendingCallback
@@ -60,33 +67,39 @@ public class ChatListBroadcastReceiver extends BroadcastReceiver
             final ChatIdChecker chatIdChecker,
             final MessageSenderBase messageSender)
     {
-        if (chatIdChecker == null || messageSender == null)
+        if (callback == null || commandSendingCallback == null ||
+                chatIdChecker == null || messageSender == null)
+        {
             return null;
+        }
 
         return new ChatListBroadcastReceiver(
                 callback, commandSendingCallback, chatIdChecker, messageSender);
     }
 
-    public boolean setCommandSendingCallback(
-            final CommandSendingCallback commandSendingCallback)
+    public static ChatListBroadcastReceiver getInstance(
+            final NewMessageReceivedCallback callback,
+            final CommandSendingCallback commandSendingCallback,
+            final Executor executor)
     {
-        if (commandSendingCallback == null)
-            return false;
+        if (callback == null || commandSendingCallback == null) return null;
 
-        m_commandSendingCallback = commandSendingCallback;
+        AttachmentUploaderSyncBase attachmentUploader =
+                AttachmentUploaderSyncFactory.generateAttachmentUploader(null);
 
-        return true;
-    }
+        if (attachmentUploader == null) return null;
 
-    public boolean setNewMessageReceivedCallback(
-            final NewMessageReceivedCallback newMessageReceivedCallback)
-    {
-        if (newMessageReceivedCallback == null)
-            return false;
+        MessageSenderBase messageSender =
+                MessageSenderFactory.generateMessageSender(attachmentUploader, null, executor);
 
-        m_newMessageReceivedCallback = newMessageReceivedCallback;
+        if (messageSender == null) return null;
 
-        return true;
+        ChatIdChecker chatIdChecker = ChatIdCheckerGenerator.generateChatIdChecker();
+
+        if (chatIdChecker == null) return null;
+
+        return new ChatListBroadcastReceiver(
+                callback, commandSendingCallback, chatIdChecker, messageSender);
     }
 
     @Override

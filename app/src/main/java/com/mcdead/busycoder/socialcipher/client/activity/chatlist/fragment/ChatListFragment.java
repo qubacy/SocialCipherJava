@@ -66,16 +66,12 @@ public class ChatListFragment extends Fragment
 
     protected ChatListFragment(
             final ChatListFragmentCallback callback,
-            final ChatListLoaderBase chatListLoader,
-            final ChatListBroadcastReceiver chatListBroadcastReceiver,
-            final ChatListAdapter chatListAdapter)
+            final ChatListLoaderBase chatListLoader)
     {
         super();
 
         m_callback = callback;
         m_chatListLoader = chatListLoader;
-        m_chatChangeBroadcastReceiver = chatListBroadcastReceiver;
-        m_chatListAdapter = chatListAdapter;
     }
 
     public static ChatListFragment getInstance(
@@ -90,51 +86,19 @@ public class ChatListFragment extends Fragment
 
         if (chatListLoader == null) return null;
 
-        AttachmentUploaderSyncBase attachmentUploader =
-                AttachmentUploaderSyncFactory.generateAttachmentUploader(null);
-
-        if (attachmentUploader == null) return null;
-
-        MessageSenderBase messageSender =
-                MessageSenderFactory.generateMessageSender(
-                        attachmentUploader, null, ContextCompat.getMainExecutor(context));
-
-        if (messageSender == null) return null;
-
-        ChatIdChecker chatIdChecker = ChatIdCheckerGenerator.generateChatIdChecker();
-
-        if (chatIdChecker == null) return null;
-
-        ChatListBroadcastReceiver chatListBroadcastReceiver =
-                ChatListBroadcastReceiver.getInstance(
-                        null, null, chatIdChecker, messageSender);
-
-        if (chatListBroadcastReceiver == null)
-            return null;
-
-        LayoutInflater layoutInflater = LayoutInflater.from(context);
-        ChatListAdapter chatListAdapter =
-                ChatListAdapter.getInstance(
-                        layoutInflater, null, null);
-
-        return new ChatListFragment(
-                callback, chatListLoader, chatListBroadcastReceiver, chatListAdapter);
+        return new ChatListFragment(callback, chatListLoader);
     }
 
     public static ChatListFragment getInstance(
             final ChatListFragmentCallback callback,
-            final ChatListLoaderBase chatListLoader,
-            final ChatListBroadcastReceiver chatListBroadcastReceiver,
-            final ChatListAdapter chatListAdapter)
+            final ChatListLoaderBase chatListLoader)
     {
-        if (callback == null || chatListLoader == null ||
-            chatListBroadcastReceiver == null || chatListAdapter == null)
-        {
+        if (callback == null || chatListLoader == null) {
             return null;
         }
 
         return new ChatListFragment(
-                callback, chatListLoader, chatListBroadcastReceiver, chatListAdapter);
+                callback, chatListLoader);
     }
 
     @Override
@@ -144,34 +108,49 @@ public class ChatListFragment extends Fragment
         m_chatListViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
 
         if (!m_chatListViewModel.isInitialized()) {
-            m_chatChangeBroadcastReceiver.setNewMessageReceivedCallback(this);
-            m_chatChangeBroadcastReceiver.setCommandSendingCallback(this);
             m_chatListLoader.setCallback(this);
-            m_chatListAdapter.setChatListCallback(this);
-            m_chatListAdapter.setChatListItemCallback(this);
 
-            m_chatListViewModel.setChatListAdapter(m_chatListAdapter);
             m_chatListViewModel.setChatListLoader(m_chatListLoader);
             m_chatListViewModel.setCallback(m_callback);
-            m_chatListViewModel.setChatListBroadcastReceiver(m_chatChangeBroadcastReceiver);
 
         } else {
-            m_chatListAdapter = m_chatListViewModel.getChatListAdapter();
             m_chatListLoader = m_chatListViewModel.getChatLoader();
-            m_chatChangeBroadcastReceiver = m_chatListViewModel.getChatListBroadcastReceiver();
             m_callback = m_chatListViewModel.getCallback();
         }
 
         launchChatsLoader();
 
+        Error broadcastReceiverSettingError = setupChatListBroadcastReceiver();
+
+        if (broadcastReceiverSettingError != null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    broadcastReceiverSettingError, m_context.getApplicationContext());
+
+            return;
+        }
+    }
+
+    private Error setupChatListBroadcastReceiver() {
         IntentFilter intentFilter = new IntentFilter(ChatListBroadcastReceiver.C_NEW_MESSAGE_ADDED);
 
         intentFilter.addAction(ChatListBroadcastReceiver.C_UPDATES_RECEIVED);
         intentFilter.addAction(ChatListBroadcastReceiver.C_SEND_COMMAND_MESSAGE);
 
+        ChatListBroadcastReceiver chatListBroadcastReceiver =
+                ChatListBroadcastReceiver.getInstance(
+                        this, this, ContextCompat.getMainExecutor(m_context));
+
+        if (chatListBroadcastReceiver == null)
+            return new Error(
+                    "Chat List Broadcast Receiver hasn't been initialized!", true);
+
+        m_chatChangeBroadcastReceiver = chatListBroadcastReceiver;
+
         LocalBroadcastManager.
-                getInstance(getActivity().getApplicationContext()).
+                getInstance(m_context.getApplicationContext()).
                 registerReceiver(m_chatChangeBroadcastReceiver, intentFilter);
+
+        return null;
     }
 
     @Override
@@ -189,8 +168,9 @@ public class ChatListFragment extends Fragment
         if (m_chatListLoader != null)
             m_chatListLoader.cancel(true);
 
-        LocalBroadcastManager.getInstance(getActivity().getApplicationContext())
-                .unregisterReceiver(m_chatChangeBroadcastReceiver);
+        LocalBroadcastManager.
+                getInstance(m_context.getApplicationContext()).
+                unregisterReceiver(m_chatChangeBroadcastReceiver);
 
         super.onDestroy();
     }
@@ -206,8 +186,23 @@ public class ChatListFragment extends Fragment
         m_dialogsListRecyclerView = view.findViewById(R.id.dialogs_recycler_view);
 
         m_dialogsListRecyclerView.addItemDecoration(
-                new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
-        m_dialogsListRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                new DividerItemDecoration(m_context, DividerItemDecoration.VERTICAL));
+        m_dialogsListRecyclerView.setLayoutManager(new LinearLayoutManager(m_context));
+
+        ChatListAdapter chatListAdapter =
+                ChatListAdapter.getInstance(inflater, this, this);
+
+        if (chatListAdapter == null) {
+            ErrorBroadcastReceiver.broadcastError(
+                    new Error(
+                            "Chat List Adapter generation has been failed!",
+                            true), m_context.getApplicationContext());
+
+            return view;
+        }
+
+        m_chatListAdapter = chatListAdapter;
+
         m_dialogsListRecyclerView.setAdapter(m_chatListAdapter);
 
         return view;

@@ -26,7 +26,7 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
     public static final String C_CHAT_NOTIFICATION_TEXT_PROP_NAME = "chatNotificationText";
     public static final String C_IS_CIPHER_SESSION_SET = "isCipherSessionSet";
 
-    private ChatBroadcastReceiverCallback m_callback = null;
+    final private ChatBroadcastReceiverCallback m_callback;
 
     protected ChatBroadcastReceiver(
             final ChatBroadcastReceiverCallback callback)
@@ -39,6 +39,8 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
     public static ChatBroadcastReceiver getInstance(
             final ChatBroadcastReceiverCallback callback)
     {
+        if (callback == null) return null;
+
         return new ChatBroadcastReceiver(callback);
     }
 
@@ -63,17 +65,6 @@ public class ChatBroadcastReceiver extends BroadcastReceiver {
 
         if (processingError != null)
             m_callback.onChatBroadcastReceiverErrorOccurred(processingError);
-    }
-
-    public boolean setCallback(
-            final ChatBroadcastReceiverCallback callback)
-    {
-        if (m_callback != null || callback == null)
-            return false;
-
-        m_callback = callback;
-
-        return true;
     }
 
     private Error processNewMessageAddedAction() {

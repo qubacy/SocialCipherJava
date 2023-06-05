@@ -28,19 +28,10 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
             final LayoutInflater layoutInflater,
             final AttachmentListAdapterCallback callback)
     {
-        if (layoutInflater == null) return null;
+        if (layoutInflater == null || callback == null)
+            return null;
 
         return new AttachmentListAdapter(layoutInflater, callback);
-    }
-
-    public boolean setCallback(
-            final AttachmentListAdapterCallback callback)
-    {
-        if (callback == null || m_callback != null) return false;
-
-        m_callback = callback;
-
-        return true;
     }
 
     @NonNull
@@ -59,8 +50,6 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
     public void onBindViewHolder(
             @NonNull AttachmentListViewHolder holder, int position)
     {
-        if (m_callback == null) return;
-
         AttachmentData attachmentData = m_callback.getAttachmentByIndex(position);
 
         if (attachmentData == null) return;
@@ -81,8 +70,6 @@ public class AttachmentListAdapter extends RecyclerView.Adapter<AttachmentListVi
 
     @Override
     public int getItemCount() {
-        if (m_callback == null) return 0;
-
         return m_callback.getAttachmentListSize();
     }
 
