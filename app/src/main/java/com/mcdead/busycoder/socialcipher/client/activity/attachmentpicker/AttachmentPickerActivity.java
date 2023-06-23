@@ -25,7 +25,9 @@ import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragme
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.DocPickerCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.intent.DocPickerCallbackWrapper;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.intent.DocPickerContract;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.docs.model.AttachmentPickerDocViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.images.AttachmentPickerImageFragment;
+import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.fragment.picker.images.model.AttachmentPickerImageViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.intent.AttachmentPickerActivityContract;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.model.AttachmentPickerViewModel;
 import com.mcdead.busycoder.socialcipher.client.data.entity.attachment.type.AttachmentType;
@@ -238,25 +240,44 @@ public class AttachmentPickerActivity extends AppCompatActivity
         Fragment fragment =
                 getSupportFragmentManager().findFragmentById(R.id.attachment_file_picker_wrapper);
 
-        switch (attachmentType) {
-            case IMAGE: onImagesChoiceConfirmClicked(fragment); break;
-            case DOC: onDocChoiceConfirmClicked(fragment); break;
-        }
+        AttachmentPickerDocViewModel attachmentPickerDocViewModel =
+                new ViewModelProvider(this).get(AttachmentPickerDocViewModel.class);
+        AttachmentPickerImageViewModel attachmentPickerImageViewModel =
+                new ViewModelProvider(this).get(AttachmentPickerImageViewModel.class);
+
+        List<AttachmentData> chosenDocAttachmentDataList =
+                attachmentPickerDocViewModel.getChosenDocDataList();
+        List<AttachmentData> chosenImageAttachmentDataList =
+                attachmentPickerImageViewModel.getChosenImageDataList();
+
+        List<AttachmentData> chosenAttachmentDataList = new ArrayList<AttachmentData>() {
+            {
+                if (chosenDocAttachmentDataList != null) addAll(chosenDocAttachmentDataList);
+                if (chosenImageAttachmentDataList != null) addAll(chosenImageAttachmentDataList);
+            }
+        };
+
+        setActivityAttachmentDataListResult(chosenAttachmentDataList);
+
+//        switch (attachmentType) {
+//            case IMAGE: onImagesChoiceConfirmClicked(fragment); break;
+//            case DOC: onDocChoiceConfirmClicked(fragment); break;
+//        }
     }
 
-    private void onImagesChoiceConfirmClicked(final Fragment fragment) {
-        AttachmentPickerImageFragment imageFragment = (AttachmentPickerImageFragment) fragment;
-        List<AttachmentData> chosenImageAttachmentDataList = imageFragment.getChosenImageDataList();
-
-        setActivityAttachmentDataListResult(chosenImageAttachmentDataList);
-    }
-
-    private void onDocChoiceConfirmClicked(final Fragment fragment) {
-        AttachmentPickerDocFragment docFragment = (AttachmentPickerDocFragment) fragment;
-        List<AttachmentData> chosenDocAttachmentDataList = docFragment.getChosenDocDataList();
-
-        setActivityAttachmentDataListResult(chosenDocAttachmentDataList);
-    }
+//    private void onImagesChoiceConfirmClicked(final Fragment fragment) {
+//        AttachmentPickerImageFragment imageFragment = (AttachmentPickerImageFragment) fragment;
+//        List<AttachmentData> chosenImageAttachmentDataList = imageFragment.getChosenImageDataList();
+//
+//        setActivityAttachmentDataListResult(chosenImageAttachmentDataList);
+//    }
+//
+//    private void onDocChoiceConfirmClicked(final Fragment fragment) {
+//        AttachmentPickerDocFragment docFragment = (AttachmentPickerDocFragment) fragment;
+//        List<AttachmentData> chosenDocAttachmentDataList = docFragment.getChosenDocDataList();
+//
+//        setActivityAttachmentDataListResult(chosenDocAttachmentDataList);
+//    }
 
     private void setActivityAttachmentDataListResult(
             final List<AttachmentData> fileDataList)

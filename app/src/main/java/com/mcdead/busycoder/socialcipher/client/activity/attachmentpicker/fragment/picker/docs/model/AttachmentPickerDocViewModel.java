@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AttachmentPickerDocViewModel extends ViewModel {
@@ -55,6 +56,21 @@ public class AttachmentPickerDocViewModel extends ViewModel {
         if (m_docAttachmentDataList == null) return 0;
 
         return m_docAttachmentDataList.size();
+    }
+
+    public List<AttachmentData> getChosenDocDataList() {
+        if (m_docAttachmentDataList == null) return null;
+
+        List<AttachmentData> chosenAttachmentDataList = new ArrayList<>();
+
+        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentData :
+                m_docAttachmentDataList)
+        {
+            if (docAttachmentData.second.getValue())
+                chosenAttachmentDataList.add(docAttachmentData.first);
+        }
+
+        return chosenAttachmentDataList;
     }
 
     public boolean isInitialized() {

@@ -37,6 +37,11 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:5.3.1'
 
+    debugImplementation 'androidx.test.ext:junit:1.1.5'
+    debugImplementation 'org.mockito:mockito-android:5.3.1'
+    debugImplementation 'androidx.fragment:fragment-testing:1.5.7'
+    debugImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'org.mockito:mockito-android:5.3.1'
     androidTestImplementation 'androidx.fragment:fragment-testing:1.5.7'

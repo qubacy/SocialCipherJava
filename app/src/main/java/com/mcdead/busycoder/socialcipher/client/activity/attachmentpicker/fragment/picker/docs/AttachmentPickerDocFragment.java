@@ -190,18 +190,18 @@ public class AttachmentPickerDocFragment extends Fragment
         m_docListAdapter.notifyDataSetChanged();
     }
 
-    public List<AttachmentData> getChosenDocDataList() {
-        List<Pair<AttachmentData, ObjectWrapper<Boolean>>> docAttachmentDataList =
-                m_attachmentPickerDocViewModel.getDocAttachmentDataList();
-        List<AttachmentData> chosenAttachmentDataList = new ArrayList<>();
-
-        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentData :
-                docAttachmentDataList)
-        {
-            if (docAttachmentData.second.getValue())
-                chosenAttachmentDataList.add(docAttachmentData.first);
-        }
-
-        return chosenAttachmentDataList;
-    }
+//    public List<AttachmentData> getChosenDocDataList() {
+//        List<Pair<AttachmentData, ObjectWrapper<Boolean>>> docAttachmentDataList =
+//                m_attachmentPickerDocViewModel.getDocAttachmentDataList();
+//        List<AttachmentData> chosenAttachmentDataList = new ArrayList<>();
+//
+//        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> docAttachmentData :
+//                docAttachmentDataList)
+//        {
+//            if (docAttachmentData.second.getValue())
+//                chosenAttachmentDataList.add(docAttachmentData.first);
+//        }
+//
+//        return chosenAttachmentDataList;
+//    }
 }

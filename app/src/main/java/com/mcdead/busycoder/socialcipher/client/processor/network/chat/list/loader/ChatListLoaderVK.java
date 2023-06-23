@@ -74,7 +74,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
                                final List<ResponseChatListItemGroup> groupsData)
     {
         if (usersData == null || groupsData == null)
-            return new Error("Users / Groups data is empty!", true);
+            return null;//new Error("Users / Groups data is empty!", true);
 
         for (final ResponseChatListItemUserProfile userData : usersData) {
             UserEntity user =
@@ -110,7 +110,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
             throws IOException
     {
         if (m_chatTypeDefiner == null)
-            return new Error("Dialog type definer is not initialized!", true);
+            return new Error("Chat type definer is not initialized!", true);
 
         for (final ResponseChatListItem chatItem : chatListResponse.items) {
             SystemClock.sleep(C_REQUEST_TIMEOUT);
@@ -130,7 +130,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
             if (messagesResponse.body().error != null)
                 return new Error(messagesResponse.body().error.message, true);
             if (!ChatsStore.getInstance().addChat(chat))
-                return new Error("Dialog init. error!", true);
+                return new Error("Chat init. error!", true);
 
             if (chat.getType() == ChatType.CONVERSATION) {
                 ChatEntityConversation chatConversation = (ChatEntityConversation) chat;
@@ -176,7 +176,7 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
                     return error;
 
                 if (!chat.addMessage(newMessageWrapper.getValue()))
-                    return new Error("Dialog message init. error!", true);
+                    return new Error("Chat message init. error!", true);
             }
         }
 
@@ -222,8 +222,8 @@ public class ChatListLoaderVK extends ChatListLoaderBase {
         if (m_callback == null) return;
 
         if (error == null)
-            m_callback.onDialogsLoaded();
+            m_callback.onChatListLoaded();
         else
-            m_callback.onDialogsLoadingError(error);
+            m_callback.onChatListLoadingError(error);
     }
 }

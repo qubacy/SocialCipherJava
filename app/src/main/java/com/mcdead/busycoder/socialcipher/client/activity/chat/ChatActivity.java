@@ -175,9 +175,4 @@ public class ChatActivity extends AppCompatActivity
     public void onAttachmentPickerDemanded() {
         m_attachmentPickerLauncher.launch(null);
     }
-
-    @Override
-    public boolean isValid() {
-        return (!isDestroyed());
-    }
 }

@@ -213,16 +213,16 @@ public class AttachmentPickerImageFragment extends Fragment
         m_attachmentPickerImageAdapter.notifyDataSetChanged();
     }
 
-    public List<AttachmentData> getChosenImageDataList() {
-        List<AttachmentData> chosenImageDataList = new ArrayList<>();
-
-        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> imageData :
-                m_imagePickerViewModel.getImageDataList())
-        {
-            if (imageData.second.getValue())
-                chosenImageDataList.add(imageData.first);
-        }
-
-        return chosenImageDataList;
-    }
+//    public List<AttachmentData> getChosenImageDataList() {
+//        List<AttachmentData> chosenImageDataList = new ArrayList<>();
+//
+//        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> imageData :
+//                m_imagePickerViewModel.getImageDataList())
+//        {
+//            if (imageData.second.getValue())
+//                chosenImageDataList.add(imageData.first);
+//        }
+//
+//        return chosenImageDataList;
+//    }
 }

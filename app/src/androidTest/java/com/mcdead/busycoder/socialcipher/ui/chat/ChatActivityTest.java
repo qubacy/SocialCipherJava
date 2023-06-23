@@ -3,6 +3,7 @@ package com.mcdead.busycoder.socialcipher.ui.chat;
 import android.content.Context;
 import android.content.Intent;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.testing.FragmentScenario;
 import androidx.lifecycle.Lifecycle;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -19,6 +20,8 @@ import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntityGenerator;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.type.ChatType;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderBase;
+import com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderVK;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoadingCallback;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSendingCallback;
 import com.mcdead.busycoder.socialcipher.setting.network.SettingsNetwork;
@@ -31,7 +34,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ChatActivityTest {
     private static final String C_VALID_TOKEN =
-            "";
+            "vk1.a.39k26RE5IJvADQdui5-Sg5IlUfc_i7IwdvWb9Ax3qm2VZpAH2HSwTcQWBvQQWMFlPuhN3qhO3MD52llG2ytVc7PDRD2zPQPoixip7HREBqwwdo7PaFog7mxUHv08ajPTM2qvoTn9QzpsuN8kllx9cchUQ5A5MVfSkTC0_-_VZw9yIhOV0XBxCcekvuUgPbdrXADePDcgb3au-uEQTaeYRA";
 
     private long m_chatId = 0;
     private long m_localPeerId = 0;
@@ -89,8 +92,8 @@ public class ChatActivityTest {
                 };
 
         com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderVK chatLoaderVK =
-                com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderFactory.
-                        generateChatLoader(m_chatId, chatLoadingCallback);
+                (ChatLoaderVK) com.mcdead.busycoder.socialcipher.client.processor.chat.
+                        loader.ChatLoaderFactory.generateChatLoader(m_chatId, chatLoadingCallback);
 
         com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase attachmentUploader =
                 com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncFactory.generateAttachmentUploader(m_context.getContentResolver());
@@ -109,52 +112,17 @@ public class ChatActivityTest {
                 };
 
         com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase messageSenderBase =
-                com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderFactory.generateMessageSender(attachmentUploader, messageSendingCallback, m_context.getMainExecutor());
-
-        ChatBroadcastReceiverCallback chatBroadcastReceiverCallback = new ChatBroadcastReceiverCallback() {
-            @Override
-            public void onNewChatMessageReceived() {
-
-            }
-
-            @Override
-            public void onChatBroadcastReceiverErrorOccurred(Error error) {
-
-            }
-
-            @Override
-            public void onSettingCipherSessionAnswerRequested(long chatId, long initializePeerId, long messageId) {
-
-            }
-
-            @Override
-            public void onCipherSessionSettingEnded(long chatId, boolean isCipherSessionSet) {
-
-            }
-
-            @Override
-            public void onNewMessageSendingRequested(long chatId, String messageText) {
-
-            }
-
-            @Override
-            public void onNewChatNotificationShowingRequested(String chatNotificationText) {
-
-            }
-        };
-
-        ChatBroadcastReceiver chatBroadcastReceiver =
-                ChatBroadcastReceiver.getInstance(chatBroadcastReceiverCallback);
-
-        MessageListAdapter messageListAdapter = MessageListAdapter.getInstance(m_context.)
+                com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderFactory.generateMessageSender(attachmentUploader, messageSendingCallback, ContextCompat.getMainExecutor(m_context));
 
         ChatFragmentFactory chatFragmentFactory =
-                new ChatFragmentFactory(m_chatId, m_localPeerId, callback, chatLoaderVK, attachmentUploader, messageSenderBase, chatBroadcastReceiver, );
+                new ChatFragmentFactory(
+                        m_chatId, m_localPeerId, callback,
+                        (ChatLoaderBase) chatLoaderVK, attachmentUploader, messageSenderBase);
 
         m_chatScenario =
                 FragmentScenario.launchInContainer(
                         ChatFragment.class, null, chatFragmentFactory);
 
-        m_chatScenario.moveToState(Lifecycle.State.STARTED);
+        //m_chatScenario.moveToState(Lifecycle.State.STARTED);
     }
 }

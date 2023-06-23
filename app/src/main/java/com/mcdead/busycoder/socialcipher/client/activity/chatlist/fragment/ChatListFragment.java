@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +24,6 @@ import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapt
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.broadcastreceiver.ChatListBroadcastReceiver;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.adapter.ChatListItemCallback;
 import com.mcdead.busycoder.socialcipher.client.activity.chatlist.fragment.model.ChatListViewModel;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdChecker;
-import com.mcdead.busycoder.socialcipher.client.data.entity.chat.id.ChatIdCheckerGenerator;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoaderBase;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoaderFactory;
 import com.mcdead.busycoder.socialcipher.client.processor.chat.list.loader.ChatListLoadingCallback;
@@ -35,12 +32,6 @@ import com.mcdead.busycoder.socialcipher.client.activity.error.broadcastreceiver
 import com.mcdead.busycoder.socialcipher.R;
 import com.mcdead.busycoder.socialcipher.client.data.store.ChatsStore;
 import com.mcdead.busycoder.socialcipher.client.data.entity.chat.ChatEntity;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderFactory;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase;
-import com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncFactory;
-
-import java.util.List;
 
 public class ChatListFragment extends Fragment
     implements ChatListLoadingCallback,
@@ -230,14 +221,14 @@ public class ChatListFragment extends Fragment
     }
 
     @Override
-    public void onDialogsLoaded() {
+    public void onChatListLoaded() {
         m_callback.onChatListLoaded();
 
         m_chatListAdapter.notifyDataSetChanged();
     }
 
     @Override
-    public void onDialogsLoadingError(Error error) {
+    public void onChatListLoadingError(Error error) {
         ErrorBroadcastReceiver.broadcastError(
                 error,
                 m_context.getApplicationContext()
@@ -293,7 +284,7 @@ public class ChatListFragment extends Fragment
 
     @Override
     public void onNewMessageReceived(final long chatId) {
-        onDialogsLoaded();
+        onChatListLoaded();
 
         Long curChatId = m_chatListViewModel.getCurrentChatId();
 

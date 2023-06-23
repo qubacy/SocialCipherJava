@@ -4,6 +4,8 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_doc_view_holder_chosen_background.xml" value="0.134" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_image_view_holder_choosing_indication_icon_background.xml" value="0.1" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_picker_button_chosen_shape.xml" value="0.1" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_picker_button_shape.xml" value="0.187" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_shower_background.xml" value="0.134" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/attachment_shower_button_shape.xml" value="0.187" />
@@ -13,8 +15,11 @@
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/drawable/message_sending_button_shape_pressed.xml" value="0.187" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_attachment_picker.xml" value="0.1859375" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/activity_attachment_shower.xml" value="0.1859375" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/attachment_doc_view_holder.xml" value="0.2911458333333333" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/attachment_shower_view_holder.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/dialog_fragment_request_answer_boolean.xml" value="0.284375" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_chooser.xml" value="0.1859375" />
+        <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_doc_picker.xml" value="0.2911458333333333" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_shower.xml" value="0.18802083333333333" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_attachment_type_picker.xml" value="0.553519768563163" />
         <entry key="..\:/Users/MCDead/AndroidStudioProjects/SocialCipher/app/src/main/res/layout/fragment_chat.xml" value="0.18802083333333333" />

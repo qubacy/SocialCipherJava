@@ -19,21 +19,13 @@ public class ChatFragmentFactory extends FragmentFactory {
     private com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase m_attachmentUploader;
     private com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase m_messageSender;
 
-    private ChatBroadcastReceiver m_broadcastReceiver;
-
-    private MessageListAdapter m_messageListAdapter;
-    private AttachmentListAdapter m_attachmentListAdapter;
-
     public ChatFragmentFactory(
             final long chatId,
             final long localPeerId,
             final ChatFragmentCallback callback,
             final com.mcdead.busycoder.socialcipher.client.processor.chat.loader.ChatLoaderBase chatLoader,
             final com.mcdead.busycoder.socialcipher.client.processor.chat.attachment.uploader.AttachmentUploaderSyncBase attachmentUploader,
-            final com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase messageSender,
-            final ChatBroadcastReceiver chatBroadcastReceiver,
-            final MessageListAdapter messageListAdapter,
-            final AttachmentListAdapter attachmentListAdapter)
+            final com.mcdead.busycoder.socialcipher.client.processor.chat.message.sender.MessageSenderBase messageSender)
     {
         super();
 
@@ -44,10 +36,6 @@ public class ChatFragmentFactory extends FragmentFactory {
         m_chatLoader = chatLoader;
         m_attachmentUploader = attachmentUploader;
         m_messageSender = messageSender;
-
-        m_broadcastReceiver = chatBroadcastReceiver;
-        m_messageListAdapter = messageListAdapter;
-        m_attachmentListAdapter = attachmentListAdapter;
     }
 
     @NonNull
@@ -59,9 +47,12 @@ public class ChatFragmentFactory extends FragmentFactory {
         if (!className.equals(ChatFragment.class.getName()))
             return super.instantiate(classLoader, className);
 
+        switch (className) {
+            case ChatFragment.class.getName():
+        }
+
         return ChatFragment.getInstance(
                 m_chatId, m_localPeerId, m_callback,
-                m_chatLoader, m_attachmentUploader, m_messageSender,
-                m_broadcastReceiver, m_messageListAdapter, m_attachmentListAdapter);
+                m_chatLoader, m_attachmentUploader, m_messageSender);
     }
 }

@@ -23,7 +23,7 @@ public abstract class MessageProcessorBase {
     final protected String m_token;
     final protected ChatIdChecker m_chatIdChecker;
 
-    public MessageProcessorBase(
+    protected MessageProcessorBase(
             final AttachmentTypeDefinerInterface attachmentTypeDefiner,
             final String token,
             final ChatIdChecker chatIdChecker)

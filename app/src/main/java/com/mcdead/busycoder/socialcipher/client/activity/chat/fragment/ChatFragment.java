@@ -279,6 +279,8 @@ public class ChatFragment extends Fragment
                         LinearLayoutManager.HORIZONTAL,
                         false));
 
+        m_messagesListView.setItemAnimator(null);
+        m_attachmentListView.setItemAnimator(null);
         m_messagesListView.setAdapter(m_messageListAdapter);
         m_attachmentListView.setAdapter(m_attachmentListAdapter);
 

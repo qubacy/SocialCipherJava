@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 import com.mcdead.busycoder.socialcipher.client.activity.attachmentpicker.data.AttachmentData;
 import com.mcdead.busycoder.socialcipher.utility.ObjectWrapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AttachmentPickerImageViewModel extends ViewModel {
@@ -54,6 +55,21 @@ public class AttachmentPickerImageViewModel extends ViewModel {
         if (m_imageAttachmentDataList == null) return 0;
 
         return m_imageAttachmentDataList.size();
+    }
+
+    public List<AttachmentData> getChosenImageDataList() {
+        if (m_imageAttachmentDataList == null) return null;
+
+        List<AttachmentData> chosenImageDataList = new ArrayList<>();
+
+        for (final Pair<AttachmentData, ObjectWrapper<Boolean>> imageData :
+                m_imageAttachmentDataList)
+        {
+            if (imageData.second.getValue())
+                chosenImageDataList.add(imageData.first);
+        }
+
+        return chosenImageDataList;
     }
 
     public boolean isInitialized() {

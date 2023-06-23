@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/default_gap"
         app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@id/request_answer_boolean_horizontal_guideline"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintRight_toRightOf="@id/request_answer_boolean_vertical_guideline"
         app:layout_constraintLeft_toLeftOf="@id/request_answer_boolean_vertical_guideline"/>
 
@@ -36,7 +36,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_gap"
         android:layout_marginRight="@dimen/default_gap"
-        app:layout_constraintTop_toBottomOf="@id/request_answer_boolean_horizontal_guideline"
+        app:layout_constraintTop_toBottomOf="@id/request_answer_boolean_text"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toLeftOf="@id/request_answer_boolean_vertical_guideline"
         android:text="@string/request_answer_accept_button_caption"/>
 
@@ -46,7 +47,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_gap"
         android:layout_marginLeft="@dimen/default_gap"
-        app:layout_constraintTop_toBottomOf="@id/request_answer_boolean_horizontal_guideline"
+        app:layout_constraintTop_toBottomOf="@id/request_answer_boolean_text"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="@id/request_answer_boolean_vertical_guideline"
         android:text="@string/request_answer_cancel_button_caption"/>
 
